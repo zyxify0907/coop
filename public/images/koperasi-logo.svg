@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Koperasi Politeknik Besut Berhad">
+  <path fill="#ef0808" d="M74 244C83 155 149 85 256 66c74-13 132-20 181-66-27 63-81 108-166 126l101-4c-43 55-105 82-170 101-53 15-95 32-128 61z"/>
+  <path fill="#000000" d="M70 351c20-76 81-112 160-133l-78 5c39-41 85-65 145-80-7 30-22 57-47 80 33-13 60-29 81-50-9 82-67 142-145 166-50 16-89 25-116 62z"/>
+  <path fill="#ffffff" d="M77 284c48-41 98-59 156-76l-10 14c-54 17-103 38-146 77z"/>
+  <path fill="#ffffff" d="M91 333c45-43 101-63 151-78l-29 19c-47 17-83 36-122 59z"/>
+  <text x="256" y="412" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="58" font-weight="900" fill="#ef0808">KOPERASI</text>
+  <text x="256" y="446" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="900" fill="#000000">POLITEKNIK BESUT BERHAD</text>
+</svg>

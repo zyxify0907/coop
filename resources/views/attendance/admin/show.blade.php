@@ -1,0 +1,12 @@
+@extends('layouts.app')
+@section('title', 'Butiran Kehadiran')
+@section('page-title', 'Butiran Kehadiran')
+@section('page-subtitle', 'Maklumat lengkap rekod kehadiran pekerja.')
+@section('content')
+    @include('attendance.partials.styles')
+    @php $duration = fn ($minutes) => intdiv((int) ($minutes ?? 0), 60).' jam '.((int) ($minutes ?? 0) % 60).' minit'; @endphp
+    <div class="attendance-page"><header class="attendance-head"><div><h1>Butiran Kehadiran</h1><p>{{ $record->staff->nama }} &middot; {{ $record->staff->no_pekerja }}</p></div><a class="attendance-secondary" href="{{ route('admin.attendance.records') }}">Kembali ke Rekod</a></header>
+        <section class="attendance-panel"><div class="attendance-detail"><div><span>Tarikh</span><strong>{{ $record->attendance_date->format('d/m/Y') }}</strong></div><div><span>Status</span><strong>{{ ucfirst(str_replace('_', ' ', $record->status)) }}</strong></div><div><span>Check In</span><strong>{{ $record->check_in_time?->timezone('Asia/Kuala_Lumpur')->format('d/m/Y h:i A') ?? '-' }}</strong></div><div><span>GPS Check In</span><strong>{{ $record->check_in_gps_verified ? 'Disahkan' : 'Tidak disahkan' }}</strong></div><div><span>Check Out</span><strong>{{ $record->check_out_time?->timezone('Asia/Kuala_Lumpur')->format('d/m/Y h:i A') ?? '-' }}</strong></div><div><span>GPS Check Out</span><strong>{{ $record->check_out_gps_verified ? 'Disahkan' : 'Tidak disahkan' }}</strong></div><div><span>Lewat</span><strong>{{ $duration($record->late_minutes) }}</strong></div><div><span>Keluar Awal</span><strong>{{ $duration($record->early_leave_minutes) }}</strong></div><div><span>Waktu Bekerja</span><strong>{{ $duration($record->working_minutes) }}</strong></div><div><span>Lokasi</span><strong>{{ $record->location_name ?? '-' }}</strong></div></div></section>
+        <section class="attendance-panel"><header class="attendance-panel__head"><div><h2>Sejarah Pembetulan</h2><p>Pembetulan yang berkaitan dengan rekod ini.</p></div></header><div class="attendance-list">@forelse($record->corrections as $correction)<div class="attendance-list__item"><div><strong>{{ ucfirst(str_replace('_',' ', $correction->correction_type)) }}</strong><span>{{ $correction->reason }}</span></div><span class="attendance-badge attendance-badge--{{ $correction->status }}">{{ ucfirst($correction->status) }}</span></div>@empty<div class="attendance-empty">Tiada pembetulan untuk rekod ini.</div>@endforelse</div></section>
+    </div>
+@endsection

@@ -15,7 +15,7 @@
         'clothing_staff' => 'Staff Pengurusan Baju',
         default => 'Pekerja Koperasi',
     };
-    $memberNumber = $user->no_pekerja ?? '-';
+    $memberNumber = $user->no_anggota ?? 'Belum dijana';
     $moneyOrPending = fn ($value) => $shareRecord ? 'RM '.number_format((float) $value, 2) : 'Belum diisi admin';
 @endphp
 

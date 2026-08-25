@@ -1,25 +1,33 @@
 @extends('layouts.app')
 
-@section('title', 'Senarai Ahli')
-@section('page-title', 'Anggota')
+@php
+    $isStaffList = ($memberType ?? 'student') === 'staff';
+    $pageTitle = $isStaffList ? 'Senarai Anggota Staff' : 'Senarai Anggota Student';
+    $shareRoute = $isStaffList
+        ? route('admin.saham.index', ['kategori' => 'staff'])
+        : route('admin.saham.index', ['kategori' => 'pelajar']);
+@endphp
+
+@section('title', $pageTitle)
+@section('page-title', $pageTitle)
 @section('page-subtitle', 'Senarai anggota koperasi yang telah diluluskan oleh admin.')
 
 @php
     $totalMembers = $members->total();
     $currentItems = $members->count();
     $pageLabel = $members->total() ? $members->firstItem().'-'.$members->lastItem() : '0-0';
-    $latestApproved = optional($members->first()?->tarikh_keputusan)->format('d/m/Y') ?? '-';
+    $latestApprovedDate = $latestApproved ? \Carbon\Carbon::parse($latestApproved)->format('d/m/Y') : '-';
 @endphp
 
 @section('content')
     <section class="anggota-hero">
         <div>
-            <h2>Anggota Koperasi</h2>
-            <p>Rekod anggota yang telah diluluskan oleh admin dan sedia untuk dirujuk.</p>
+            <h2>{{ $pageTitle }}</h2>
+            <p>Rekod anggota {{ $isStaffList ? 'staff' : 'student' }} yang telah diluluskan oleh admin dan sedia untuk dirujuk.</p>
         </div>
         <div class="anggota-hero__meta">
             <span class="badge success">Diluluskan</span>
-            <strong>Terakhir: {{ $latestApproved }}</strong>
+            <strong>Terakhir: {{ $latestApprovedDate }}</strong>
         </div>
     </section>
 
@@ -27,12 +35,12 @@
         <section class="panel anggota-stat">
             <span class="anggota-stat__label">Jumlah Rekod</span>
             <strong>{{ $totalMembers }}</strong>
-            <small>Anggota koperasi yang aktif dalam senarai ini.</small>
+            <small>Anggota {{ $isStaffList ? 'staff' : 'student' }} dalam senarai ini.</small>
         </section>
         <section class="panel anggota-stat">
             <span class="anggota-stat__label">Paparan Halaman</span>
-            <strong>{{ $pageLabel }}</strong>
-            <small>{{ $currentItems }} rekod dipaparkan pada halaman semasa.</small>
+            <strong>{{ $currentItems }}</strong>
+            <small>{{ $pageLabel }} daripada {{ $totalMembers }} rekod.</small>
         </section>
         <section class="panel anggota-stat">
             <span class="anggota-stat__label">Status Data</span>
@@ -44,25 +52,36 @@
     <section class="panel anggota-panel">
         <div class="anggota-panel__head">
             <div>
-                <h2>Senarai Anggota Diluluskan</h2>
-                <p>{{ $totalMembers }} anggota koperasi direkodkan di sini.</p>
+                <h2>{{ $pageTitle }}</h2>
+                <p>{{ $totalMembers }} anggota {{ $isStaffList ? 'staff' : 'student' }} direkodkan di sini.</p>
             </div>
-            <a class="saham-button" href="{{ route('admin.saham.index', ['kategori' => 'pelajar']) }}">Lihat Saham</a>
+            <a class="saham-button" href="{{ $shareRoute }}">{{ $isStaffList ? 'Lihat Saham Staff' : 'Lihat Saham Student' }}</a>
         </div>
+
+        <form class="anggota-search" method="GET" action="{{ route($isStaffList ? 'admin.anggota.staff' : 'admin.anggota.students') }}">
+            <label for="search">Cari {{ $isStaffList ? 'Anggota Staff' : 'Anggota Student' }}</label>
+            <input id="search" name="search" type="search" value="{{ $filters['search'] ?? '' }}" placeholder="{{ $isStaffList ? 'Nama, no anggota, no pekerja, no KP, jenis staff atau email' : 'Nama, no anggota, no matrik, no KP atau program' }}">
+            <button type="submit">Cari</button>
+            @if (($filters['search'] ?? '') !== '')
+                <a href="{{ route($isStaffList ? 'admin.anggota.staff' : 'admin.anggota.students') }}">Reset</a>
+            @endif
+        </form>
 
         <div class="table-wrap">
             <table class="anggota-table">
                 <thead>
                     <tr>
                         <th>Nama</th>
-                        <th>No Anggota</th>
-                        <th>No Matrik</th>
+                        <th>{{ $isStaffList ? 'No Anggota Staff' : 'No Anggota' }}</th>
+                        @unless ($isStaffList)
+                            <th>Identiti</th>
+                        @endunless
                         <th>No KP</th>
-                        <th>Program</th>
+                        <th>{{ $isStaffList ? 'Jenis Staff' : 'Program' }}</th>
                         <th>Tarikh Daftar Ahli</th>
-                        <th>Saham</th>
+                        <th>Jumlah Saham</th>
                         <th>Status Permohonan</th>
-                        <th>Status Pelajar</th>
+                        <th>Status Akaun</th>
                         <th>Tindakan</th>
                     </tr>
                 </thead>
@@ -71,9 +90,16 @@
                         @php
                             $data = $member->data_permohonan ?? [];
                             $memberName = $member->nama_pemohon ?: 'Tanpa Nama';
-                            $initials = collect(explode(' ', $memberName))->filter()->take(2)->map(fn ($part) => strtoupper(substr($part, 0, 1)))->implode('') ?: 'AG';
-                            $memberProfile = $member->ahli;
-                            $memberSaham = optional($memberProfile)->saham;
+                            $initials = collect(explode(' ', $memberName))->filter()->take(2)->map(fn ($part) => strtoupper(substr($part, 0, 1)))->implode('') ?: ($isStaffList ? 'AS' : 'AG');
+                            $profile = $isStaffList ? $staffMembers->get($member->no_matrik) : $member->ahli;
+                            $memberSaham = $isStaffList ? optional($profile)->sahamStaff : optional($profile)->saham;
+                            $memberNumber = $isStaffList ? ($profile->no_anggota ?? $data['no_anggota'] ?? '-') : ($profile->no_anggota ?? '-');
+                            $identityLabel = $isStaffList ? 'No Pekerja' : 'No Matrik';
+                            $typeLabel = $isStaffList ? ($profile->staff_type_label ?? '-') : ($data['program_pengajian'] ?? $profile->program ?? '-');
+                            $registeredDate = $isStaffList
+                                ? (optional(optional($profile)->tarikh_mula)->format('d/m/Y') ?? (optional($member->tarikh_keputusan)->format('d/m/Y') ?? '-'))
+                                : (optional(optional($profile)->tarikh_daftar)->format('d/m/Y') ?? (optional($member->tarikh_keputusan)->format('d/m/Y') ?? '-'));
+                            $totalShare = (float) optional($memberSaham)->syer + (float) optional($memberSaham)->tambahan_saham;
                         @endphp
                         <tr>
                             <td>
@@ -85,16 +111,18 @@
                                     </div>
                                 </div>
                             </td>
-                            <td><span class="table-chip">{{ $memberProfile->no_anggota ?? '-' }}</span></td>
-                            <td><span class="table-chip">{{ $member->no_matrik }}</span></td>
-                            <td>{{ $data['penama_nric'] ?? $memberProfile->nric ?? '-' }}</td>
-                            <td>{{ $data['program_pengajian'] ?? $memberProfile->program ?? '-' }}</td>
-                            <td>{{ optional(optional($memberProfile)->tarikh_daftar)->format('d/m/Y') ?? (optional($member->tarikh_keputusan)->format('d/m/Y') ?? '-') }}</td>
-                            <td><span class="money">{{ 'RM '.number_format((float) optional($memberSaham)->syer, 2) }}</span></td>
+                            <td><span class="table-chip">{{ $memberNumber }}</span></td>
+                            @unless ($isStaffList)
+                                <td><span class="table-chip">{{ $member->no_matrik }}<small>{{ $identityLabel }}</small></span></td>
+                            @endunless
+                            <td>{{ $profile->nric ?? $data['no_kad_pengenalan'] ?? '-' }}</td>
+                            <td>{{ $typeLabel }}</td>
+                            <td>{{ $registeredDate }}</td>
+                            <td><span class="money">{{ 'RM '.number_format($totalShare, 2) }}</span></td>
                             <td><span class="status-pill status-pill--diluluskan">Diluluskan</span></td>
                             <td>
-                                <span class="status-pill {{ ($memberProfile->status_aktif ?? false) ? 'status-pill--diluluskan' : 'status-pill--ditolak' }}">
-                                    {{ ($memberProfile->status_aktif ?? false) ? 'Aktif' : 'Tidak Aktif' }}
+                                <span class="status-pill {{ ($profile->status_aktif ?? false) ? 'status-pill--diluluskan' : 'status-pill--ditolak' }}">
+                                    {{ ($profile->status_aktif ?? false) ? 'Aktif' : 'Tidak Aktif' }}
                                 </span>
                             </td>
                             <td>
@@ -103,9 +131,9 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10">
+                            <td colspan="{{ $isStaffList ? 9 : 10 }}">
                                 <div class="empty-state">
-                                    <strong>Belum ada anggota yang diluluskan.</strong>
+                                    <strong>Belum ada anggota {{ $isStaffList ? 'staff' : 'student' }} yang diluluskan.</strong>
                                     <span>Rekod akan muncul di sini selepas permohonan anggota diluluskan oleh admin.</span>
                                 </div>
                             </td>
@@ -208,6 +236,56 @@
         margin:6px 0 0;
         color:var(--muted-2);
     }
+    .anggota-search{
+        display:flex;
+        align-items:end;
+        gap:12px;
+        padding:16px 24px;
+        border-bottom:1px solid var(--line);
+        background:#fff;
+        flex-wrap:wrap;
+    }
+    .anggota-search label{
+        display:grid;
+        gap:6px;
+        color:var(--muted);
+        font-size:12px;
+        font-weight:900;
+        text-transform:uppercase;
+        letter-spacing:.04em;
+    }
+    .anggota-search input{
+        width:min(460px, 70vw);
+        min-height:42px;
+        border:1px solid var(--line-strong);
+        border-radius:10px;
+        padding:0 13px;
+        color:var(--text);
+        font:inherit;
+        font-weight:700;
+    }
+    .anggota-search button,
+    .anggota-search a{
+        display:inline-flex;
+        min-height:42px;
+        align-items:center;
+        justify-content:center;
+        border-radius:10px;
+        padding:0 16px;
+        font-size:14px;
+        font-weight:900;
+        text-decoration:none;
+    }
+    .anggota-search button{
+        border:1px solid var(--secondary);
+        background:var(--secondary);
+        color:#fff;
+    }
+    .anggota-search a{
+        border:1px solid var(--line-strong);
+        background:#fff;
+        color:var(--text);
+    }
     .saham-button{
         display:inline-flex;
         align-items:center;
@@ -292,6 +370,7 @@
     .money{
         display:inline-flex;
         align-items:center;
+        gap:6px;
         min-height:32px;
         padding:0 12px;
         border-radius:999px;
@@ -300,6 +379,12 @@
         color:var(--text);
         font-weight:800;
         white-space:nowrap;
+    }
+    .table-chip small{
+        color:var(--muted-2);
+        font-size:10px;
+        font-weight:900;
+        text-transform:uppercase;
     }
     .status-pill{
         display:inline-flex;

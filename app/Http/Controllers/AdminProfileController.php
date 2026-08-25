@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\AdminUser;
 use App\Models\Ahli;
 use App\Models\AhliImport;
+use App\Models\Permohonan;
 use App\Models\Pekerja;
+use App\Models\Saham;
+use App\Models\SahamStaff;
 use App\Services\AhliImportService;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
@@ -13,6 +16,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -40,7 +44,7 @@ class AdminProfileController extends Controller
             'search' => ['nullable', 'string', 'max:100'],
             'program' => ['nullable', Rule::in($this->studentProgramOptions())],
             'kelas' => ['nullable', Rule::in($this->studentClassOptions())],
-            'semester' => ['nullable', Rule::in(['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5'])],
+            'semester' => ['nullable', Rule::in(['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6'])],
             'tarikh_masuk' => ['nullable', 'date'],
         ]);
 
@@ -81,7 +85,7 @@ class AdminProfileController extends Controller
         return view('admin.admin_users.students', [
             'role' => $role,
             'user' => $user,
-            'students' => $studentsQuery->get(),
+            'students' => $studentsQuery->paginate(30)->withQueryString(),
             'search' => $search,
             'filters' => [
                 'program' => $program,
@@ -91,7 +95,7 @@ class AdminProfileController extends Controller
             ],
             'programOptions' => $this->studentProgramOptions(),
             'classOptions' => $this->studentClassOptions(),
-            'semesterOptions' => ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5'],
+            'semesterOptions' => ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6'],
             'latestImport' => AhliImport::query()->latest()->first(),
         ]);
     }
@@ -108,7 +112,7 @@ class AdminProfileController extends Controller
             'search' => ['nullable', 'string', 'max:100'],
         ]);
 
-        $staffQuery = Pekerja::query()->orderBy('nama');
+        $staffQuery = Pekerja::query()->eligibleForShares()->orderBy('nama');
         $search = trim((string) ($validated['search'] ?? ''));
 
         if ($search !== '') {
@@ -124,8 +128,68 @@ class AdminProfileController extends Controller
         return view('admin.admin_users.staff', [
             'role' => $role,
             'user' => $user,
-            'staff' => $staffQuery->get(),
+            'staff' => $staffQuery->paginate(30)->withQueryString(),
             'search' => $search,
+            'listTitle' => 'Senarai Staff',
+            'listSubtitle' => 'Paparan staff yang layak mempunyai saham koperasi sahaja.',
+            'heroTitle' => 'Manage Staff',
+            'heroSubtitle' => 'Kemaskini maklumat staff yang mempunyai saham koperasi.',
+            'recordLabel' => 'rekod staff',
+            'addButtonLabel' => 'Tambah Staff',
+            'emptyTitle' => 'Tiada rekod staff.',
+            'emptySubtitle' => 'Pekerja koperasi dipaparkan dalam senarai berasingan.',
+            'searchLabel' => 'Cari Staff',
+            'searchPlaceholder' => 'Nama, No. KP atau jenis staff',
+            'listRoute' => route('admin.users.staff'),
+            'addButtonRoute' => route('admin.users.create', ['type' => 'staff']),
+            'importRoute' => route('admin.users.staff.import'),
+            'showWorkerFields' => false,
+        ]);
+    }
+
+    public function coopWorkers(Request $request): View|RedirectResponse
+    {
+        if (! $this->isAdmin($request)) {
+            return redirect()->route('login');
+        }
+
+        $role = 'admin';
+        $user = AdminUser::query()->find($request->session()->get('auth_id'));
+        $validated = $request->validate([
+            'search' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        $staffQuery = Pekerja::query()->coopWorkers()->orderBy('nama');
+        $search = trim((string) ($validated['search'] ?? ''));
+
+        if ($search !== '') {
+            $staffQuery->where(function ($query) use ($search) {
+                $query
+                    ->where('nama', 'like', '%'.$search.'%')
+                    ->orWhere('no_pekerja', 'like', '%'.$search.'%')
+                    ->orWhere('nric', 'like', '%'.$search.'%')
+                    ->orWhere('staff_type', 'like', '%'.$search.'%');
+            });
+        }
+
+        return view('admin.admin_users.staff', [
+            'role' => $role,
+            'user' => $user,
+            'staff' => $staffQuery->paginate(30)->withQueryString(),
+            'search' => $search,
+            'listTitle' => 'Senarai Pekerja Koperasi',
+            'listSubtitle' => 'Paparan pekerja koperasi sahaja, tanpa rekod saham.',
+            'heroTitle' => 'Manage Pekerja Koperasi',
+            'heroSubtitle' => 'Kemaskini akaun pekerja koperasi yang tidak mempunyai saham.',
+            'recordLabel' => 'rekod pekerja koperasi',
+            'addButtonLabel' => 'Tambah Pekerja',
+            'emptyTitle' => 'Tiada rekod pekerja koperasi.',
+            'emptySubtitle' => 'Klik Tambah Pekerja untuk daftar pekerja koperasi baru.',
+            'searchLabel' => 'Cari Pekerja Koperasi',
+            'searchPlaceholder' => 'Nama, no pekerja atau No. KP',
+            'listRoute' => route('admin.users.coop-workers'),
+            'addButtonRoute' => route('admin.users.create', ['type' => 'staff', 'staff_type' => Pekerja::COOP_WORKER_STAFF_TYPE]),
+            'showWorkerFields' => true,
         ]);
     }
 
@@ -157,7 +221,7 @@ class AdminProfileController extends Controller
             'no_matrik' => ['required', 'string', 'max:20', 'unique:ahli,no_matrik'],
             'nama' => ['required', 'string', 'max:100'],
             'nric' => ['required', 'string', 'max:20', 'unique:ahli,nric'],
-            'semester' => ['nullable', Rule::in(['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5'])],
+            'semester' => ['nullable', Rule::in(['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6'])],
             'program' => ['nullable', Rule::in($this->studentProgramOptions())],
             'kelas' => ['nullable', Rule::in($this->studentClassOptions())],
             'no_tel' => ['nullable', 'string', 'max:20'],
@@ -204,6 +268,23 @@ class AdminProfileController extends Controller
             ->with('status', "Import selesai. Berjaya: {$result->importedCount} rekod. Gagal: {$result->failedCount} rekod. Password student dijana automatik: No Matrik + @123.");
     }
 
+    public function importStaff(Request $request, AhliImportService $importer): RedirectResponse
+    {
+        if (! $this->isAdmin($request)) {
+            return redirect()->route('login');
+        }
+
+        $validated = $request->validate([
+            'file' => ['required', 'file', 'mimes:csv,txt,xlsx', 'max:10240'],
+        ]);
+
+        $result = $importer->importStaff($validated['file']);
+
+        return redirect()
+            ->route('admin.users.staff')
+            ->with('status', "Import staff selesai. Berjaya: {$result->importedCount} rekod. Gagal: {$result->failedCount} rekod. Password staff default: staff12345.");
+    }
+
     public function storeStaff(Request $request): RedirectResponse
     {
         if (! $this->isAdmin($request)) {
@@ -223,7 +304,7 @@ class AdminProfileController extends Controller
             'password' => ['nullable', 'string', 'min:6'],
         ]);
 
-        Pekerja::query()->create([
+        $staff = Pekerja::query()->create([
             'no_pekerja' => $validated['no_pekerja'],
             'nama' => $validated['nama'],
             'nric' => $validated['nric'],
@@ -236,8 +317,12 @@ class AdminProfileController extends Controller
             'status_aktif' => (bool) ($validated['status_aktif'] ?? true),
         ]);
 
+        if ($validated['staff_type'] === Pekerja::COOP_WORKER_STAFF_TYPE) {
+            SahamStaff::query()->where('id_pekerja', $staff->id_pekerja)->delete();
+        }
+
         return redirect()
-            ->route('admin.users.staff')
+            ->route($validated['staff_type'] === Pekerja::COOP_WORKER_STAFF_TYPE ? 'admin.users.coop-workers' : 'admin.users.staff')
             ->with('status', 'Staff berjaya ditambah. Password default: staff12345.');
     }
 
@@ -283,7 +368,7 @@ class AdminProfileController extends Controller
         if ($type === 'student') {
             $rules['nric'][] = Rule::unique('ahli', 'nric')->ignore($id, 'id_ahli');
             $rules['email'][] = Rule::unique('ahli', 'email')->ignore($id, 'id_ahli');
-            $rules['semester'] = ['nullable', Rule::in(['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5'])];
+            $rules['semester'] = ['nullable', Rule::in(['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6'])];
             $rules['program'] = ['nullable', Rule::in($this->studentProgramOptions())];
             $rules['kelas'] = ['nullable', Rule::in($this->studentClassOptions())];
             $rules['tarikh_daftar'] = ['nullable', 'date'];
@@ -316,8 +401,18 @@ class AdminProfileController extends Controller
 
         $user->save();
 
+        if ($type === 'staff' && $user->staff_type === Pekerja::COOP_WORKER_STAFF_TYPE) {
+            SahamStaff::query()->where('id_pekerja', $user->id_pekerja)->delete();
+        }
+
+        $redirectRoute = match (true) {
+            $type === 'student' => 'admin.users.students',
+            $user->staff_type === Pekerja::COOP_WORKER_STAFF_TYPE => 'admin.users.coop-workers',
+            default => 'admin.users.staff',
+        };
+
         return redirect()
-            ->route($type === 'student' ? 'admin.users.students' : 'admin.users.staff')
+            ->route($redirectRoute)
             ->with('status', 'Profil berjaya dikemaskini.');
     }
 
@@ -342,7 +437,22 @@ class AdminProfileController extends Controller
         }
 
         try {
-            $user->delete();
+            DB::transaction(function () use ($type, $user): void {
+                if ($type === 'student') {
+                    Permohonan::query()->where('id_ahli', $user->getKey())->delete();
+                    Saham::query()->where('id_ahli', $user->getKey())->delete();
+                } else {
+                    Permohonan::query()
+                        ->where('jenis', 'anggota')
+                        ->where('no_matrik', $user->no_pekerja)
+                        ->where('data_permohonan->pemohon_role', 'staff')
+                        ->delete();
+
+                    SahamStaff::query()->where('id_pekerja', $user->getKey())->delete();
+                }
+
+                $user->delete();
+            });
         } catch (QueryException) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Rekod tidak boleh dipadam kerana masih mempunyai data berkaitan.'], 422);
@@ -385,7 +495,7 @@ class AdminProfileController extends Controller
     {
         $classes = [];
 
-        foreach (range(1, 5) as $semester) {
+        foreach (range(1, 6) as $semester) {
             $classes[] = 'DIT'.$semester.'A';
             $classes[] = 'DIT'.$semester.'B';
             $classes[] = 'DDC'.$semester.'A';
@@ -408,7 +518,7 @@ class AdminProfileController extends Controller
      */
     private function academicFromClass(?string $kelas): ?array
     {
-        if (! preg_match('/^(DIT|DDC|DBF)([1-5])[A-Z]$/', strtoupper(trim((string) $kelas)), $matches)) {
+        if (! preg_match('/^(DIT|DDC|DBF)([1-6])[A-Z]$/', strtoupper(trim((string) $kelas)), $matches)) {
             return null;
         }
 

@@ -6,29 +6,68 @@
 
 @php
     $application = $memberApplication;
-    $member = $application->ahli;
     $data = $application->data_permohonan ?? [];
-    $amountFields = ['yuran_anggota', 'modal_saham'];
+    $isStaffMember = ($data['pemohon_role'] ?? null) === 'staff';
+    $member = $isStaffMember ? $staffMember : $application->ahli;
+    $shareRecord = $isStaffMember ? optional($staffMember)->sahamStaff : optional($member)->saham;
+    $memberNumber = $isStaffMember ? (optional($member)->no_anggota ?? $data['no_anggota'] ?? '-') : optional($member)->no_anggota;
+    $memberFee = $isStaffMember ? ($data['yuran_anggota'] ?? optional($shareRecord)->yuran ?? 10) : (optional($shareRecord)->yuran ?? $data['yuran_anggota'] ?? 0);
+    $baseShare = (float) (optional($shareRecord)->syer ?? $data['modal_saham'] ?? 0);
+    $additionalShare = (float) (optional($shareRecord)->tambahan_saham ?? 0);
+    $totalShare = $baseShare + $additionalShare;
+    $grandTotal = (float) $memberFee + $totalShare;
+    $amountFields = ['yuran_anggota', 'modal_saham', 'tambahan_saham', 'jumlah_saham', 'jumlah_bayaran'];
     $initials = collect(explode(' ', $application->nama_pemohon))->filter()->take(2)->map(fn ($part) => strtoupper(substr($part, 0, 1)))->implode('') ?: 'AG';
     $heirFields = ['nama_waris', 'telefon_waris', 'hubungan_waris', 'penama_nama', 'penama_nric', 'penama_hubungan', 'penama_no_tel', 'penama_alamat', 'penama_poskod', 'penama_peratus', 'penama2_nama', 'penama2_nric', 'penama2_hubungan', 'penama2_no_tel', 'penama2_alamat', 'penama2_poskod', 'penama2_peratus'];
-    $memberInfo = collect([
+    $memberInfo = $isStaffMember ? collect([
+        'nama_penuh' => $application->nama_pemohon,
+        'email' => $application->email,
+        'no_tel' => $application->no_tel,
+        'no_anggota' => $memberNumber,
+        'no_kp' => optional($member)->nric ?? $data['no_kad_pengenalan'] ?? '-',
+        'jenis_staff' => optional($member)->staff_type_label ?? $data['jenis_staff'] ?? '-',
+        'status_anggota' => 'Diluluskan',
+        'tarikh_daftar' => optional($application->tarikh_keputusan)->format('d/m/Y'),
+        'yuran_anggota' => (float) $memberFee,
+        'modal_saham' => $baseShare,
+        'tambahan_saham' => $additionalShare,
+        'jumlah_saham' => $totalShare,
+        'jumlah_bayaran' => $grandTotal,
+        'alamat' => $data['alamat'] ?? null,
+        'agama' => $data['agama'] ?? null,
+        'bangsa' => $data['bangsa'] ?? null,
+        'jantina' => $data['jantina'] ?? null,
+        'tarikh_lahir' => $data['tarikh_lahir'] ?? null,
+        'taraf_perkahwinan' => $data['taraf_perkahwinan'] ?? null,
+    ])->filter(fn ($value) => filled($value) || is_numeric($value)) : collect([
         'nama_penuh' => $application->nama_pemohon,
         'email' => $application->email,
         'no_tel' => $application->no_tel,
         'no_matrik' => $application->no_matrik,
-        'nric' => optional($member)->nric,
+        'no_anggota' => optional($member)->no_anggota,
+        'no_kp' => optional($member)->nric ?? $data['no_kad_pengenalan'] ?? '-',
         'semester' => optional($member)->semester,
-        'program' => optional($member)->program,
+        'program' => $data['program_pengajian'] ?? optional($member)->program,
+        'kelas' => $data['kelas'] ?? optional($member)->kelas,
         'tarikh_daftar' => optional(optional($member)->tarikh_daftar)->format('d/m/Y') ?? optional($application->tarikh_keputusan)->format('d/m/Y'),
         'status_anggota' => 'Diluluskan',
-        'jumlah_saham' => optional(optional($member)->saham)->syer ?? 0,
-        'jumlah_yuran' => optional(optional($member)->saham)->yuran ?? 0,
-    ])->merge(collect($data)->except($heirFields));
+        'yuran_anggota' => (float) $memberFee,
+        'modal_saham' => $baseShare,
+        'tambahan_saham' => $additionalShare,
+        'jumlah_saham' => $totalShare,
+        'jumlah_bayaran' => $grandTotal,
+        'alamat' => $data['alamat'] ?? null,
+        'agama' => $data['agama'] ?? null,
+        'bangsa' => $data['bangsa'] ?? null,
+        'jantina' => $data['jantina'] ?? null,
+        'tarikh_lahir' => $data['tarikh_lahir'] ?? null,
+        'taraf_perkahwinan' => $data['taraf_perkahwinan'] ?? null,
+    ])->filter(fn ($value) => filled($value) || is_numeric($value));
     $heirData = collect($data)->only($heirFields)->filter(fn ($value) => filled($value));
 @endphp
 
 @section('page-actions')
-    <a class="link-button secondary" href="{{ route('admin.anggota.index') }}">Kembali</a>
+    <a class="link-button secondary" href="{{ route($isStaffMember ? 'admin.anggota.staff' : 'admin.anggota.students') }}">Kembali</a>
 @endsection
 
 @section('content')
@@ -37,7 +76,7 @@
             <span class="student-avatar">{{ $initials }}</span>
             <div>
                 <h2>{{ $application->nama_pemohon }}</h2>
-                <p>{{ $application->no_matrik }} - {{ $application->email ?: 'Email tiada' }} - {{ $application->no_tel ?: 'Telefon tiada' }}</p>
+                <p>{{ $isStaffMember ? $memberNumber : $application->no_matrik }} - {{ $application->email ?: 'Email tiada' }} - {{ $application->no_tel ?: 'Telefon tiada' }}</p>
             </div>
         </div>
 
@@ -51,7 +90,7 @@
     <section class="panel panel-pad">
         <div class="section-title">
             <h2>Maklumat Profil Anggota</h2>
-            <p>Semua maklumat pelajar, maklumat anggota dan ringkasan saham.</p>
+            <p>Semua maklumat {{ $isStaffMember ? 'staff' : 'pelajar' }}, maklumat anggota dan ringkasan saham.</p>
         </div>
 
         <div class="compact-sections">

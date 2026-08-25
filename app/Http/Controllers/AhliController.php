@@ -11,6 +11,7 @@ use App\Notifications\AhliImportCompleted;
 use App\Services\AhliImportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
 
@@ -55,6 +56,21 @@ class AhliController extends Controller
 
     public function anggotaIndex(Request $request): View|RedirectResponse
     {
+        return redirect()->route('admin.anggota.students');
+    }
+
+    public function anggotaStudents(Request $request): View|RedirectResponse
+    {
+        return $this->renderAnggotaList($request, 'student');
+    }
+
+    public function anggotaStaff(Request $request): View|RedirectResponse
+    {
+        return $this->renderAnggotaList($request, 'staff');
+    }
+
+    private function renderAnggotaList(Request $request, string $memberType): View|RedirectResponse
+    {
         $role = $request->session()->get('auth_role');
 
         if ($role !== 'admin') {
@@ -67,16 +83,108 @@ class AhliController extends Controller
             return redirect()->route('login');
         }
 
+        $validated = $request->validate([
+            'search' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        $search = trim((string) ($validated['search'] ?? ''));
+
+        $membersQuery = Permohonan::query()
+            ->where('jenis', 'anggota')
+            ->where('status', 'diluluskan');
+
+        if ($memberType === 'staff') {
+            $matchingStaffNumbers = collect();
+
+            if ($search !== '') {
+                $staffHasMemberNumber = Schema::hasColumn('pekerja', 'no_anggota');
+                $matchingStaffNumbers = Pekerja::query()
+                    ->where(function ($staffQuery) use ($search, $staffHasMemberNumber): void {
+                        if ($staffHasMemberNumber) {
+                            $staffQuery->where('no_anggota', 'like', "%{$search}%");
+                        }
+
+                        $staffQuery
+                            ->orWhere('no_pekerja', 'like', "%{$search}%")
+                            ->orWhere('nama', 'like', "%{$search}%")
+                            ->orWhere('nric', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
+                            ->orWhere('staff_type', 'like', "%{$search}%");
+                    })
+                    ->pluck('no_pekerja');
+            }
+
+            $membersQuery
+                ->where('data_permohonan->pemohon_role', 'staff')
+                ->when($search !== '', function ($query) use ($search, $matchingStaffNumbers): void {
+                    $query->where(function ($searchQuery) use ($search, $matchingStaffNumbers): void {
+                        $searchQuery
+                            ->where('nama_pemohon', 'like', "%{$search}%")
+                            ->orWhere('no_matrik', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
+                            ->orWhere('data_permohonan->no_kad_pengenalan', 'like', "%{$search}%");
+
+                        if ($matchingStaffNumbers->isNotEmpty()) {
+                            $searchQuery->orWhereIn('no_matrik', $matchingStaffNumbers);
+                        }
+                    });
+                });
+        } else {
+            $membersQuery
+                ->with(['ahli.saham'])
+                ->where(function ($query): void {
+                    $query
+                        ->whereNull('data_permohonan->pemohon_role')
+                        ->orWhere('data_permohonan->pemohon_role', '!=', 'staff');
+                })
+                ->when($search !== '', function ($query) use ($search): void {
+                    $query->where(function ($searchQuery) use ($search): void {
+                        $searchQuery
+                            ->where('nama_pemohon', 'like', "%{$search}%")
+                            ->orWhere('no_matrik', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
+                            ->orWhereHas('ahli', function ($memberQuery) use ($search): void {
+                                $memberQuery
+                                    ->where('no_anggota', 'like', "%{$search}%")
+                                    ->orWhere('nric', 'like', "%{$search}%")
+                                    ->orWhere('program', 'like', "%{$search}%");
+                            });
+                    });
+                });
+        }
+
+        $members = $membersQuery
+            ->latest('tarikh_keputusan')
+            ->latest('id_permohonan')
+            ->paginate(15)
+            ->withQueryString();
+
         return view('admin.anggota.index', [
             'role' => $role,
             'user' => $user,
-            'members' => Permohonan::query()
-                ->with(['ahli.saham'])
+            'memberType' => $memberType,
+            'members' => $members,
+            'staffMembers' => Pekerja::query()
+                ->with('sahamStaff')
+                ->whereIn('no_pekerja', $memberType === 'staff' ? $members->getCollection()->pluck('no_matrik')->filter()->values() : [])
+                ->get()
+                ->keyBy('no_pekerja'),
+            'filters' => [
+                'search' => $search,
+            ],
+            'latestApproved' => Permohonan::query()
                 ->where('jenis', 'anggota')
                 ->where('status', 'diluluskan')
+                ->when($memberType === 'staff', fn ($query) => $query->where('data_permohonan->pemohon_role', 'staff'))
+                ->when($memberType !== 'staff', function ($query): void {
+                    $query->where(function ($roleQuery): void {
+                        $roleQuery
+                            ->whereNull('data_permohonan->pemohon_role')
+                            ->orWhere('data_permohonan->pemohon_role', '!=', 'staff');
+                    });
+                })
                 ->latest('tarikh_keputusan')
-                ->latest('id_permohonan')
-                ->paginate(20),
+                ->value('tarikh_keputusan'),
         ]);
     }
 
@@ -96,10 +204,16 @@ class AhliController extends Controller
 
         abort_unless($permohonan->jenis === 'anggota' && $permohonan->status === 'diluluskan', 404);
 
+        $application = $permohonan->load('ahli.saham');
+        $staffMember = ($application->data_permohonan['pemohon_role'] ?? null) === 'staff'
+            ? Pekerja::query()->with('sahamStaff')->where('no_pekerja', $application->no_matrik)->first()
+            : null;
+
         return view('admin.anggota.show', [
             'role' => $role,
             'user' => $user,
-            'memberApplication' => $permohonan->load('ahli.saham'),
+            'memberApplication' => $application,
+            'staffMember' => $staffMember,
         ]);
     }
 }

@@ -14,6 +14,7 @@ use App\Models\SahamStaff;
 use App\Models\ShareTransaction;
 use App\Models\Stok;
 use App\Models\Tempahan;
+use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Http\RedirectResponse;
@@ -35,9 +36,14 @@ class OperationsController extends Controller
             return $auth;
         }
 
+        $this->backfillApprovedStaffMemberNumbers();
+        $approvedStaffNumbers = $this->approvedStaffMemberApplications()->keys();
+        $approvedStaffShareQuery = fn () => SahamStaff::query()
+            ->eligibleStaff()
+            ->whereHas('pekerja', fn ($query) => $query->whereIn('no_pekerja', $approvedStaffNumbers->isNotEmpty() ? $approvedStaffNumbers : ['__none__']));
         $studentTotal = (float) Saham::query()->selectRaw('COALESCE(SUM(syer + tambahan_saham), 0) as total')->value('total');
         $staffTotal = Schema::hasTable('saham_staff')
-            ? (float) SahamStaff::query()->selectRaw('COALESCE(SUM(syer + tambahan_saham), 0) as total')->value('total')
+            ? (float) $approvedStaffShareQuery()->selectRaw('COALESCE(SUM(syer + tambahan_saham), 0) as total')->value('total')
             : 0.0;
         $pendingStatuses = ['baru', 'semak', 'pending', 'dalam_semakan'];
         $membershipPending = Permohonan::query()->where('jenis', 'anggota')->whereIn('status', $pendingStatuses)->count();
@@ -48,7 +54,7 @@ class OperationsController extends Controller
             ...$auth,
             'summary' => [
                 'student_members' => Saham::query()->whereRaw('(COALESCE(syer, 0) + COALESCE(tambahan_saham, 0)) > 0')->count(),
-                'staff_members' => Schema::hasTable('saham_staff') ? SahamStaff::query()->whereRaw('(COALESCE(syer, 0) + COALESCE(tambahan_saham, 0)) > 0')->count() : 0,
+                'staff_members' => Schema::hasTable('saham_staff') ? $approvedStaffShareQuery()->whereRaw('(COALESCE(syer, 0) + COALESCE(tambahan_saham, 0)) > 0')->count() : 0,
                 'student_total' => $studentTotal,
                 'staff_total' => $staffTotal,
                 'grand_total' => $studentTotal + $staffTotal,
@@ -1024,17 +1030,25 @@ class OperationsController extends Controller
         $kelas = trim((string) $request->query('kelas', ''));
         $staffType = trim((string) $request->query('staff_type', ''));
         $tarikh = trim((string) $request->query('tarikh', ''));
+        $defaultFiscalEndYear = now()->month >= 9 ? now()->year + 1 : now()->year;
+        $fiscalEndYear = (int) $request->query('tahun', $defaultFiscalEndYear);
+        $fiscalEndYear = $fiscalEndYear >= 2000 && $fiscalEndYear <= ($defaultFiscalEndYear + 10)
+            ? $fiscalEndYear
+            : $defaultFiscalEndYear;
+        $financialSummary = $this->financialShareSummary($fiscalEndYear);
 
         $studentSharesQuery = $this->filteredStudentSharesQuery($request);
         $printStudentShares = $category === 'pelajar' ? (clone $studentSharesQuery)->get() : collect();
         $studentShares = $studentSharesQuery
             ->paginate(20)
             ->withQueryString();
+        $this->backfillApprovedStaffMemberNumbers();
         $staffMembersQuery = $this->filteredStaffSharesQuery($request);
         $printStaffMembers = $category === 'staff' ? (clone $staffMembersQuery)->get() : collect();
         $staffMembers = $staffMembersQuery
             ->paginate(20)
             ->withQueryString();
+        $approvedStaffApplications = $this->approvedStaffMemberApplications();
         $memberProfiles = Permohonan::query()
             ->where('jenis', 'anggota')
             ->where('status', 'diluluskan')
@@ -1042,11 +1056,15 @@ class OperationsController extends Controller
         $inactiveReasons = $this->inactiveMemberReasons();
         $inactiveStaffReasons = $this->inactiveStaffReasons();
         $positiveStudentShares = fn () => Saham::query()->whereRaw('(COALESCE(syer, 0) + COALESCE(tambahan_saham, 0)) > 0');
-        $positiveStaffShares = fn () => SahamStaff::query()->whereRaw('(COALESCE(syer, 0) + COALESCE(tambahan_saham, 0)) > 0');
+        $approvedStaffNumbers = $approvedStaffApplications->keys();
+        $positiveStaffShares = fn () => SahamStaff::query()
+            ->eligibleStaff()
+            ->whereHas('pekerja', fn ($query) => $query->whereIn('no_pekerja', $approvedStaffNumbers->isNotEmpty() ? $approvedStaffNumbers : ['__none__']))
+            ->whereRaw('(COALESCE(syer, 0) + COALESCE(tambahan_saham, 0)) > 0');
         $studentCount = $positiveStudentShares()->count();
         $studentTotal = (float) Saham::query()->selectRaw('COALESCE(SUM(syer + tambahan_saham), 0) as total')->value('total');
         $staffCount = $positiveStaffShares()->count();
-        $staffTotal = (float) SahamStaff::query()->selectRaw('COALESCE(SUM(syer + tambahan_saham), 0) as total')->value('total');
+        $staffTotal = (float) SahamStaff::query()->eligibleStaff()->selectRaw('COALESCE(SUM(syer + tambahan_saham), 0) as total')->value('total');
         $stoppedStudentShares = $positiveStudentShares()
             ->whereHas('ahli', fn ($query) => $query->where('status_aktif', false))
             ->selectRaw('COALESCE(SUM(syer + tambahan_saham), 0) as total')
@@ -1061,9 +1079,8 @@ class OperationsController extends Controller
         $stoppedStaffCount = $positiveStaffShares()
             ->whereHas('pekerja', fn ($query) => $query->where('status_aktif', false))
             ->count();
-        $fiscalEndYear = now()->month >= 9 ? now()->year + 1 : now()->year;
-        $fiscalStart = now()->setDate($fiscalEndYear - 1, 9, 1)->startOfDay();
-        $fiscalEnd = now()->setDate($fiscalEndYear, 8, 31)->endOfDay();
+        $fiscalStart = $financialSummary['fiscal_start'];
+        $fiscalEnd = $financialSummary['fiscal_end'];
         $periodStudentCount = $positiveStudentShares()
             ->whereHas('ahli', fn ($query) => $query->whereBetween('tarikh_daftar', [$fiscalStart, $fiscalEnd]))
             ->count();
@@ -1100,10 +1117,12 @@ class OperationsController extends Controller
             'staffMembers' => $staffMembers,
             'printStudentRecords' => $printStudentShares,
             'printStaffRecords' => $printStaffMembers,
+            'approvedStaffApplications' => $approvedStaffApplications,
             'memberProfiles' => $memberProfiles,
             'inactiveReasons' => $inactiveReasons,
             'inactiveStaffReasons' => $inactiveStaffReasons,
             'annualSummaryTables' => $this->annualShareSummaries(),
+            'fiscalYearOptions' => $this->fiscalYearOptions($fiscalEndYear),
             'filters' => [
                 'search' => $search,
                 'status' => $status,
@@ -1111,13 +1130,13 @@ class OperationsController extends Controller
                 'kelas' => $kelas,
                 'staff_type' => $staffType,
                 'tarikh' => $tarikh,
+                'tahun' => $fiscalEndYear,
             ],
             'studentPrograms' => collect(['JTMK', 'JRKV']),
-            'studentClasses' => collect(range(1, 5))
+            'studentClasses' => collect(range(1, 6))
                 ->flatMap(fn ($semester) => ['DIT'.$semester.'A', 'DIT'.$semester.'B', 'DDC'.$semester.'A', 'DBF'.$semester.'A']),
             'staffTypes' => collect([
-                'lecturer_member' => 'Pensyarah / Staf Akademik (Anggota)',
-                'coop_staff' => 'Pekerja Koperasi',
+                'lecturer_member' => 'Pensyarah / Staf Akademik',
                 'clothing_staff' => 'Staff Pengurusan Baju',
             ]),
             'students' => Ahli::query()->doesntHave('saham')->orderBy('nama')->get(),
@@ -1149,6 +1168,7 @@ class OperationsController extends Controller
                 'stopped_share_total' => (float) $stoppedStudentShares + $stoppedStaffShares,
                 'active_count' => max(($studentCount + $staffCount) - ($stoppedStudentCount + $stoppedStaffCount), 0),
                 'active_total' => max(($studentTotal + $staffTotal) - ((float) $stoppedStudentShares + $stoppedStaffShares), 0),
+                ...$financialSummary,
             ],
         ]);
     }
@@ -1163,13 +1183,19 @@ class OperationsController extends Controller
 
         $category = $request->query('kategori', 'pelajar');
         $category = in_array($category, ['pelajar', 'staff', 'rumusan'], true) ? $category : 'pelajar';
+        $defaultFiscalEndYear = now()->month >= 9 ? now()->year + 1 : now()->year;
+        $fiscalEndYear = (int) $request->query('tahun', $defaultFiscalEndYear);
+        $fiscalEndYear = $fiscalEndYear >= 2000 && $fiscalEndYear <= ($defaultFiscalEndYear + 10)
+            ? $fiscalEndYear
+            : $defaultFiscalEndYear;
+        $this->backfillApprovedStaffMemberNumbers();
         $filename = match ($category) {
             'pelajar' => 'senarai_saham_pelajar_'.now()->format('Y-m-d').'.csv',
             'staff' => 'senarai_saham_staff_'.now()->format('Y-m-d').'.csv',
-            default => 'saham-'.$category.'-'.now()->format('Y-m-d-His').'.csv',
+            default => 'rumusan_saham_tahun_kewangan_'.$fiscalEndYear.'.csv',
         };
 
-        return response()->streamDownload(function () use ($category, $request): void {
+        return response()->streamDownload(function () use ($category, $request, $fiscalEndYear): void {
             $handle = fopen('php://output', 'w');
 
             if ($handle === false) {
@@ -1205,12 +1231,15 @@ class OperationsController extends Controller
                     ]);
                 }
             } elseif ($category === 'staff') {
-                fputcsv($handle, ['BIL', 'NAMA', 'NO KP', 'NO PEKERJA', 'JENIS STAFF', 'TARIKH MULA KERJA', 'SAHAM SEMASA', 'TAMBAHAN SAHAM', 'JUMLAH SAHAM', 'STATUS STAFF']);
+                fputcsv($handle, ['BIL', 'NAMA', 'NO ANGGOTA', 'NO KP', 'JENIS STAFF', 'YURAN AHLI', 'SAHAM SEMASA', 'TAMBAHAN SAHAM', 'JUMLAH SAHAM', 'STATUS STAFF']);
 
                 $staffMembers = $this->filteredStaffSharesQuery($request)->get();
                 $inactiveStaffReasons = $this->inactiveStaffReasons();
+                $approvedStaffApplications = $this->approvedStaffMemberApplications();
 
                 foreach ($staffMembers as $index => $staff) {
+                    $approvedApplication = $approvedStaffApplications->get($staff->no_pekerja);
+                    $applicationData = $approvedApplication?->data_permohonan ?? [];
                     $statusLabel = $staff->status_aktif
                         ? 'Aktif'
                         : ($inactiveStaffReasons[$staff->id_pekerja] ?? 'Pindah / Berhenti');
@@ -1218,10 +1247,10 @@ class OperationsController extends Controller
                     fputcsv($handle, [
                         $index + 1,
                         $staff->nama,
+                        $this->staffMemberNumber($staff, $approvedApplication),
                         $staff->nric ?? '-',
-                        $staff->no_pekerja ?? '-',
                         $staff->staff_type_label,
-                        optional($staff->tarikh_mula)->format('d/m/Y') ?? '-',
+                        $this->csvMoney($staff->sahamStaff->yuran ?? ($applicationData['yuran_anggota'] ?? 0)),
                         $this->csvMoney($staff->sahamStaff->syer ?? 0),
                         $this->csvMoney($staff->sahamStaff->tambahan_saham ?? 0),
                         $this->csvMoney((float) ($staff->sahamStaff->syer ?? 0) + (float) ($staff->sahamStaff->tambahan_saham ?? 0)),
@@ -1229,27 +1258,17 @@ class OperationsController extends Controller
                     ]);
                 }
             } else {
-                $studentCount = Saham::query()->count();
-                $studentTotal = (float) Saham::query()->selectRaw('COALESCE(SUM(syer + tambahan_saham), 0) as total')->value('total');
-                $staffCount = SahamStaff::query()->count();
-                $staffTotal = (float) SahamStaff::query()->selectRaw('COALESCE(SUM(syer + tambahan_saham), 0) as total')->value('total');
-                $stoppedStudentCount = Ahli::query()->where('status_aktif', false)->count();
-                $stoppedStudentShares = (float) Saham::query()
-                    ->whereHas('ahli', fn ($query) => $query->where('status_aktif', false))
-                    ->selectRaw('COALESCE(SUM(syer + tambahan_saham), 0) as total')
-                    ->value('total');
-                $stoppedStaffCount = Pekerja::query()->where('status_aktif', false)->count();
-                $stoppedStaffShares = (float) SahamStaff::query()
-                    ->whereHas('pekerja', fn ($query) => $query->where('status_aktif', false))
-                    ->selectRaw('COALESCE(SUM(syer + tambahan_saham), 0) as total')
-                    ->value('total');
+                $summary = $this->financialShareSummary($fiscalEndYear);
 
-                fputcsv($handle, ['Perkara', 'Orang', 'Jumlah Saham']);
-                fputcsv($handle, ['Jumlah Saham Pelajar', $studentCount, number_format($studentTotal, 2, '.', '')]);
-                fputcsv($handle, ['Jumlah Saham Staff', $staffCount, number_format($staffTotal, 2, '.', '')]);
-                fputcsv($handle, ['Pelajar Pindah / Berhenti', $stoppedStudentCount, number_format($stoppedStudentShares, 2, '.', '')]);
-                fputcsv($handle, ['Staff Pindah / Berhenti', $stoppedStaffCount, number_format($stoppedStaffShares, 2, '.', '')]);
-                fputcsv($handle, ['Jumlah Saham Anggota Koperasi Polibesut', $studentCount + $staffCount, number_format($studentTotal + $staffTotal, 2, '.', '')]);
+                fputcsv($handle, ['REKOD PENAMBAHAN SAHAM ANGGOTA KOPERASI POLITEKNIK BESUT TAHUN KEWANGAN SEPTEMBER '.$summary['fiscal_start']->format('Y').' SEHINGGA 31 OGOS '.$summary['fiscal_end_year']]);
+                fputcsv($handle, ['SAHAM ANGGOTA', 'ANGGOTA', 'SAHAM']);
+                fputcsv($handle, ['STAFF', $summary['period_staff_count'], number_format($summary['period_staff_total'], 2, '.', '')]);
+                fputcsv($handle, ['PELAJAR', $summary['period_student_count'], number_format($summary['period_student_total'], 2, '.', '')]);
+                fputcsv($handle, ['PENAMBAHAN ANGGOTA & SAHAM SEHINGGA 31 OGOS '.$summary['fiscal_end_year'], $summary['period_count'], number_format($summary['period_total'], 2, '.', '')]);
+                fputcsv($handle, ['JUMLAH ANGGOTA & SAHAM TERKUMPUL SEHINGGA 31 OGOS '.$summary['fiscal_previous_end_year'], $summary['previous_count'], number_format($summary['previous_total'], 2, '.', '')]);
+                fputcsv($handle, ['JUMLAH ANGGOTA & SAHAM TERKUMPUL SEHINGGA 31 OGOS '.$summary['fiscal_end_year'], $summary['current_cumulative_count'], number_format($summary['current_cumulative_total'], 2, '.', '')]);
+                fputcsv($handle, ['JUMLAH ANGGOTA BERHENTI/BERPINDAH SEHINGGA 31 OGOS '.$summary['fiscal_end_year'], $summary['stopped_count'], number_format($summary['stopped_share_total'], 2, '.', '')]);
+                fputcsv($handle, ['JUMLAH ANGGOTA DAN SAHAM SEHINGGA 31 OGOS '.$summary['fiscal_end_year'], $summary['active_count'], number_format($summary['active_total'], 2, '.', '')]);
             }
 
             fclose($handle);
@@ -1334,6 +1353,12 @@ class OperationsController extends Controller
 
         if ($auth instanceof RedirectResponse) {
             return $auth;
+        }
+
+        if (! $staff->isEligibleForShares()) {
+            return redirect()
+                ->route('admin.users.coop-workers')
+                ->withErrors(['saham' => 'Pekerja koperasi tidak mempunyai rekod saham.']);
         }
 
         $validated = $request->validate([
@@ -1844,9 +1869,12 @@ class OperationsController extends Controller
         $status = in_array($status, ['aktif', 'tidak_aktif'], true) ? $status : '';
         $staffType = trim((string) $request->query('staff_type', ''));
         $tarikh = trim((string) $request->query('tarikh', ''));
+        $approvedStaffNumbers = $this->approvedStaffMemberApplications()->keys();
 
         return Pekerja::query()
+            ->eligibleForShares()
             ->with('sahamStaff')
+            ->whereIn('no_pekerja', $approvedStaffNumbers->isNotEmpty() ? $approvedStaffNumbers : ['__none__'])
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($staffQuery) use ($search): void {
                     $staffQuery
@@ -1860,6 +1888,237 @@ class OperationsController extends Controller
             ->when($staffType !== '', fn ($query) => $query->where('staff_type', $staffType))
             ->when($tarikh !== '', fn ($query) => $query->whereDate('tarikh_mula', $tarikh))
             ->orderBy('nama');
+    }
+
+    private function approvedStaffMemberApplications(): \Illuminate\Support\Collection
+    {
+        return Permohonan::query()
+            ->where('jenis', 'anggota')
+            ->where('status', 'diluluskan')
+            ->where('data_permohonan->pemohon_role', 'staff')
+            ->whereNotNull('data_permohonan->no_anggota')
+            ->get()
+            ->keyBy('no_matrik');
+    }
+
+    private function staffMemberNumber(Pekerja $staff, ?Permohonan $approvedApplication = null): string
+    {
+        if (Schema::hasColumn('pekerja', 'no_anggota') && filled($staff->no_anggota)) {
+            return $staff->no_anggota;
+        }
+
+        return $approvedApplication->data_permohonan['no_anggota'] ?? '-';
+    }
+
+    private function backfillApprovedStaffMemberNumbers(): void
+    {
+        DB::transaction(function (): void {
+            Permohonan::query()
+                ->where('jenis', 'anggota')
+                ->where('status', 'diluluskan')
+                ->where('data_permohonan->pemohon_role', 'staff')
+                ->get()
+                ->each(function (Permohonan $application): void {
+                    $data = $application->data_permohonan ?? [];
+
+                    $staff = Pekerja::query()
+                        ->where('no_pekerja', $application->no_matrik)
+                        ->first();
+
+                    if (! $staff) {
+                        return;
+                    }
+
+                    $memberNumber = $this->staffMemberNumber($staff, $application);
+
+                    if ($memberNumber !== '-' && $this->memberNumberValue($memberNumber) >= 1001) {
+                        return;
+                    }
+
+                    $memberNumber = $this->nextStaffMemberNumber();
+
+                    if (Schema::hasColumn('pekerja', 'no_anggota')) {
+                        $staff->update(['no_anggota' => $memberNumber]);
+                    }
+
+                    $data['no_anggota'] = $memberNumber;
+                    $application->update(['data_permohonan' => $data]);
+                });
+        });
+    }
+
+    private function nextMemberNumber(): string
+    {
+        $memberNumbers = Ahli::query()
+            ->whereNotNull('no_anggota')
+            ->lockForUpdate()
+            ->pluck('no_anggota');
+
+        if (Schema::hasColumn('pekerja', 'no_anggota')) {
+            $memberNumbers = $memberNumbers->merge(
+                Pekerja::query()
+                    ->whereNotNull('no_anggota')
+                    ->lockForUpdate()
+                    ->pluck('no_anggota')
+            );
+        }
+
+        $memberNumbers = $memberNumbers->merge(
+            Permohonan::query()
+                ->where('jenis', 'anggota')
+                ->where('status', 'diluluskan')
+                ->where('data_permohonan->pemohon_role', 'staff')
+                ->get()
+                ->pluck('data_permohonan.no_anggota')
+                ->filter()
+        );
+
+        $highestNumber = $memberNumbers
+            ->map(fn (string $number): int => preg_match('/^PBT(\d+)$/i', trim($number), $matches) ? (int) $matches[1] : 0)
+            ->max() ?? 0;
+
+        return 'PBT'.max(123, $highestNumber + 1);
+    }
+
+    private function nextStaffMemberNumber(): string
+    {
+        $memberNumbers = collect();
+
+        if (Schema::hasColumn('pekerja', 'no_anggota')) {
+            $memberNumbers = $memberNumbers->merge(
+                Pekerja::query()
+                    ->whereNotNull('no_anggota')
+                    ->lockForUpdate()
+                    ->pluck('no_anggota')
+            );
+        }
+
+        $memberNumbers = $memberNumbers->merge(
+            Permohonan::query()
+                ->where('jenis', 'anggota')
+                ->where('status', 'diluluskan')
+                ->where('data_permohonan->pemohon_role', 'staff')
+                ->get()
+                ->pluck('data_permohonan.no_anggota')
+                ->filter()
+        );
+
+        $highestNumber = $memberNumbers
+            ->map(fn (string $number): int => $this->memberNumberValue($number))
+            ->filter(fn (int $number): bool => $number >= 1001)
+            ->max() ?? 1000;
+
+        return 'PBT'.($highestNumber + 1);
+    }
+
+    private function memberNumberValue(?string $number): int
+    {
+        return preg_match('/^PBT(\d+)$/i', trim((string) $number), $matches)
+            ? (int) $matches[1]
+            : 0;
+    }
+
+    private function financialShareSummary(int $fiscalEndYear): array
+    {
+        $fiscalStart = Carbon::create($fiscalEndYear - 1, 9, 1)->startOfDay();
+        $fiscalEnd = Carbon::create($fiscalEndYear, 8, 31)->endOfDay();
+        $rows = $this->shareSummaryRows();
+
+        $periodRows = $rows->filter(fn (array $row): bool => $row['date']->betweenIncluded($fiscalStart, $fiscalEnd));
+        $previousRows = $rows->filter(fn (array $row): bool => $row['date']->lt($fiscalStart));
+        $currentRows = $rows->filter(fn (array $row): bool => $row['date']->lte($fiscalEnd));
+        $stoppedRows = $currentRows->where('active', false);
+        $studentRows = $periodRows->where('type', 'student');
+        $staffRows = $periodRows->where('type', 'staff');
+
+        $currentCount = $currentRows->count();
+        $currentTotal = (float) $currentRows->sum('amount');
+        $stoppedCount = $stoppedRows->count();
+        $stoppedTotal = (float) $stoppedRows->sum('amount');
+
+        return [
+            'fiscal_start' => $fiscalStart,
+            'fiscal_end' => $fiscalEnd,
+            'fiscal_end_year' => $fiscalEndYear,
+            'fiscal_previous_end_year' => $fiscalEndYear - 1,
+            'period_student_count' => $studentRows->count(),
+            'period_student_total' => (float) $studentRows->sum('amount'),
+            'period_staff_count' => $staffRows->count(),
+            'period_staff_total' => (float) $staffRows->sum('amount'),
+            'period_count' => $periodRows->count(),
+            'period_total' => (float) $periodRows->sum('amount'),
+            'previous_count' => $previousRows->count(),
+            'previous_total' => (float) $previousRows->sum('amount'),
+            'current_cumulative_count' => $currentCount,
+            'current_cumulative_total' => $currentTotal,
+            'stopped_count' => $stoppedCount,
+            'stopped_share_total' => $stoppedTotal,
+            'active_count' => max($currentCount - $stoppedCount, 0),
+            'active_total' => max($currentTotal - $stoppedTotal, 0),
+        ];
+    }
+
+    private function fiscalYearOptions(int $selectedYear): \Illuminate\Support\Collection
+    {
+        $years = $this->shareSummaryRows()
+            ->map(fn (array $row): int => $row['date']->month >= 9 ? $row['date']->year + 1 : $row['date']->year)
+            ->push(now()->month >= 9 ? now()->year + 1 : now()->year)
+            ->push($selectedYear)
+            ->unique()
+            ->sortDesc()
+            ->values();
+
+        return $years->isEmpty() ? collect([$selectedYear]) : $years;
+    }
+
+    private function shareSummaryRows(): \Illuminate\Support\Collection
+    {
+        $rows = collect();
+
+        Saham::query()->with('ahli')->get()->each(function (Saham $share) use ($rows): void {
+            $member = $share->ahli;
+            $amount = (float) ($share->syer ?? 0) + (float) ($share->tambahan_saham ?? 0);
+
+            if ($amount <= 0) {
+                return;
+            }
+
+            $date = optional($member)->tarikh_daftar ?? $share->tarikh_kemaskini ?? now();
+
+            $rows->push([
+                'date' => $date instanceof Carbon ? $date->copy()->startOfDay() : Carbon::parse($date)->startOfDay(),
+                'type' => 'student',
+                'active' => (bool) (optional($member)->status_aktif ?? false),
+                'amount' => $amount,
+            ]);
+        });
+
+        $approvedStaffNumbers = $this->approvedStaffMemberApplications()->keys();
+
+        SahamStaff::query()
+            ->eligibleStaff()
+            ->whereHas('pekerja', fn ($query) => $query->whereIn('no_pekerja', $approvedStaffNumbers->isNotEmpty() ? $approvedStaffNumbers : ['__none__']))
+            ->with('pekerja')
+            ->get()
+            ->each(function (SahamStaff $share) use ($rows): void {
+                $member = $share->pekerja;
+                $amount = (float) ($share->syer ?? 0) + (float) ($share->tambahan_saham ?? 0);
+
+                if ($amount <= 0) {
+                    return;
+                }
+
+                $date = optional($member)->tarikh_mula ?? $share->tarikh_kemaskini ?? now();
+
+                $rows->push([
+                    'date' => $date instanceof Carbon ? $date->copy()->startOfDay() : Carbon::parse($date)->startOfDay(),
+                    'type' => 'staff',
+                    'active' => (bool) (optional($member)->status_aktif ?? false),
+                    'amount' => $amount,
+                ]);
+            });
+
+        return $rows;
     }
 
     private function annualShareSummaries(): \Illuminate\Support\Collection
@@ -1883,22 +2142,29 @@ class OperationsController extends Controller
             ]);
         });
 
-        SahamStaff::query()->with('pekerja')->get()->each(function (SahamStaff $share) use ($rows): void {
-            $member = $share->pekerja;
-            $date = optional($member)->tarikh_mula ?? $share->tarikh_kemaskini ?? now();
-            $amount = (float) ($share->syer ?? 0) + (float) ($share->tambahan_saham ?? 0);
+        $approvedStaffNumbers = $this->approvedStaffMemberApplications()->keys();
 
-            if ($amount <= 0) {
-                return;
-            }
+        SahamStaff::query()
+            ->eligibleStaff()
+            ->whereHas('pekerja', fn ($query) => $query->whereIn('no_pekerja', $approvedStaffNumbers->isNotEmpty() ? $approvedStaffNumbers : ['__none__']))
+            ->with('pekerja')
+            ->get()
+            ->each(function (SahamStaff $share) use ($rows): void {
+                $member = $share->pekerja;
+                $date = optional($member)->tarikh_mula ?? $share->tarikh_kemaskini ?? now();
+                $amount = (float) ($share->syer ?? 0) + (float) ($share->tambahan_saham ?? 0);
 
-            $rows->push([
-                'year' => (int) $date->format('Y'),
-                'type' => 'staff',
-                'active' => (bool) (optional($member)->status_aktif ?? false),
-                'amount' => $amount,
-            ]);
-        });
+                if ($amount <= 0) {
+                    return;
+                }
+
+                $rows->push([
+                    'year' => (int) $date->format('Y'),
+                    'type' => 'staff',
+                    'active' => (bool) (optional($member)->status_aktif ?? false),
+                    'amount' => $amount,
+                ]);
+            });
 
         if ($rows->isEmpty()) {
             return collect();

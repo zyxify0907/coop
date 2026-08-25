@@ -11,7 +11,7 @@
             <p>Kemaskini profil akaun student. Password dijana automatik daripada No Matrik.</p>
         </div>
         <div class="student-page-hero__meta">
-            <span>{{ $students->count() }} rekod</span>
+            <span>Total {{ $students->total() }} pelajar</span>
         </div>
     </section>
 
@@ -99,7 +99,7 @@
             </div>
             <div class="student-list-actions">
                 <span class="record-badge">
-                    {{ $students->count() }} rekod
+                    Total {{ $students->total() }} pelajar
                 </span>
                 {{-- Optional Add Button --}}
                 <a href="{{ route('admin.users.create', ['type' => 'student']) }}" class="add-student-button">

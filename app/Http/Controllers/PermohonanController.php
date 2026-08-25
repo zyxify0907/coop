@@ -37,7 +37,16 @@ class PermohonanController extends Controller
             }
 
             $types = $this->applicationTypesForRole('staff', $user->staff_type);
-            $activeType = $jenis && isset($types[$jenis]) ? $jenis : 'saham';
+
+            if ($types === []) {
+                return redirect()
+                    ->route('auth.dashboard')
+                    ->withErrors(['permohonan' => 'Pekerja koperasi tidak mempunyai modul permohonan saham.']);
+            }
+
+            $staffMemberNumber = $this->staffMemberNumber($user);
+            $defaultType = $staffMemberNumber ? 'saham' : 'anggota';
+            $activeType = $jenis && isset($types[$jenis]) ? $jenis : $defaultType;
             $portalRoutes = $this->staffPortalRoutes($user->staff_type);
 
             return view('student.permohonan.index', [
@@ -46,8 +55,8 @@ class PermohonanController extends Controller
                 'types' => $types,
                 'activeType' => $activeType,
                 'portalLabel' => 'Staff Portal',
-                'identityLabel' => 'No Pekerja',
-                'identityValue' => $user->no_pekerja,
+                'identityLabel' => 'No Anggota',
+                'identityValue' => $staffMemberNumber ?? 'Belum dijana',
                 'currentShare' => (float) optional($user->sahamStaff)->syer + (float) optional($user->sahamStaff)->tambahan_saham,
                 'portalRoutes' => $portalRoutes,
                 'applications' => Permohonan::query()
@@ -133,6 +142,11 @@ class PermohonanController extends Controller
         $types = $this->applicationTypesForRole($authRole, $authRole === 'staff' ? $user->staff_type : null);
         abort_unless(isset($types[$jenis]), 404);
 
+        $isStaffApplicant = $authRole === 'staff';
+        $withdrawalTypes = $isStaffApplicant
+            ? ['Berhenti Keahlian', 'Berpindah', 'Bersara', 'Lain-lain']
+            : ['Berhenti Keahlian', 'Berpindah', 'Bersara', 'Tamat Pengajian', 'Lain-lain'];
+
         $rules = [
             'email' => ['nullable', 'email', 'max:100'],
             'no_tel' => ['nullable', 'string', 'max:20'],
@@ -149,8 +163,8 @@ class PermohonanController extends Controller
                 'taraf_perkahwinan' => ['required', 'string', 'max:50'],
                 'alamat' => ['required', 'string', 'max:500'],
                 'no_tel_rumah' => ['nullable', 'string', 'max:20'],
-                'program_pengajian' => ['required', Rule::in(['JTMK', 'JRKV'])],
-                'kelas' => ['required', Rule::in($this->studentClassOptions())],
+                'program_pengajian' => [$isStaffApplicant ? 'nullable' : 'required', Rule::in(['JTMK', 'JRKV'])],
+                'kelas' => [$isStaffApplicant ? 'nullable' : 'required', Rule::in($this->studentClassOptions())],
                 'yuran_anggota' => ['required', 'numeric', 'min:10'],
                 'modal_saham' => ['required', 'numeric', 'min:10'],
                 'salinan_ic' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
@@ -190,15 +204,13 @@ class PermohonanController extends Controller
                 'no_anggota' => ['nullable', 'string', 'max:50'],
                 'no_kp' => ['required', 'string', 'max:20'],
                 'jenis_permohonan' => ['required', 'array', 'min:1'],
-                'jenis_permohonan.*' => ['string', Rule::in(['Pengeluaran Saham', 'Berhenti Keahlian', 'Berpindah', 'Bersara', 'Tamat Pengajian', 'Lain-lain'])],
+                'jenis_permohonan.*' => ['string', Rule::in($withdrawalTypes)],
                 'lain_lain_sebab' => ['nullable', 'string', 'max:500'],
                 'salinan_ic' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
                 'surat_sokongan' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
-                'saham_dipohon' => ['nullable', 'numeric', 'min:0'],
-                'jumlah_dipohon' => ['required', 'numeric', 'min:0'],
                 'tarikh_pengakuan' => ['required', 'date'],
                 'akuan_pengeluaran' => ['accepted'],
-                'kaedah_terima_bayaran' => ['required', 'string', Rule::in(['Bayaran Atas Talian'])],
+                'kaedah_terima_bayaran' => ['required', 'string', Rule::in(['Bayaran Atas Talian', 'Tunai'])],
                 'nama_bank' => ['nullable', 'string', 'max:100'],
                 'no_akaun_bank' => ['nullable', 'string', 'max:100'],
             ],
@@ -229,15 +241,21 @@ class PermohonanController extends Controller
                     ->withInput();
             }
 
-            $shareRecord = $authRole === 'staff' ? $user->sahamStaff : $user->saham;
-            $availableShare = (float) ($shareRecord->syer ?? 0) + (float) ($shareRecord->tambahan_saham ?? 0);
+        }
 
-            if ((float) ($validated['saham_dipohon'] ?? 0) > $availableShare) {
-                return back()
-                    ->withErrors(['saham_dipohon' => 'Amaun pengeluaran saham tidak boleh melebihi baki semasa RM '.number_format($availableShare, 2).'.'])
-                    ->withInput();
-            }
+        $profileUpdates = [];
 
+        if (blank($user->email) && filled($validated['email'] ?? null)) {
+            $profileUpdates['email'] = $validated['email'];
+        }
+
+        if (blank($user->no_tel) && filled($validated['no_tel'] ?? null)) {
+            $profileUpdates['no_tel'] = $validated['no_tel'];
+        }
+
+        if ($profileUpdates !== []) {
+            $user->update($profileUpdates);
+            $user->refresh();
         }
 
         $application = Permohonan::query()->create([
@@ -317,6 +335,11 @@ class PermohonanController extends Controller
         $selectedJenis = $request->string('jenis')->toString();
         $selectedStatus = $request->string('status')->toString();
         $selectedAudience = $request->string('pemohon')->toString();
+        $selectedAudience = in_array($selectedAudience, ['pelajar', 'staff'], true) ? $selectedAudience : 'pelajar';
+
+        if ($selectedAudience === 'staff') {
+            $this->backfillApprovedStaffMemberNumbers();
+        }
 
         $applications = Permohonan::query()
             ->with('ahli')
@@ -336,7 +359,7 @@ class PermohonanController extends Controller
             'applications' => $applications,
             'selectedJenis' => $selectedJenis,
             'selectedStatus' => $selectedStatus,
-            'selectedAudience' => in_array($selectedAudience, ['pelajar', 'staff'], true) ? $selectedAudience : 'pelajar',
+            'selectedAudience' => $selectedAudience,
             'statuses' => ['baru', 'dalam_semakan', 'diluluskan', 'ditolak'],
         ]);
     }
@@ -387,13 +410,32 @@ class PermohonanController extends Controller
 
                 if ($this->isStaffApplication($permohonan)) {
                     $staff = $this->resolveStaffFromApplication($permohonan);
-                    $share = SahamStaff::query()->firstOrNew(['id_pekerja' => $staff->id_pekerja]);
-                    $share->syer = max((float) ($share->syer ?? 0), (float) ($data['modal_saham'] ?? 0));
-                    $share->tambahan_saham = (float) ($share->tambahan_saham ?? 0);
-                    $share->tarikh_kemaskini = $decisionDate;
-                    $share->save();
 
-                    $this->recordShareTransaction('staff', $staff->id_pekerja, 'OPENING_BALANCE', 'CREDIT', (float) $share->syer, (float) $share->syer + (float) $share->tambahan_saham, $permohonan, 'admin', $adminId, 'Saham permulaan selepas permohonan anggota staff diluluskan.');
+                    if ($staff->isEligibleForShares()) {
+                        $memberNumber = $this->staffMemberNumber($staff) ?? ($data['no_anggota'] ?? null);
+
+                        if (! $memberNumber || $this->memberNumberValue($memberNumber) < 1001) {
+                            $memberNumber = $this->nextStaffMemberNumber();
+                        }
+
+                        if (Schema::hasColumn('pekerja', 'no_anggota') && ! $this->staffMemberNumber($staff)) {
+                            $staff->update(['no_anggota' => $memberNumber]);
+                        }
+
+                        $data['no_anggota'] = $memberNumber;
+                        $permohonan->update(['data_permohonan' => $data]);
+
+                        $share = SahamStaff::query()->firstOrNew(['id_pekerja' => $staff->id_pekerja]);
+                        if ($this->staffShareHasFeeColumn()) {
+                            $share->yuran = (float) ($data['yuran_anggota'] ?? $share->yuran ?? 0);
+                        }
+                        $share->syer = max((float) ($share->syer ?? 0), (float) ($data['modal_saham'] ?? 0));
+                        $share->tambahan_saham = (float) ($share->tambahan_saham ?? 0);
+                        $share->tarikh_kemaskini = $decisionDate;
+                        $share->save();
+
+                        $this->recordShareTransaction('staff', $staff->id_pekerja, 'OPENING_BALANCE', 'CREDIT', (float) $share->syer, (float) $share->syer + (float) $share->tambahan_saham, $permohonan, 'admin', $adminId, 'Saham permulaan selepas permohonan anggota staff diluluskan.');
+                    }
                 } elseif ($permohonan->ahli) {
                     $memberUpdates = [];
 
@@ -504,6 +546,12 @@ class PermohonanController extends Controller
         }
 
         $application = $permohonan->load(['ahli.saham', 'ahli', 'ahli.saham']);
+
+        if ($this->isStaffApplication($application) && ! $this->resolveStaffFromApplication($application)->isEligibleForShares()) {
+            return redirect()->route('admin.permohonan.show', $permohonan)
+                ->withErrors(['saham' => 'Pekerja koperasi tidak mempunyai rekod saham.']);
+        }
+
         $data = $application->data_permohonan ?? [];
         $currentShare = $this->currentShareAmount($application);
         $additionalShare = (float) ($data['amaun_tambahan'] ?? 0);
@@ -537,9 +585,15 @@ class PermohonanController extends Controller
         }
 
         $application = $permohonan->load(['ahli.saham', 'ahli']);
+
+        if ($this->isStaffApplication($application) && ! $this->resolveStaffFromApplication($application)->isEligibleForShares()) {
+            return redirect()->route('admin.permohonan.show', $permohonan)
+                ->withErrors(['saham' => 'Pekerja koperasi tidak mempunyai rekod saham.']);
+        }
+
         $data = $application->data_permohonan ?? [];
         $currentShare = $this->currentShareAmount($application);
-        $requestedShare = (float) ($data['saham_dipohon'] ?? 0);
+        $requestedShare = $currentShare;
         $types = collect($data['jenis_permohonan'] ?? []);
         $inactiveTypes = ['Berhenti / Berpindah / Bersara', 'Berhenti Keahlian', 'Berpindah', 'Bersara', 'Tamat Pengajian'];
         $defaultStudentStatus = $types->intersect($inactiveTypes)->isNotEmpty()
@@ -646,20 +700,19 @@ class PermohonanController extends Controller
 
         $application = $permohonan->load(['ahli.saham', 'ahli']);
         $validated = $request->validate([
-            'status_pelajar' => ['required', Rule::in(['aktif', 'pindah_berhenti'])],
             'catatan_admin' => ['nullable', 'string', 'max:1000'],
             'confirm_withdrawal_process' => ['accepted'],
         ], [
             'confirm_withdrawal_process.accepted' => 'Sila tekan Proses Pengeluaran dahulu sebelum simpan.',
         ]);
 
-        $shareAmount = (float) ($application->data_permohonan['saham_dipohon'] ?? 0);
         $share = $this->isStaffApplication($application)
             ? $this->resolveStaffShare($application)
             : Saham::query()->firstOrNew(['id_ahli' => $application->id_ahli]);
         $currentBaseShare = (float) ($share->syer ?? 0);
         $currentAdditionalShare = (float) ($share->tambahan_saham ?? 0);
         $currentShare = $currentBaseShare + $currentAdditionalShare;
+        $shareAmount = $currentShare;
 
         if ($shareAmount > $currentShare) {
             return back()->withErrors(['saham_dipohon' => 'Amaun saham dipohon melebihi baki saham semasa.'])->withInput();
@@ -672,20 +725,22 @@ class PermohonanController extends Controller
             $remainingDeduction = $shareAmount - $deductedFromAdditional;
             $share->tambahan_saham = $currentAdditionalShare - $deductedFromAdditional;
             $share->syer = $currentBaseShare - $remainingDeduction;
-            $share->yuran = (float) ($share->yuran ?? 10);
+            if (! $this->isStaffApplication($application) || $this->staffShareHasFeeColumn()) {
+                $share->yuran = (float) ($share->yuran ?? 10);
+            }
             $share->tarikh_kemaskini = now()->toDateString();
             $share->save();
 
             if ($this->isStaffApplication($application)) {
                 $staff = $this->resolveStaffFromApplication($application);
                 $staff->update([
-                    'status_aktif' => $validated['status_pelajar'] === 'aktif',
+                    'status_aktif' => false,
                 ]);
                 $memberType = 'staff';
                 $memberId = $staff->id_pekerja;
             } elseif ($application->ahli) {
                 $application->ahli->update([
-                    'status_aktif' => $validated['status_pelajar'] === 'aktif',
+                    'status_aktif' => false,
                 ]);
                 $memberType = 'student';
                 $memberId = $application->id_ahli;
@@ -751,13 +806,13 @@ class PermohonanController extends Controller
                 'description' => 'Mohon penambahan saham koperasi beserta maklumat bayaran.',
             ],
             'berhenti' => [
-                'label' => 'Permohonan Pengeluaran Saham / Berhenti',
-                'description' => 'Pengeluaran saham, berhenti, berpindah, bersara atau tamat pengajian.',
+                'label' => 'Permohonan Berhenti / Pindah / Bersara',
+                'description' => 'Berhenti keahlian, berpindah, bersara atau tamat pengajian dengan pengeluaran penuh baki saham.',
             ],
         ];
 
-        if ($role === 'staff' && $staffType !== 'lecturer_member') {
-            unset($types['anggota']);
+        if ($role === 'staff' && ! in_array($staffType, Pekerja::SHAREHOLDER_STAFF_TYPES, true)) {
+            return [];
         }
 
         return $types;
@@ -787,9 +842,14 @@ class PermohonanController extends Controller
                 'taraf_perkahwinan' => $validated['taraf_perkahwinan'],
                 'alamat' => $validated['alamat'],
                 'no_tel_rumah' => $validated['no_tel_rumah'] ?? null,
-                'program_pengajian' => $validated['program_pengajian'],
-                'kelas' => $validated['kelas'],
-                'semester' => $user->semester,
+                ...($authRole === 'ahli' ? [
+                    'program_pengajian' => $validated['program_pengajian'],
+                    'kelas' => $validated['kelas'],
+                    'semester' => $user->semester,
+                ] : [
+                    'jawatan' => $user->jawatan,
+                    'tarikh_mula_kerja' => optional($user->tarikh_mula)->toDateString(),
+                ]),
                 'yuran_anggota' => (float) $validated['yuran_anggota'],
                 'modal_saham' => (float) $validated['modal_saham'],
                 'dokumen_sokongan' => $validated['dokumen_sokongan'] ?? [],
@@ -818,7 +878,7 @@ class PermohonanController extends Controller
             ],
             'saham' => [
                 ...$baseData,
-                'no_anggota' => $authRole === 'ahli' ? $user->no_anggota : $user->no_pekerja,
+                'no_anggota' => $authRole === 'ahli' ? $user->no_anggota : $this->staffMemberNumber($user),
                 'no_pendaftaran' => $validated['no_pendaftaran'] ?? ($authRole === 'ahli' ? $user->no_matrik : $user->no_pekerja),
                 'no_kp' => $validated['no_kp'],
                 'amaun_tambahan' => (float) $validated['amaun_tambahan'],
@@ -831,13 +891,17 @@ class PermohonanController extends Controller
             ],
             'berhenti' => [
                 ...$baseData,
-                'no_anggota' => $validated['no_anggota'] ?? ($authRole === 'ahli' ? $user->no_anggota : $user->no_pekerja),
+                'no_anggota' => $validated['no_anggota'] ?? ($authRole === 'ahli' ? $user->no_anggota : $this->staffMemberNumber($user)),
                 'no_kp' => $validated['no_kp'],
                 'jenis_permohonan' => $validated['jenis_permohonan'],
                 'lain_lain_sebab' => $validated['lain_lain_sebab'] ?? null,
                 'dokumen_sokongan' => $validated['dokumen_sokongan'] ?? [],
-                'saham_dipohon' => isset($validated['saham_dipohon']) ? (float) $validated['saham_dipohon'] : null,
-                'jumlah_dipohon' => (float) $validated['jumlah_dipohon'],
+                'saham_dipohon' => (float) ($authRole === 'ahli'
+                    ? (($user->saham->syer ?? 0) + ($user->saham->tambahan_saham ?? 0))
+                    : (($user->sahamStaff->syer ?? 0) + ($user->sahamStaff->tambahan_saham ?? 0))),
+                'jumlah_dipohon' => (float) ($authRole === 'ahli'
+                    ? (($user->saham->syer ?? 0) + ($user->saham->tambahan_saham ?? 0))
+                    : (($user->sahamStaff->syer ?? 0) + ($user->sahamStaff->tambahan_saham ?? 0))),
                 'tarikh_pengakuan' => $validated['tarikh_pengakuan'],
                 'akuan_pengeluaran' => true,
                 'kaedah_terima_bayaran' => $validated['kaedah_terima_bayaran'],
@@ -857,10 +921,31 @@ class PermohonanController extends Controller
 
     private function nextMemberNumber(): string
     {
-        $highestNumber = Ahli::query()
+        $memberNumbers = Ahli::query()
             ->whereNotNull('no_anggota')
             ->lockForUpdate()
-            ->pluck('no_anggota')
+            ->pluck('no_anggota');
+
+        if (Schema::hasColumn('pekerja', 'no_anggota')) {
+            $memberNumbers = $memberNumbers->merge(
+                Pekerja::query()
+                    ->whereNotNull('no_anggota')
+                    ->lockForUpdate()
+                    ->pluck('no_anggota')
+            );
+        }
+
+        $memberNumbers = $memberNumbers->merge(
+            Permohonan::query()
+                ->where('jenis', 'anggota')
+                ->where('status', 'diluluskan')
+                ->where('data_permohonan->pemohon_role', 'staff')
+                ->get()
+                ->pluck('data_permohonan.no_anggota')
+                ->filter()
+        );
+
+        $highestNumber = $memberNumbers
             ->map(function (string $number): int {
                 return preg_match('/^PBT(\\d+)$/i', trim($number), $matches)
                     ? (int) $matches[1]
@@ -869,6 +954,44 @@ class PermohonanController extends Controller
             ->max() ?? 0;
 
         return 'PBT'.max(123, $highestNumber + 1);
+    }
+
+    private function nextStaffMemberNumber(): string
+    {
+        $memberNumbers = collect();
+
+        if (Schema::hasColumn('pekerja', 'no_anggota')) {
+            $memberNumbers = $memberNumbers->merge(
+                Pekerja::query()
+                    ->whereNotNull('no_anggota')
+                    ->lockForUpdate()
+                    ->pluck('no_anggota')
+            );
+        }
+
+        $memberNumbers = $memberNumbers->merge(
+            Permohonan::query()
+                ->where('jenis', 'anggota')
+                ->where('status', 'diluluskan')
+                ->where('data_permohonan->pemohon_role', 'staff')
+                ->get()
+                ->pluck('data_permohonan.no_anggota')
+                ->filter()
+        );
+
+        $highestNumber = $memberNumbers
+            ->map(fn (string $number): int => $this->memberNumberValue($number))
+            ->filter(fn (int $number): bool => $number >= 1001)
+            ->max() ?? 1000;
+
+        return 'PBT'.($highestNumber + 1);
+    }
+
+    private function memberNumberValue(?string $number): int
+    {
+        return preg_match('/^PBT(\d+)$/i', trim((string) $number), $matches)
+            ? (int) $matches[1]
+            : 0;
     }
 
     /** @return array{dashboard:string,permohonan_index:string,permohonan_store:string,profile:string} */
@@ -886,6 +1009,59 @@ class PermohonanController extends Controller
             'permohonan_store' => $prefix.'.permohonan.store',
             'profile' => $prefix.'.profile',
         ];
+    }
+
+    private function staffMemberNumber(Pekerja $staff): ?string
+    {
+        if (Schema::hasColumn('pekerja', 'no_anggota') && filled($staff->no_anggota)) {
+            return $staff->no_anggota;
+        }
+
+        $approvedApplication = Permohonan::query()
+            ->where('jenis', 'anggota')
+            ->where('status', 'diluluskan')
+            ->where('data_permohonan->pemohon_role', 'staff')
+            ->where('no_matrik', $staff->no_pekerja)
+            ->latest('tarikh_keputusan')
+            ->latest('id_permohonan')
+            ->first();
+
+        return $approvedApplication->data_permohonan['no_anggota'] ?? null;
+    }
+
+    private function staffShareHasFeeColumn(): bool
+    {
+        return Schema::hasColumn('saham_staff', 'yuran');
+    }
+
+    private function backfillApprovedStaffMemberNumbers(): void
+    {
+        DB::transaction(function (): void {
+            Permohonan::query()
+                ->where('jenis', 'anggota')
+                ->where('status', 'diluluskan')
+                ->where('data_permohonan->pemohon_role', 'staff')
+                ->get()
+                ->each(function (Permohonan $application): void {
+                    $data = $application->data_permohonan ?? [];
+
+                    $staff = $this->resolveStaffFromApplication($application);
+                    $memberNumber = $this->staffMemberNumber($staff) ?? ($data['no_anggota'] ?? null);
+
+                    if ($memberNumber && $this->memberNumberValue($memberNumber) >= 1001) {
+                        return;
+                    }
+
+                    $memberNumber = $this->nextStaffMemberNumber();
+
+                    if (Schema::hasColumn('pekerja', 'no_anggota')) {
+                        $staff->update(['no_anggota' => $memberNumber]);
+                    }
+
+                    $data['no_anggota'] = $memberNumber;
+                    $application->update(['data_permohonan' => $data]);
+                });
+        });
     }
 
     /** @return array<int, array{label:string,hint:string,category:string,purpose:string}> */
@@ -928,7 +1104,6 @@ class PermohonanController extends Controller
     private function withdrawalPurpose(array $selectedTypes): string
     {
         $labels = array_values(array_intersect([
-            'Pengeluaran Saham',
             'Berhenti Keahlian',
             'Berpindah',
             'Bersara',
@@ -936,7 +1111,7 @@ class PermohonanController extends Controller
         ], $selectedTypes));
 
         return $labels === []
-            ? 'Permohonan Pengeluaran Saham / Berhenti'
+            ? 'Permohonan Berhenti / Pindah / Bersara'
             : 'Permohonan '.implode(' / ', $labels);
     }
 
@@ -1004,6 +1179,12 @@ class PermohonanController extends Controller
     private function currentShareAmount(Permohonan $permohonan): float
     {
         if ($this->isStaffApplication($permohonan)) {
+            $staff = $this->resolveStaffFromApplication($permohonan);
+
+            if (! $staff->isEligibleForShares()) {
+                return 0.0;
+            }
+
             $share = $this->resolveStaffShare($permohonan);
 
             return (float) ($share->syer ?? 0) + (float) ($share->tambahan_saham ?? 0);
@@ -1109,7 +1290,7 @@ class PermohonanController extends Controller
     {
         $classes = [];
 
-        foreach (range(1, 5) as $semester) {
+        foreach (range(1, 6) as $semester) {
             $classes[] = 'DIT'.$semester.'A';
             $classes[] = 'DIT'.$semester.'B';
             $classes[] = 'DDC'.$semester.'A';

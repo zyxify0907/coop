@@ -7,7 +7,7 @@
 @php
     $isStaffAudience = $selectedAudience === 'staff';
     $pageHeading = $isStaffAudience ? 'Senarai Permohonan Staff' : 'Senarai Permohonan Pelajar';
-    $identityHeading = $isStaffAudience ? 'NO PEKERJA' : 'NO MATRIK';
+    $identityHeading = $isStaffAudience ? 'NO ANGGOTA' : 'NO MATRIK';
 @endphp
 
 @section('content')
@@ -90,6 +90,7 @@
                 $amountFields = ['amaun_tambahan', 'amaun_dipohon', 'syer_semasa', 'yuran_anggota', 'modal_saham', 'saham_dipohon', 'jumlah_dipohon'];
                 $initials = collect(explode(' ', $application->nama_pemohon))->filter()->take(2)->map(fn ($part) => strtoupper(substr($part, 0, 1)))->implode('') ?: 'ST';
                 $noKp = $data['no_kad_pengenalan'] ?? $data['no_kp'] ?? $application->ahli?->nric ?? '-';
+                $identityValue = $isStaffAudience ? ($data['no_anggota'] ?? 'Belum dijana') : ($application->no_matrik ?: '-');
             @endphp
 
             <div class="request-item">
@@ -103,7 +104,7 @@
                     </div>
 
                     <div>
-                        <span class="soft-code">{{ $application->no_matrik ?: '-' }}</span>
+                        <span class="soft-code">{{ $identityValue }}</span>
                     </div>
 
                     <div>

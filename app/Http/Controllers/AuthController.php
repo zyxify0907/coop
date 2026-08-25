@@ -368,8 +368,12 @@ class AuthController extends Controller
     private function adminStats(): array
     {
         $studentShares = (float) DB::table('saham')->selectRaw('COALESCE(SUM(syer + tambahan_saham), 0) as total')->value('total');
-        $staffShares = Schema::hasTable('saham_staff')
-            ? (float) DB::table('saham_staff')->selectRaw('COALESCE(SUM(syer + tambahan_saham), 0) as total')->value('total')
+        $staffShares = Schema::hasTable('saham_staff') && Schema::hasTable('pekerja')
+            ? (float) DB::table('saham_staff')
+                ->join('pekerja', 'saham_staff.id_pekerja', '=', 'pekerja.id_pekerja')
+                ->whereIn('pekerja.staff_type', Pekerja::SHAREHOLDER_STAFF_TYPES)
+                ->selectRaw('COALESCE(SUM(saham_staff.syer + saham_staff.tambahan_saham), 0) as total')
+                ->value('total')
             : 0.0;
         $staffQuery = Pekerja::query();
         $statusCounts = Permohonan::query()

@@ -3,12 +3,17 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['no_pekerja', 'nama', 'nric', 'password_hash', 'jawatan', 'staff_type', 'no_tel', 'email', 'kadar_elaun', 'tarikh_mula', 'status_aktif'])]
+#[Fillable(['no_anggota', 'no_pekerja', 'nama', 'nric', 'password_hash', 'jawatan', 'staff_type', 'no_tel', 'email', 'kadar_elaun', 'tarikh_mula', 'status_aktif'])]
 class Pekerja extends Model
 {
+    public const SHAREHOLDER_STAFF_TYPES = ['lecturer_member', 'clothing_staff'];
+
+    public const COOP_WORKER_STAFF_TYPE = 'coop_staff';
+
     protected $table = 'pekerja';
 
     protected $primaryKey = 'id_pekerja';
@@ -20,10 +25,25 @@ class Pekerja extends Model
         return $this->hasOne(SahamStaff::class, 'id_pekerja', 'id_pekerja');
     }
 
+    public function scopeEligibleForShares(Builder $query): Builder
+    {
+        return $query->whereIn('staff_type', self::SHAREHOLDER_STAFF_TYPES);
+    }
+
+    public function scopeCoopWorkers(Builder $query): Builder
+    {
+        return $query->where('staff_type', self::COOP_WORKER_STAFF_TYPE);
+    }
+
+    public function isEligibleForShares(): bool
+    {
+        return in_array($this->staff_type, self::SHAREHOLDER_STAFF_TYPES, true);
+    }
+
     public function getStaffTypeLabelAttribute(): string
     {
         return match ($this->staff_type) {
-            'lecturer_member' => 'Pensyarah / Staf Akademik (Anggota)',
+            'lecturer_member' => 'Pensyarah / Staf Akademik',
             'clothing_staff' => 'Staff Pengurusan Baju',
             default => 'Pekerja Koperasi',
         };

@@ -9,8 +9,9 @@
     $backRoute = $isStudent ? route('admin.users.students') : route('admin.users.staff');
     $storeRoute = $isStudent ? route('admin.users.students.store') : route('admin.users.staff.store');
     $programOptions = ['JTMK', 'JRKV'];
-    $semesterOptions = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5'];
-    $classOptionsBySemester = collect(range(1, 5))->mapWithKeys(fn ($semester) => [
+    $semesterOptions = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6'];
+    $selectedStaffType = old('staff_type', request('staff_type'));
+    $classOptionsBySemester = collect(range(1, 6))->mapWithKeys(fn ($semester) => [
         'Sem '.$semester => ['DIT'.$semester.'A', 'DIT'.$semester.'B', 'DDC'.$semester.'A', 'DBF'.$semester.'A'],
     ])->all();
 @endphp
@@ -111,9 +112,9 @@
                         <label for="staff_type">Jenis Staff</label>
                         <select id="staff_type" name="staff_type" required>
                             <option value="">Pilih jenis staff</option>
-                            <option value="lecturer_member" @selected(old('staff_type') === 'lecturer_member')>Pensyarah / Staf Akademik (Anggota)</option>
-                            <option value="coop_staff" @selected(old('staff_type') === 'coop_staff')>Pekerja Koperasi</option>
-                            <option value="clothing_staff" @selected(old('staff_type') === 'clothing_staff')>Staff Pengurusan Baju</option>
+                            <option value="lecturer_member" @selected($selectedStaffType === 'lecturer_member')>Pensyarah / Staf Akademik</option>
+                            <option value="coop_staff" @selected($selectedStaffType === 'coop_staff')>Pekerja Koperasi</option>
+                            <option value="clothing_staff" @selected($selectedStaffType === 'clothing_staff')>Staff Pengurusan Baju</option>
                         </select>
                     </div>
                 @endif
@@ -272,7 +273,7 @@
                 }
 
                 const academicFromClass = (className) => {
-                    const match = String(className || '').match(/^(DIT|DDC|DBF)([1-5])[A-Z]$/);
+                    const match = String(className || '').match(/^(DIT|DDC|DBF)([1-6])[A-Z]$/);
 
                     if (!match) {
                         return null;

@@ -1,17 +1,22 @@
 @extends('layouts.app')
 
-@section('title', 'Manage Staff')
-@section('page-title', 'Manage Staff')
-@section('page-subtitle', 'Kemaskini maklumat staff yang sedia ada dalam sistem.')
+@section('title', $heroTitle ?? 'Manage Staff')
+@section('page-title', $heroTitle ?? 'Manage Staff')
+@section('page-subtitle', $heroSubtitle ?? 'Kemaskini maklumat staff yang sedia ada dalam sistem.')
+
+@php
+    $showWorkerFields = $showWorkerFields ?? false;
+    $emptyColspan = $showWorkerFields ? 10 : 7;
+@endphp
 
 @section('content')
     <section class="staff-page-hero">
         <div>
-            <h1>Manage <span class="brand-red">Staff</span></h1>
-            <p>Kemaskini maklumat staff yang sedia ada dalam sistem.</p>
+            <h1>{{ $heroTitle ?? 'Manage Staff' }}</h1>
+            <p>{{ $heroSubtitle ?? 'Kemaskini maklumat staff yang sedia ada dalam sistem.' }}</p>
         </div>
         <div class="staff-page-hero__meta">
-            <span>{{ $staff->count() }} rekod</span>
+            <span>Total {{ $staff->total() }} {{ $showWorkerFields ? 'pekerja' : 'staff' }}</span>
         </div>
     </section>
 
@@ -29,35 +34,63 @@
         </div>
     @endif
 
+    @if (! $showWorkerFields && ! empty($importRoute))
+        <section class="panel staff-import-panel">
+            <div class="staff-import-copy">
+                <span class="staff-import-kicker">IMPORT EXCEL</span>
+                <h2>Muat Naik Senarai Staff</h2>
+                <p>Kolum diperlukan: Nama dan No KP sahaja. No Pekerja dijana automatik jika tiada dalam fail.</p>
+            </div>
+            <form class="staff-import-form" method="POST" action="{{ $importRoute }}" enctype="multipart/form-data">
+                @csrf
+                <label class="staff-import-file" for="staffImportFile">
+                    <input id="staffImportFile" name="file" type="file" accept=".csv,.txt,.xlsx" required>
+                    <span class="staff-import-file__icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                    </span>
+                    <span>
+                        <strong>Pilih fail Excel</strong>
+                        <small>CSV atau XLSX, maksimum 10MB</small>
+                    </span>
+                </label>
+                <button class="staff-import-button" type="submit">Upload Excel</button>
+            </form>
+        </section>
+    @endif
+
     <section class="panel staff-list-panel">
         <div class="staff-list-head">
             <div>
-                <h2>Senarai <span class="brand-red">Staff</span></h2>
-                <p>Paparan lengkap mengikut maklumat yang tersedia dalam jadual staff.</p>
+                <h2>{{ $listTitle ?? 'Senarai Staff' }}</h2>
+                <p>{{ $listSubtitle ?? 'Paparan lengkap mengikut maklumat yang tersedia dalam jadual staff.' }}</p>
             </div>
             <div class="staff-list-actions">
-                <span class="record-badge">{{ $staff->count() }} rekod</span>
-                <a href="{{ route('admin.users.create', ['type' => 'staff']) }}" class="add-staff-button">
+                <span class="record-badge">Total {{ $staff->total() }} {{ $showWorkerFields ? 'pekerja' : 'staff' }}</span>
+                <a href="{{ $addButtonRoute ?? route('admin.users.create', ['type' => 'staff']) }}" class="add-staff-button">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    Tambah Staff
+                    {{ $addButtonLabel ?? 'Tambah Staff' }}
                 </a>
             </div>
         </div>
 
-        <form class="staff-search-bar" method="GET" action="{{ route('admin.users.staff') }}">
+        <form class="staff-search-bar" method="GET" action="{{ $listRoute ?? route('admin.users.staff') }}">
             <div class="staff-search-field">
-                <label for="search">Cari Staff</label>
+                <label for="search">{{ $searchLabel ?? 'Cari Staff' }}</label>
                 <input
                     id="search"
                     name="search"
                     type="search"
                     value="{{ $search ?? request('search') }}"
-                    placeholder="Nama, no pekerja, No. KP atau jenis staff">
+                    placeholder="{{ $searchPlaceholder ?? 'Nama, no pekerja, No. KP atau jenis staff' }}">
             </div>
             <div class="staff-search-actions">
                 <button class="staff-search-button" type="submit">Cari</button>
                 @if (($search ?? request('search')))
-                    <a class="staff-reset-button" href="{{ route('admin.users.staff') }}">Reset</a>
+                    <a class="staff-reset-button" href="{{ $listRoute ?? route('admin.users.staff') }}">Reset</a>
                 @endif
             </div>
         </form>
@@ -67,14 +100,18 @@
                 <thead>
                     <tr>
                         <th>Nama</th>
-                        <th>No Pekerja</th>
+                        @if ($showWorkerFields)
+                            <th>No Pekerja</th>
+                        @endif
                         <th>No. KP</th>
                         <th>Jenis Staff</th>
-                        <th>No Telefon</th>
                         <th>Email</th>
+                        <th>No Telefon</th>
                         <th>Tarikh Mula</th>
-                        <th>Elaun</th>
-                        <th>Status</th>
+                        @if ($showWorkerFields)
+                            <th>Elaun</th>
+                            <th>Status</th>
+                        @endif
                         <th class="actions-col">Tindakan</th>
                     </tr>
                 </thead>
@@ -92,18 +129,22 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="no-pekerja-cell"><code class="badge-code">{{ $member->no_pekerja }}</code></td>
+                            @if ($showWorkerFields)
+                                <td class="no-pekerja-cell"><code class="badge-code">{{ $member->no_pekerja }}</code></td>
+                            @endif
                             <td><span class="mono">{{ $member->nric ?? '-' }}</span></td>
                             <td>{{ $member->staff_type_label }}</td>
-                            <td>{{ $member->no_tel ?? '-' }}</td>
                             <td>{{ $member->email ?? '-' }}</td>
+                            <td>{{ $member->no_tel ?? '-' }}</td>
                             <td>{{ optional($member->tarikh_mula)->format('d/m/Y') ?? '-' }}</td>
-                            <td>RM {{ number_format((float) $member->kadar_elaun, 2) }}</td>
-                            <td>
-                                <span class="status-badge {{ $member->status_aktif ? 'is-active' : 'is-inactive' }}">
-                                    {{ $member->status_aktif ? 'Aktif' : 'Tidak Aktif' }}
-                                </span>
-                            </td>
+                            @if ($showWorkerFields)
+                                <td>RM {{ number_format((float) $member->kadar_elaun, 2) }}</td>
+                                <td>
+                                    <span class="status-badge {{ $member->status_aktif ? 'is-active' : 'is-inactive' }}">
+                                        {{ $member->status_aktif ? 'Aktif' : 'Tidak Aktif' }}
+                                    </span>
+                                </td>
+                            @endif
                             <td>
                                 <div class="action-buttons">
                                     <a class="edit-button" href="{{ route('admin.users.edit', ['type' => 'staff', 'id' => $member->id_pekerja]) }}">Edit</a>
@@ -117,10 +158,10 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10">
+                            <td colspan="{{ $emptyColspan }}">
                                 <div class="empty-state">
-                                    <strong>Tiada rekod staff.</strong>
-                                    <span>Klik Tambah Staff untuk daftar rekod baru.</span>
+                                    <strong>{{ $emptyTitle ?? 'Tiada rekod staff.' }}</strong>
+                                    <span>{{ $emptySubtitle ?? 'Klik Tambah Staff untuk daftar rekod baru.' }}</span>
                                 </div>
                             </td>
                         </tr>
@@ -175,7 +216,21 @@
         font-size:13px;
         font-weight:900;
     }
-    .staff-alert{display:flex;align-items:center;gap:12px;padding:14px 20px;border-radius:14px;margin-bottom:20px;border:1px solid transparent;font-weight:800}
+    .staff-alert{
+        position:fixed;
+        top:20px;
+        right:20px;
+        z-index:1000;
+        display:flex;
+        max-width:min(420px, calc(100vw - 32px));
+        align-items:center;
+        gap:12px;
+        padding:14px 20px;
+        border-radius:14px;
+        border:1px solid transparent;
+        font-weight:800;
+        box-shadow:0 18px 38px rgba(15,23,42,.16);
+    }
     .staff-alert.success{background:var(--success-soft);border-color:#bbf7d0;color:var(--success)}
     .staff-alert.danger{background:var(--danger-soft);border-color:var(--danger-soft);color:var(--danger)}
     .alert-close{margin-left:auto;border:0;background:none;font-size:22px;cursor:pointer;color:inherit}
@@ -248,6 +303,99 @@
         box-shadow:0 10px 22px rgba(30,64,175,.16);
     }
     .add-staff-button:hover{background:var(--secondary-hover);color:#fff;box-shadow:0 12px 26px rgba(30,64,175,.22)}
+    .staff-import-panel{
+        display:grid;
+        grid-template-columns:minmax(0,1fr) auto;
+        gap:18px;
+        align-items:center;
+        margin-bottom:24px;
+        padding:24px 28px;
+        border:1px solid var(--line);
+        border-radius:22px!important;
+        background:#fff;
+        box-shadow:0 14px 34px rgba(15,23,42,.055)!important;
+    }
+    .staff-import-copy{
+        display:grid;
+        gap:6px;
+    }
+    .staff-import-kicker{
+        color:var(--secondary);
+        font-size:12px;
+        font-weight:900;
+        letter-spacing:.04em;
+    }
+    .staff-import-copy h2{
+        margin:0;
+        color:var(--text);
+        font-size:22px;
+        font-weight:900;
+    }
+    .staff-import-copy p{
+        margin:0;
+        color:var(--muted-2);
+        font-weight:800;
+    }
+    .staff-import-form{
+        display:flex;
+        align-items:center;
+        gap:12px;
+        flex-wrap:wrap;
+        justify-content:flex-end;
+    }
+    .staff-import-file{
+        display:flex;
+        align-items:center;
+        gap:12px;
+        min-height:56px;
+        padding:10px 14px;
+        border:1px dashed var(--line-strong);
+        border-radius:14px;
+        background:var(--surface-soft);
+        cursor:pointer;
+    }
+    .staff-import-file input{
+        position:absolute;
+        width:1px;
+        height:1px;
+        overflow:hidden;
+        clip:rect(0,0,0,0);
+    }
+    .staff-import-file__icon{
+        display:grid;
+        width:36px;
+        height:36px;
+        place-items:center;
+        border-radius:10px;
+        background:var(--secondary-soft);
+        color:var(--secondary);
+    }
+    .staff-import-file strong,
+    .staff-import-file small{
+        display:block;
+    }
+    .staff-import-file strong{
+        color:var(--text);
+        font-size:13px;
+        font-weight:900;
+    }
+    .staff-import-file small{
+        margin-top:2px;
+        color:var(--muted-2);
+        font-size:12px;
+        font-weight:700;
+    }
+    .staff-import-button{
+        min-height:46px;
+        border:1px solid var(--secondary);
+        border-radius:12px;
+        background:var(--secondary);
+        color:#fff;
+        padding:0 18px;
+        font-weight:900;
+        cursor:pointer;
+        box-shadow:0 10px 22px rgba(30,64,175,.16);
+    }
     .staff-search-bar{
         display:flex;
         align-items:end;
@@ -323,7 +471,7 @@
         color:var(--text);
     }
     .table-responsive{overflow-x:auto;padding:0}
-    .staff-table{width:100%;border-collapse:separate;border-spacing:0;min-width:1080px}
+    .staff-table{width:100%;border-collapse:separate;border-spacing:0;min-width:{{ $showWorkerFields ? '1120px' : '860px' }}}
     .staff-table th{
         padding:14px 16px;
         text-align:left;
@@ -391,6 +539,10 @@
     @media (max-width:640px){
         .staff-page-hero{align-items:flex-start;flex-direction:column;padding:24px}
         .staff-page-hero h1{font-size:30px}
+        .staff-alert{top:12px;right:12px;left:12px;max-width:none}
+        .staff-import-panel{grid-template-columns:1fr;padding:22px}
+        .staff-import-form{justify-content:flex-start}
+        .staff-import-file,.staff-import-button{width:100%}
         .staff-list-head{align-items:flex-start;padding:22px}
         .staff-search-bar{padding:16px 22px}
         .staff-search-field{min-width:100%}
@@ -398,4 +550,20 @@
         .table-responsive{overflow-x:auto}
     }
 </style>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.staff-alert').forEach((alert) => {
+            const closeButton = alert.querySelector('.alert-close');
+            const closeAlert = () => {
+                alert.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateY(-8px)';
+                setTimeout(() => alert.remove(), 260);
+            };
+
+            closeButton?.addEventListener('click', closeAlert);
+            setTimeout(closeAlert, 5000);
+        });
+    });
+</script>
 @endpush

@@ -39,11 +39,13 @@
                 <tr><th>No. KP</th><td>{{ $user->nric ?? '-' }}</td></tr>
                 <tr><th>Email</th><td>{{ $user->email ?? '-' }}</td></tr>
                 <tr><th>No Telefon</th><td>{{ $user->no_tel ?? '-' }}</td></tr>
+                <tr><th>No Anggota</th><td>{{ $user->no_anggota ?? 'Belum dijana' }}</td></tr>
                 <tr><th>No Pekerja</th><td>{{ $user->no_pekerja }}</td></tr>
                 <tr><th>Role</th><td>Staff</td></tr>
                 <tr><th>Jenis Staff</th><td>{{ $staffTypeLabel }}</td></tr>
                 <tr><th>Status Akaun</th><td>{{ $user->status_aktif ? 'Aktif' : 'Tidak Aktif' }}</td></tr>
                 <tr><th>Status Anggota</th><td>{{ $memberStatus }}</td></tr>
+                <tr><th>Yuran Anggota</th><td>RM {{ number_format((float) optional($shareRecord)->yuran, 2) }}</td></tr>
                 <tr><th>Syer Asas</th><td>RM {{ number_format((float) optional($shareRecord)->syer, 2) }}</td></tr>
                 <tr><th>Tambahan Saham</th><td>RM {{ number_format((float) optional($shareRecord)->tambahan_saham, 2) }}</td></tr>
                 <tr><th>Jumlah Saham</th><td>RM {{ number_format($totalShare, 2) }}</td></tr>

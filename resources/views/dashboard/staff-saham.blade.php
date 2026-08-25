@@ -31,13 +31,13 @@
             <div>
                 <span>DASHBOARD SAHAM</span>
                 <h1>Saham Staff</h1>
-                <p>Pantau nombor pekerja, jumlah saham, permohonan saham dan transaksi terkini.</p>
+                <p>Pantau nombor anggota, jumlah saham, permohonan saham dan transaksi terkini.</p>
             </div>
             <a href="{{ route($portalPrefix.'.permohonan.index', ['jenis' => 'saham']) }}">Tambah Saham</a>
         </section>
 
         <section class="module-metrics staff-share-metrics">
-            <div><span>No Pekerja</span><strong>{{ $user->no_pekerja ?? '-' }}</strong><small>{{ $user->staff_type_label }}</small></div>
+            <div><span>No Anggota</span><strong>{{ $user->no_anggota ?? 'Belum dijana' }}</strong><small>{{ $user->staff_type_label }}</small></div>
             <div><span>Yuran Ahli</span><strong>RM {{ number_format($memberFee, 2) }}</strong><small>Yuran menjadi anggota</small></div>
             <div><span>Syer Semasa</span><strong>RM {{ number_format($currentShare, 2) }}</strong><small>Modal saham asas</small></div>
             <div><span>Tambahan Saham</span><strong>RM {{ number_format($additionalShare, 2) }}</strong><small>Jumlah tambahan diluluskan</small></div>

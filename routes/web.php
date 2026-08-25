@@ -91,10 +91,12 @@ Route::prefix('clothing-staff')->middleware('staff.type:strict,clothing_staff')-
 Route::get('/admin/users', [AdminProfileController::class, 'index'])->name('admin.users.index');
 Route::get('/admin/users/students', [AdminProfileController::class, 'students'])->name('admin.users.students');
 Route::get('/admin/users/staff', [AdminProfileController::class, 'staff'])->name('admin.users.staff');
+Route::get('/admin/users/pekerja-koperasi', [AdminProfileController::class, 'coopWorkers'])->name('admin.users.coop-workers');
 Route::get('/admin/users/{type}/create', [AdminProfileController::class, 'create'])->name('admin.users.create');
 Route::post('/admin/users/students', [AdminProfileController::class, 'storeStudent'])->name('admin.users.students.store');
 Route::post('/admin/users/students/import', [AdminProfileController::class, 'importStudents'])->name('admin.users.students.import');
 Route::post('/admin/users/staff', [AdminProfileController::class, 'storeStaff'])->name('admin.users.staff.store');
+Route::post('/admin/users/staff/import', [AdminProfileController::class, 'importStaff'])->name('admin.users.staff.import');
 Route::get('/admin/users/{type}/{id}/edit', [AdminProfileController::class, 'edit'])->name('admin.users.edit');
 Route::put('/admin/users/{type}/{id}', [AdminProfileController::class, 'update'])->name('admin.users.update');
 Route::delete('/admin/users/{type}/{id}', [AdminProfileController::class, 'destroy'])->name('admin.users.destroy');
@@ -102,6 +104,8 @@ Route::delete('/admin/users/{type}/{id}', [AdminProfileController::class, 'destr
 Route::get('/admin/ahli', [AhliController::class, 'index'])->name('admin.ahli.index');
 Route::post('/admin/ahli/import', [AhliController::class, 'import'])->name('admin.ahli.import');
 Route::get('/admin/anggota', [AhliController::class, 'anggotaIndex'])->name('admin.anggota.index');
+Route::get('/admin/anggota-student', [AhliController::class, 'anggotaStudents'])->name('admin.anggota.students');
+Route::get('/admin/anggota-staff', [AhliController::class, 'anggotaStaff'])->name('admin.anggota.staff');
 Route::get('/admin/anggota/{permohonan}', [AhliController::class, 'anggotaShow'])->name('admin.anggota.show');
 
 Route::middleware('staff.type:strict,clothing_staff')->group(function (): void {

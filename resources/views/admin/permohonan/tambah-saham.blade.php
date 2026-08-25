@@ -13,6 +13,7 @@
     $money = fn ($value) => 'RM ' . number_format((float) $value, 2);
     $isStaffRequest = ($data['pemohon_role'] ?? 'ahli') === 'staff';
     $initials = collect(explode(' ', $application->nama_pemohon))->filter()->take(2)->map(fn ($part) => strtoupper(substr($part, 0, 1)))->implode('') ?: 'ST';
+    $displayNumber = $isStaffRequest ? ($data['no_anggota'] ?? 'Belum dijana') : ($application->no_matrik ?? '-');
 @endphp
 
 <div class="share-add-page">
@@ -34,7 +35,7 @@
                 <span class="applicant-avatar">{{ $initials }}</span>
                 <div>
                     <h2>{{ $application->nama_pemohon }}</h2>
-                    <p>{{ $application->no_matrik }} &middot; {{ $application->email ?: 'Email tiada' }} &middot; {{ $application->no_tel ?: 'Telefon tiada' }}</p>
+                    <p>{{ $displayNumber }} &middot; {{ $application->email ?: 'Email tiada' }} &middot; {{ $application->no_tel ?: 'Telefon tiada' }}</p>
                 </div>
             </div>
             <span class="status-pill status-pill--{{ $application->status }}">{{ str_replace('_', ' ', ucfirst($application->status)) }}</span>
@@ -57,7 +58,7 @@
 
         <form method="POST" action="{{ route('admin.permohonan.saham.store', $application) }}" class="share-form">
             @csrf
-            <input type="hidden" name="confirm_share_addition" value="" data-share-add-confirm>
+            <input type="hidden" name="confirm_share_addition" value="1">
             <div class="field field-full">
                 <label for="amaun_tambahan">Amaun Tambahan Saham</label>
                 <input type="hidden" name="amaun_tambahan" value="{{ $additionalShare }}">
@@ -85,8 +86,7 @@
 
             <div class="form-actions">
                 <a class="link-button secondary" href="{{ route('admin.permohonan.show', $application) }}">Batal</a>
-                <button class="button share-pick-button" type="button" data-share-add-choice>Tambah Saham</button>
-                <button class="button save-decision-button" type="submit">Simpan Keputusan</button>
+                <button class="button share-pick-button" type="submit">Diluluskan</button>
             </div>
         </form>
     </section>
@@ -411,34 +411,4 @@
         }
     }
 </style>
-@endpush
-
-@push('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const form = document.querySelector('.share-form');
-
-            if (!form) {
-                return;
-            }
-
-            const confirmInput = form.querySelector('[data-share-add-confirm]');
-            const choiceButton = form.querySelector('[data-share-add-choice]');
-
-            if (choiceButton && confirmInput) {
-                choiceButton.addEventListener('click', () => {
-                    confirmInput.value = '1';
-                    choiceButton.classList.add('is-selected');
-                    choiceButton.setAttribute('aria-pressed', 'true');
-                });
-
-                form.addEventListener('submit', (event) => {
-                    if (confirmInput.value !== '1') {
-                        event.preventDefault();
-                        alert('Sila tekan Tambah Saham dahulu sebelum simpan.');
-                    }
-                });
-            }
-        });
-    </script>
 @endpush

@@ -7,16 +7,17 @@
 @php
     $typeConfig = $types[$activeType];
     $currentData = old();
+    $isStaffApplicant = ($role ?? 'ahli') === 'staff';
     $portalLabel = $portalLabel ?? 'Student Portal';
     $identityLabel = $identityLabel ?? 'No Matrik';
     $identityValue = $identityValue ?? $user->no_matrik;
-    $memberNumber = $user->no_anggota ?? null;
+    $memberNumber = $isStaffApplicant ? ($identityValue !== 'Belum dijana' ? $identityValue : null) : ($user->no_anggota ?? null);
     $programOptions = ['JTMK', 'JRKV'];
-    $kelasOptions = collect(range(1, 5))
+    $kelasOptions = collect(range(1, 6))
         ->flatMap(fn ($semester) => ['DIT'.$semester.'A', 'DIT'.$semester.'B', 'DDC'.$semester.'A', 'DBF'.$semester.'A'])
         ->all();
-    $profileProgramLocked = filled($user->program) && in_array($user->program, $programOptions, true);
-    $profileClassLocked = filled($user->kelas) && in_array($user->kelas, $kelasOptions, true);
+    $profileProgramLocked = ! $isStaffApplicant && filled($user->program) && in_array($user->program, $programOptions, true);
+    $profileClassLocked = ! $isStaffApplicant && filled($user->kelas) && in_array($user->kelas, $kelasOptions, true);
     $currentShare = $currentShare ?? (float) optional($user->saham)->syer;
     $portalRoutes = $portalRoutes ?? [
         'dashboard' => 'auth.dashboard',
@@ -90,10 +91,12 @@
                                 <input type="text" value="{{ $user->nama }}" disabled>
                             </div>
 
-                            <div class="field-block">
-                                <label>{{ $identityLabel }}</label>
-                                <input type="text" value="{{ $identityValue }}" disabled>
-                            </div>
+                            @unless ($isStaffApplicant)
+                                <div class="field-block">
+                                    <label>{{ $identityLabel }}</label>
+                                    <input type="text" value="{{ $identityValue }}" disabled>
+                                </div>
+                            @endunless
 
                             <div class="field-block">
                                 <label>No. KP</label>
@@ -127,7 +130,7 @@
 
                             <div class="field-block">
                                 <label for="pekerjaan_pelajar">Pekerjaan / Pelajar</label>
-                                <input id="pekerjaan_pelajar" name="pekerjaan_pelajar" type="text" value="{{ old('pekerjaan_pelajar', 'Pelajar') }}" required readonly>
+                                <input id="pekerjaan_pelajar" name="pekerjaan_pelajar" type="text" value="{{ old('pekerjaan_pelajar', $isStaffApplicant ? $user->staff_type_label : 'Pelajar') }}" required readonly>
                             </div>
 
                             <div class="field-block">
@@ -155,42 +158,54 @@
                                 <input id="no_tel_rumah" name="no_tel_rumah" type="text" value="{{ old('no_tel_rumah') }}">
                             </div>
 
-                            <div class="field-block">
-                                <label for="program_pengajian">Program Pengajian</label>
-                                @if ($profileProgramLocked)
-                                    <input type="hidden" name="program_pengajian" value="{{ $user->program }}">
-                                    <select id="program_pengajian" disabled>
-                                        <option value="{{ $user->program }}">{{ $user->program }}</option>
-                                    </select>
-                                @else
-                                    <select id="program_pengajian" name="program_pengajian" required>
-                                        @foreach ($programOptions as $programOption)
-                                            <option value="{{ $programOption }}" @selected(old('program_pengajian', $user->program) === $programOption)>{{ $programOption }}</option>
-                                        @endforeach
-                                    </select>
-                                @endif
-                            </div>
+                            @if ($isStaffApplicant)
+                                <div class="field-block">
+                                    <label>Jenis Staff</label>
+                                    <input type="text" value="{{ $user->staff_type_label }}" disabled>
+                                </div>
 
-                            <div class="field-block">
-                                <label>Semester Semasa</label>
-                                <input type="text" value="{{ $user->semester ?? '-' }}" disabled>
-                            </div>
+                                <div class="field-block">
+                                    <label>Tarikh Mula Kerja</label>
+                                    <input type="text" value="{{ optional($user->tarikh_mula)->format('d/m/Y') ?? '-' }}" disabled>
+                                </div>
+                            @else
+                                <div class="field-block">
+                                    <label for="program_pengajian">Program Pengajian</label>
+                                    @if ($profileProgramLocked)
+                                        <input type="hidden" name="program_pengajian" value="{{ $user->program }}">
+                                        <select id="program_pengajian" disabled>
+                                            <option value="{{ $user->program }}">{{ $user->program }}</option>
+                                        </select>
+                                    @else
+                                        <select id="program_pengajian" name="program_pengajian" required>
+                                            @foreach ($programOptions as $programOption)
+                                                <option value="{{ $programOption }}" @selected(old('program_pengajian', $user->program) === $programOption)>{{ $programOption }}</option>
+                                            @endforeach
+                                        </select>
+                                    @endif
+                                </div>
 
-                            <div class="field-block">
-                                <label for="kelas">Kelas</label>
-                                @if ($profileClassLocked)
-                                    <input type="hidden" name="kelas" value="{{ $user->kelas }}">
-                                    <select id="kelas" disabled>
-                                        <option value="{{ $user->kelas }}">{{ $user->kelas }}</option>
-                                    </select>
-                                @else
-                                    <select id="kelas" name="kelas" required>
-                                        @foreach ($kelasOptions as $kelasOption)
-                                            <option value="{{ $kelasOption }}" @selected(old('kelas', $user->kelas ?? 'DIT1A') === $kelasOption)>{{ $kelasOption }}</option>
-                                        @endforeach
-                                    </select>
-                                @endif
-                            </div>
+                                <div class="field-block">
+                                    <label>Semester Semasa</label>
+                                    <input type="text" value="{{ $user->semester ?? '-' }}" disabled>
+                                </div>
+
+                                <div class="field-block">
+                                    <label for="kelas">Kelas</label>
+                                    @if ($profileClassLocked)
+                                        <input type="hidden" name="kelas" value="{{ $user->kelas }}">
+                                        <select id="kelas" disabled>
+                                            <option value="{{ $user->kelas }}">{{ $user->kelas }}</option>
+                                        </select>
+                                    @else
+                                        <select id="kelas" name="kelas" required>
+                                            @foreach ($kelasOptions as $kelasOption)
+                                                <option value="{{ $kelasOption }}" @selected(old('kelas', $user->kelas ?? 'DIT1A') === $kelasOption)>{{ $kelasOption }}</option>
+                                            @endforeach
+                                        </select>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
                     </div>
                 @elseif ($activeType === 'saham')
@@ -208,10 +223,12 @@
                                 <input type="text" value="{{ $user->nama }}" disabled>
                             </div>
 
-                            <div class="field-block">
-                                <label>{{ $identityLabel }}</label>
-                                <input type="text" value="{{ $identityValue }}" disabled>
-                            </div>
+                            @unless ($isStaffApplicant)
+                                <div class="field-block">
+                                    <label>{{ $identityLabel }}</label>
+                                    <input type="text" value="{{ $identityValue }}" disabled>
+                                </div>
+                            @endunless
 
                             <div class="field-block">
                                 <label>No Anggota</label>
@@ -249,10 +266,12 @@
                                 <input type="text" value="{{ $user->nama }}" disabled>
                             </div>
 
-                            <div class="field-block">
-                                <label>{{ $identityLabel }}</label>
-                                <input type="text" value="{{ $identityValue }}" disabled>
-                            </div>
+                            @unless ($isStaffApplicant)
+                                <div class="field-block">
+                                    <label>{{ $identityLabel }}</label>
+                                    <input type="text" value="{{ $identityValue }}" disabled>
+                                </div>
+                            @endunless
 
                             <div class="field-block">
                                 <label for="no_anggota">No Anggota</label>
@@ -545,7 +564,7 @@
                             </div>
                         </div>
                         <div class="checkbox-grid">
-                            @foreach (['Pengeluaran Saham', 'Berhenti Keahlian', 'Berpindah', 'Bersara', 'Tamat Pengajian', 'Lain-lain'] as $option)
+                            @foreach ($isStaffApplicant ? ['Berhenti Keahlian', 'Berpindah', 'Bersara', 'Lain-lain'] : ['Berhenti Keahlian', 'Berpindah', 'Bersara', 'Tamat Pengajian', 'Lain-lain'] as $option)
                                 <label class="choice-box">
                                     <input type="checkbox" name="jenis_permohonan[]" value="{{ $option }}" data-withdrawal-type @checked(in_array($option, old('jenis_permohonan', []), true))>
                                     <span>{{ $option }}</span>
@@ -593,7 +612,7 @@
                             <span class="section-block__tag">IV</span>
                             <div>
                                 <h3>Pengakuan Pemohon</h3>
-                                <p>Nyatakan amaun yang dipohon dan sahkan pengakuan.</p>
+                                <p>Pemohon mengesahkan pengeluaran penuh baki saham semasa.</p>
                             </div>
                         </div>
                         <div class="section-block__grid">
@@ -603,29 +622,13 @@
                             </div>
 
                             <div class="field-block">
-                                <label for="saham_dipohon">Saham</label>
-                                <div class="money-input">
-                                    <span>RM</span>
-                                    <input id="saham_dipohon" name="saham_dipohon" type="number" min="0" step="0.01" value="{{ old('saham_dipohon') }}" placeholder="0.00">
-                                </div>
-                            </div>
-
-                            <div class="field-block">
-                                <label for="jumlah_dipohon">Jumlah</label>
-                                <div class="money-input">
-                                    <span>RM</span>
-                                    <input id="jumlah_dipohon" name="jumlah_dipohon" type="number" min="0" step="0.01" value="{{ old('jumlah_dipohon') }}" placeholder="0.00" required>
-                                </div>
-                            </div>
-
-                            <div class="field-block">
                                 <label for="tarikh_pengakuan">Tarikh</label>
                                 <input id="tarikh_pengakuan" name="tarikh_pengakuan" type="date" value="{{ old('tarikh_pengakuan', now()->toDateString()) }}" required>
                             </div>
 
                             <label class="consent-box field-block--full">
                                 <input type="checkbox" name="akuan_pengeluaran" value="1" required @checked(old('akuan_pengeluaran'))>
-                                <span>Saya adalah orang yang dipertanggungjawabkan untuk pengeluaran wang sebanyak yang dipohon dan mengaku bahawa semua maklumat adalah benar.</span>
+                                <span>Saya mengaku bahawa semua maklumat adalah benar dan bersetuju baki saham semasa dikeluarkan sepenuhnya.</span>
                             </label>
                         </div>
                     </div>
@@ -635,7 +638,7 @@
                             <span class="section-block__tag">VI</span>
                             <div>
                                 <h3>Penerimaan Anggota</h3>
-                                <p>Bayaran diterima melalui atas talian sahaja.</p>
+                                <p>Pilih kaedah bayaran untuk penerimaan baki saham.</p>
                             </div>
                         </div>
                         <div class="section-block__grid">
@@ -643,7 +646,7 @@
                                 <label for="kaedah_terima_bayaran">Bayaran Diterima Melalui</label>
                                 <select id="kaedah_terima_bayaran" name="kaedah_terima_bayaran" required>
                                     <option value="">Pilih kaedah</option>
-                                    @foreach (['Bayaran Atas Talian'] as $option)
+                                    @foreach (['Bayaran Atas Talian', 'Tunai'] as $option)
                                         <option value="{{ $option }}" @selected(old('kaedah_terima_bayaran') === $option)>{{ $option }}</option>
                                     @endforeach
                                 </select>

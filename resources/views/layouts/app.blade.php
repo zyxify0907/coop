@@ -24,14 +24,17 @@
         ['section' => 'Kehadiran Pekerja', 'label' => 'Pembetulan', 'route' => 'admin.attendance.corrections', 'active' => 'admin.attendance.corrections*', 'icon' => 'clipboard'],
         ['section' => 'Kehadiran Pekerja', 'label' => 'Laporan Attendance', 'route' => 'admin.attendance.reports', 'active' => 'admin.attendance.reports*', 'icon' => 'chart'],
         ['section' => 'Kehadiran Pekerja', 'label' => 'Tetapan Attendance', 'route' => 'admin.attendance.settings', 'active' => 'admin.attendance.settings*', 'icon' => 'book'],
-        ['section' => 'SAHAM', 'label' => 'Permohonan', 'route' => 'admin.permohonan.index', 'active' => 'admin.permohonan.*', 'icon' => 'clipboard'],
-        ['section' => 'SAHAM', 'label' => 'Anggota', 'route' => 'admin.anggota.index', 'active' => 'admin.anggota.*', 'icon' => 'users'],
+        ['section' => 'SAHAM', 'label' => 'Permohonan Student', 'route' => 'admin.permohonan.index', 'params' => ['pemohon' => 'pelajar'], 'active' => 'admin.permohonan.*', 'audience' => 'pelajar', 'icon' => 'clipboard'],
+        ['section' => 'SAHAM', 'label' => 'Permohonan Staff', 'route' => 'admin.permohonan.index', 'params' => ['pemohon' => 'staff'], 'active' => 'admin.permohonan.*', 'audience' => 'staff', 'icon' => 'shield'],
+        ['section' => 'SAHAM', 'label' => 'Anggota Student', 'route' => 'admin.anggota.students', 'active' => 'admin.anggota.students', 'icon' => 'users'],
+        ['section' => 'SAHAM', 'label' => 'Anggota Staff', 'route' => 'admin.anggota.staff', 'active' => 'admin.anggota.staff', 'icon' => 'shield'],
         ['section' => 'SAHAM', 'label' => 'Saham', 'route' => 'admin.saham.index', 'active' => 'admin.saham.*', 'icon' => 'chart'],
         ['section' => 'SAHAM', 'label' => 'Transaksi Saham', 'route' => 'koperasi.transactions.index', 'active' => 'koperasi.transactions.*', 'icon' => 'chart'],
         ['section' => 'Tempahan Baju', 'label' => 'Senarai Tempahan', 'route' => 'admin.tempahan.index', 'active' => 'admin.tempahan.*', 'icon' => 'clipboard'],
         ['section' => 'Tempahan Baju', 'label' => 'Stok Baju', 'route' => 'admin.baju.index', 'active' => 'admin.baju.index', 'icon' => 'box'],
         ['section' => 'Pengguna', 'label' => 'Senarai Student', 'route' => 'admin.users.students', 'active' => 'admin.users.students', 'icon' => 'users'],
         ['section' => 'Pengguna', 'label' => 'Senarai Staff', 'route' => 'admin.users.staff', 'active' => 'admin.users.staff', 'icon' => 'shield'],
+        ['section' => 'Pengguna', 'label' => 'Pekerja Koperasi', 'route' => 'admin.users.coop-workers', 'active' => 'admin.users.coop-workers', 'icon' => 'users'],
         ['section' => 'Pengurusan', 'label' => 'Urus Announcement', 'route' => 'admin.announcements.index', 'active' => 'admin.announcements.*', 'icon' => 'clipboard'],
     ];
 
@@ -1645,6 +1648,9 @@
                         @php
                             $href = $link['route'] ? route($link['route'], $link['params'] ?? []) : '#';
                             $active = request()->routeIs($link['active']);
+                            if (($link['route'] ?? null) === 'admin.permohonan.index' && isset($link['audience'])) {
+                                $active = $active && request('pemohon', 'pelajar') === $link['audience'];
+                            }
                             $active = $active
                                 || ($link['route'] === 'admin.users.students' && request()->routeIs('admin.users.edit') && request()->route('type') === 'student')
                                 || ($link['route'] === 'admin.users.staff' && request()->routeIs('admin.users.edit') && request()->route('type') === 'staff');

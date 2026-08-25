@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Ahli;
 use App\Models\AhliImport;
+use App\Models\Pekerja;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +19,7 @@ class AhliImportService
      */
     private const REQUIRED_COLUMNS = ['nama', 'no_matrik', 'semester'];
     private const STUDENT_REQUIRED_COLUMNS = ['nama', 'no_matrik', 'nric', 'kelas', 'tarikh_masuk'];
+    private const STAFF_REQUIRED_COLUMNS = ['nama', 'nric'];
 
     public function import(UploadedFile $file): AhliImportResult
     {
@@ -136,6 +138,81 @@ class AhliImportService
         });
     }
 
+    public function importStaff(UploadedFile $file): AhliImportResult
+    {
+        $filename = $file->getClientOriginalName();
+
+        try {
+            $rows = $this->rowsFromFile($file, self::STAFF_REQUIRED_COLUMNS);
+        } catch (RuntimeException $exception) {
+            return $this->storeResult($filename, 0, [[
+                'row' => null,
+                'no_matrik' => null,
+                'message' => $exception->getMessage(),
+            ]]);
+        }
+
+        return DB::transaction(function () use ($filename, $rows): AhliImportResult {
+            $imported = 0;
+            $errors = [];
+            $seenNoPekerja = [];
+            $seenNric = [];
+            $seenEmail = [];
+            $nextStaffNumber = $this->nextStaffNumber();
+
+            foreach ($rows as $index => $row) {
+                $line = $index + 2;
+                $nama = trim((string) ($row['nama'] ?? ''));
+                $noPekerja = strtoupper(trim((string) ($row['no_pekerja'] ?? '')));
+                $nric = preg_replace('/\D+/', '', (string) ($row['nric'] ?? '')) ?? '';
+                $staffType = $this->normalizeStaffType((string) ($row['staff_type'] ?? '')) ?? 'lecturer_member';
+                $email = trim((string) ($row['email'] ?? ''));
+                $noTel = trim((string) ($row['no_tel'] ?? ''));
+                $tarikhMula = $this->normalizeDate((string) ($row['tarikh_mula'] ?? '')) ?? now()->toDateString();
+
+                if ($noPekerja === '') {
+                    $noPekerja = $this->formatStaffNumber($nextStaffNumber++);
+                }
+
+                $message = $this->validateStaffRow($nama, $noPekerja, $nric, $staffType, $email, $seenNoPekerja, $seenNric, $seenEmail);
+
+                if ($message !== null) {
+                    $errors[] = [
+                        'row' => $line,
+                        'no_matrik' => $noPekerja ?: null,
+                        'message' => $message,
+                    ];
+
+                    continue;
+                }
+
+                $seenNoPekerja[$noPekerja] = true;
+                $seenNric[$nric] = true;
+
+                if ($email !== '') {
+                    $seenEmail[strtolower($email)] = true;
+                }
+
+                Pekerja::query()->create([
+                    'no_pekerja' => $noPekerja,
+                    'nama' => $nama,
+                    'nric' => $nric,
+                    'staff_type' => $staffType,
+                    'no_tel' => $noTel !== '' ? $noTel : null,
+                    'email' => $email !== '' ? $email : null,
+                    'kadar_elaun' => 0,
+                    'tarikh_mula' => $tarikhMula,
+                    'password_hash' => Hash::make('staff12345'),
+                    'status_aktif' => true,
+                ]);
+
+                $imported++;
+            }
+
+            return $this->storeResult($filename, $imported, $errors);
+        });
+    }
+
     private function validateRow(string $nama, string $noMatrik, string $semester, array $seenNoMatrik): ?string
     {
         if ($nama === '') {
@@ -161,6 +238,55 @@ class AhliImportService
         return null;
     }
 
+    private function validateStaffRow(string $nama, string $noPekerja, string $nric, ?string $staffType, string $email, array $seenNoPekerja, array $seenNric, array $seenEmail): ?string
+    {
+        if ($nama === '') {
+            return 'Nama tidak boleh kosong.';
+        }
+
+        if ($noPekerja === '') {
+            return 'No Pekerja tidak boleh kosong.';
+        }
+
+        if (! preg_match('/^PBT-\d+$/', $noPekerja)) {
+            return 'No Pekerja mesti dalam format PBT-1, PBT-2 dan seterusnya.';
+        }
+
+        if ($nric === '') {
+            return 'No KP tidak boleh kosong.';
+        }
+
+        if (isset($seenNoPekerja[$noPekerja])) {
+            return 'No Pekerja berulang dalam fail import; dilangkau.';
+        }
+
+        if (isset($seenNric[$nric])) {
+            return 'No KP berulang dalam fail import; dilangkau.';
+        }
+
+        if ($email !== '' && ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return 'Email tidak sah.';
+        }
+
+        if ($email !== '' && isset($seenEmail[strtolower($email)])) {
+            return 'Email berulang dalam fail import; dilangkau.';
+        }
+
+        if (Pekerja::query()->where('no_pekerja', $noPekerja)->exists()) {
+            return 'No Pekerja sudah wujud dalam sistem; dilangkau.';
+        }
+
+        if (Pekerja::query()->where('nric', $nric)->exists()) {
+            return 'No KP sudah wujud dalam sistem; dilangkau.';
+        }
+
+        if ($email !== '' && Pekerja::query()->where('email', $email)->exists()) {
+            return 'Email sudah wujud dalam sistem; dilangkau.';
+        }
+
+        return null;
+    }
+
     private function validateStudentRow(string $nama, string $noMatrik, string $nric, string $kelas, ?string $tarikhMasuk, array $seenNoMatrik, array $seenNric): ?string
     {
         if ($nama === '') {
@@ -180,7 +306,7 @@ class AhliImportService
         }
 
         if ($this->academicFromClass($kelas) === null) {
-            return 'Kelas mesti dalam format DIT1A, DIT1B, DDC1A atau DBF1A hingga semester 5.';
+            return 'Kelas mesti dalam format DIT1A, DIT1B, DDC1A atau DBF1A hingga semester 6.';
         }
 
         if ($tarikhMasuk === null) {
@@ -222,7 +348,7 @@ class AhliImportService
      */
     private function academicFromClass(string $kelas): ?array
     {
-        if (! preg_match('/^(DIT|DDC|DBF)([1-5])[A-Z]$/', strtoupper(trim($kelas)), $matches)) {
+        if (! preg_match('/^(DIT|DDC|DBF)([1-6])[A-Z]$/', strtoupper(trim($kelas)), $matches)) {
             return null;
         }
 
@@ -552,6 +678,10 @@ class AhliImportService
                 'no_kp', 'no_k_p', 'nokp', 'nric', 'ic' => 'nric',
                 'nom_matriks', 'no_matriks', 'nom_matrik', 'no_matrik', 'matrik' => 'no_matrik',
                 'tarikh_masuk', 'tarikh_daftar', 'tarikh' => 'tarikh_masuk',
+                'no_pekerja', 'no_staff', 'staff_no', 'no_staf' => 'no_pekerja',
+                'jenis_staff', 'jenis_staf', 'staff_type', 'type_staff', 'kategori_staff', 'kategori_staf' => 'staff_type',
+                'telefon', 'no_telefon', 'phone', 'tel', 'no_tel' => 'no_tel',
+                'tarikh_mula', 'tarikh_lantik', 'tarikh_kerja' => 'tarikh_mula',
                 default => trim($header, '_'),
             };
 
@@ -644,5 +774,33 @@ class AhliImportService
     private function generateStudentPassword(string $noMatrik): string
     {
         return strtoupper(trim($noMatrik)).'@123';
+    }
+
+    private function normalizeStaffType(string $value): ?string
+    {
+        $normalized = strtolower(trim(preg_replace('/[^a-z0-9]+/', '_', $value) ?? ''));
+        $normalized = trim($normalized, '_');
+
+        return match ($normalized) {
+            'lecturer_member', 'lecturer', 'pensyarah', 'pensyarah_staf_akademik', 'staf_akademik', 'staff_akademik' => 'lecturer_member',
+            'clothing_staff', 'baju', 'staff_baju', 'staf_baju', 'pengurusan_baju' => 'clothing_staff',
+            default => null,
+        };
+    }
+
+    private function nextStaffNumber(): int
+    {
+        $numbers = Pekerja::query()
+            ->where('no_pekerja', 'like', 'PBT-%')
+            ->pluck('no_pekerja')
+            ->map(fn ($value): int => (int) preg_replace('/\D+/', '', (string) $value))
+            ->filter(fn (int $number): bool => $number > 0);
+
+        return ((int) $numbers->max()) + 1;
+    }
+
+    private function formatStaffNumber(int $number): string
+    {
+        return 'PBT-'.$number;
     }
 }

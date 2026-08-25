@@ -489,11 +489,65 @@
     }
 
     .summary-table {
-        max-width: 760px;
+        max-width: 920px;
+        min-width: 820px;
+        margin: 0 auto;
+        border-collapse: collapse;
     }
 
-    .summary-table tfoot td {
-        background: #f8fafc;
+    .summary-table th,
+    .summary-table td {
+        border: 1px solid #111827;
+        text-align: center;
+        padding: 10px 14px;
+        background: #fff;
+        color: #000;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .summary-table th {
+        font-size: 13px;
+    }
+
+    .summary-table .summary-label {
+        text-align: center;
+    }
+
+    .summary-table tfoot td,
+    .summary-table .summary-highlight td {
+        background: #ffff00;
+        font-weight: 900;
+    }
+
+    .summary-report-title {
+        margin: 0;
+        color: #000;
+        font-size: 18px;
+        line-height: 1.45;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+
+    .summary-year-form {
+        display: flex;
+        align-items: end;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .summary-year-form .field {
+        min-width: 180px;
+    }
+
+    .summary-year-form select {
+        min-height: 40px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff;
+        padding: 0 12px;
+        color: var(--text);
         font-weight: 800;
     }
 
@@ -802,6 +856,11 @@
 
 @php
     $money = fn ($value) => 'RM ' . number_format((float) $value, 2);
+    $summaryNumber = function ($value): string {
+        $formatted = number_format((float) $value, 2, '.', '');
+
+        return rtrim(rtrim($formatted, '0'), '.');
+    };
     $studentStatusLabel = function ($record) use ($inactiveReasons) {
         if ($record->ahli->status_aktif ?? false) {
             return 'Aktif';
@@ -827,7 +886,7 @@
 
         <div class="head-actions">
             @if ($category === 'rumusan')
-                <a class="link-button" href="{{ route('admin.saham.export.csv', ['kategori' => $category]) }}">CSV</a>
+                <a class="link-button" href="{{ route('admin.saham.export.csv', array_merge(request()->query(), ['kategori' => $category])) }}">CSV</a>
             @endif
             <nav class="tabs" aria-label="Kategori saham">
                 <a class="tab {{ $category === 'pelajar' ? 'is-active' : '' }}" href="{{ route('admin.saham.index', ['kategori' => 'pelajar']) }}">Pelajar</a>
@@ -1075,10 +1134,10 @@
                         <tr>
                             <th>Bil</th>
                             <th>Nama</th>
+                            <th>No Anggota</th>
                             <th>No KP</th>
-                            <th>No Pekerja</th>
                             <th>Jenis Staff</th>
-                            <th>Tarikh Mula Kerja</th>
+                            <th>Yuran Ahli</th>
                             <th>Saham Semasa</th>
                             <th>Tambahan Saham</th>
                             <th>Jumlah Saham</th>
@@ -1090,6 +1149,10 @@
                         @forelse ($staffMembers as $staff)
                             @php
                                 $staffShare = $staff->sahamStaff;
+                                $approvedStaffApplication = $approvedStaffApplications->get($staff->no_pekerja);
+                                $approvedStaffData = $approvedStaffApplication?->data_permohonan ?? [];
+                                $staffMemberNumber = $staff->no_anggota ?? $approvedStaffData['no_anggota'] ?? '-';
+                                $staffMemberFee = $staffShare->yuran ?? $approvedStaffData['yuran_anggota'] ?? 0;
                                 $staffTotalShare = (float) ($staffShare->syer ?? 0) + (float) ($staffShare->tambahan_saham ?? 0);
                             @endphp
                             <tr>
@@ -1098,10 +1161,10 @@
                                     <span class="name">{{ $staff->nama }}</span>
                                     <span class="sub">{{ $staff->email ?? '-' }}</span>
                                 </td>
+                                <td>{{ $staffMemberNumber }}</td>
                                 <td>{{ $staff->nric ?? '-' }}</td>
-                                <td>{{ $staff->no_pekerja ?? '-' }}</td>
                                 <td>{{ $staff->staff_type_label }}</td>
-                                <td>{{ optional($staff->tarikh_mula)->format('d/m/Y') ?? '-' }}</td>
+                                <td><span class="amount">{{ $money($staffMemberFee) }}</span></td>
                                 <td><span class="amount">{{ $money($staffShare->syer ?? 0) }}</span></td>
                                 <td><span class="amount">{{ $money($staffShare->tambahan_saham ?? 0) }}</span></td>
                                 <td><span class="amount">{{ $money($staffTotalShare) }}</span></td>
@@ -1154,10 +1217,10 @@
                         <tr>
                             <th>Bil</th>
                             <th>Nama</th>
+                            <th>No Anggota</th>
                             <th>No KP</th>
-                            <th>No Pekerja</th>
                             <th>Jenis Staff</th>
-                            <th>Tarikh<br>Mula Kerja</th>
+                            <th>Yuran<br>Ahli</th>
                             <th>Saham<br>Semasa</th>
                             <th>Tambahan<br>Saham</th>
                             <th>Jumlah<br>Saham</th>
@@ -1168,6 +1231,10 @@
                         @forelse ($printStaffRecords as $printStaff)
                             @php
                                 $printStaffShare = $printStaff->sahamStaff;
+                                $approvedPrintStaffApplication = $approvedStaffApplications->get($printStaff->no_pekerja);
+                                $approvedPrintStaffData = $approvedPrintStaffApplication?->data_permohonan ?? [];
+                                $printStaffMemberNumber = $printStaff->no_anggota ?? $approvedPrintStaffData['no_anggota'] ?? '-';
+                                $printStaffMemberFee = $printStaffShare->yuran ?? $approvedPrintStaffData['yuran_anggota'] ?? 0;
                                 $printStaffTotalShare = (float) ($printStaffShare->syer ?? 0) + (float) ($printStaffShare->tambahan_saham ?? 0);
                             @endphp
                             <tr>
@@ -1176,10 +1243,10 @@
                                     <span class="print-report__name">{{ $printStaff->nama ?? '-' }}</span>
                                     <span class="print-report__email">{{ $printStaff->email ?? '-' }}</span>
                                 </td>
+                                <td>{{ $printStaffMemberNumber }}</td>
                                 <td>{{ $printStaff->nric ?? '-' }}</td>
-                                <td>{{ $printStaff->no_pekerja ?? '-' }}</td>
                                 <td>{{ $printStaff->staff_type_label }}</td>
-                                <td>{{ optional($printStaff->tarikh_mula)->format('d/m/Y') ?? '-' }}</td>
+                                <td>{{ $money($printStaffMemberFee) }}</td>
                                 <td>{{ $money($printStaffShare->syer ?? 0) }}</td>
                                 <td>{{ $money($printStaffShare->tambahan_saham ?? 0) }}</td>
                                 <td>{{ $money($printStaffTotalShare) }}</td>
@@ -1198,47 +1265,73 @@
         <section class="panel">
             <div class="panel-head">
                 <div>
-                    <h2>Jumlah Saham Koperasi Politeknik Besut</h2>
-                    <span>Rumusan digital berdasarkan rekod sistem.</span>
+                    <h2 class="summary-report-title">
+                        REKOD PENAMBAHAN SAHAM ANGGOTA KOPERASI POLITEKNIK BESUT TAHUN KEWANGAN SEPTEMBER {{ $summary['fiscal_start']->format('Y') }} SEHINGGA 31 OGOS {{ $summary['fiscal_end_year'] }}
+                    </h2>
+                    <span>Rumusan digital berdasarkan nilai anggota dan saham dalam sistem.</span>
                 </div>
+                <form class="summary-year-form" method="GET" action="{{ route('admin.saham.index') }}">
+                    <input type="hidden" name="kategori" value="rumusan">
+                    <div class="field">
+                        <label for="summary_year">Pilih Tahun</label>
+                        <select id="summary_year" name="tahun">
+                            @foreach ($fiscalYearOptions as $yearOption)
+                                <option value="{{ $yearOption }}" @selected((int) ($filters['tahun'] ?? $summary['fiscal_end_year']) === (int) $yearOption)>
+                                    Sept {{ $yearOption - 1 }} - Ogos {{ $yearOption }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <button class="button" type="submit">Papar</button>
+                </form>
             </div>
 
             <div class="table-wrap">
                 <table class="summary-table">
                     <thead>
                         <tr>
-                            <th>Perkara</th>
-                            <th>Orang</th>
-                            <th>Jumlah Saham</th>
+                            <th>SAHAM ANGGOTA</th>
+                            <th>ANGGOTA</th>
+                            <th>SAHAM</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Jumlah Saham Pelajar</td>
-                            <td>{{ $summary['student_count'] }}</td>
-                            <td><span class="amount">{{ $money($summary['student_total']) }}</span></td>
+                            <td class="summary-label">STAFF</td>
+                            <td>{{ $summary['period_staff_count'] }}</td>
+                            <td>{{ $summaryNumber($summary['period_staff_total']) }}</td>
                         </tr>
                         <tr>
-                            <td>Jumlah Saham Staff</td>
-                            <td>{{ $summary['staff_count'] }}</td>
-                            <td><span class="amount">{{ $money($summary['staff_total']) }}</span></td>
+                            <td class="summary-label">PELAJAR</td>
+                            <td>{{ $summary['period_student_count'] }}</td>
+                            <td>{{ $summaryNumber($summary['period_student_total']) }}</td>
                         </tr>
                         <tr>
-                            <td>Pelajar Pindah / Berhenti</td>
-                            <td>{{ $summary['stopped_student_count'] }}</td>
-                            <td><span class="amount">{{ $money($summary['stopped_total']) }}</span></td>
+                            <td class="summary-label">PENAMBAHAN ANGGOTA & SAHAM SEHINGGA 31 OGOS {{ $summary['fiscal_end_year'] }}</td>
+                            <td>{{ $summary['period_count'] }}</td>
+                            <td>{{ $summaryNumber($summary['period_total']) }}</td>
                         </tr>
                         <tr>
-                            <td>Staff Pindah / Berhenti</td>
-                            <td>{{ $summary['stopped_staff_count'] }}</td>
-                            <td><span class="amount">{{ $money($summary['stopped_staff_total']) }}</span></td>
+                            <td class="summary-label">JUMLAH ANGGOTA & SAHAM TERKUMPUL SEHINGGA 31 OGOS {{ $summary['fiscal_previous_end_year'] }}</td>
+                            <td>{{ $summary['previous_count'] }}</td>
+                            <td>{{ $summaryNumber($summary['previous_total']) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="summary-label">JUMLAH ANGGOTA & SAHAM TERKUMPUL SEHINGGA 31 OGOS {{ $summary['fiscal_end_year'] }}</td>
+                            <td>{{ $summary['current_cumulative_count'] }}</td>
+                            <td>{{ $summaryNumber($summary['current_cumulative_total']) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="summary-label">JUMLAH ANGGOTA BERHENTI/BERPINDAH SEHINGGA 31 OGOS {{ $summary['fiscal_end_year'] }}</td>
+                            <td>{{ $summary['stopped_count'] }}</td>
+                            <td>{{ $summaryNumber($summary['stopped_share_total']) }}</td>
                         </tr>
                     </tbody>
                     <tfoot>
-                        <tr>
-                            <td>Jumlah Saham Anggota Koperasi Polibesut</td>
-                            <td>{{ $summary['grand_count'] }}</td>
-                            <td><span class="amount">{{ $money($summary['grand_total']) }}</span></td>
+                        <tr class="summary-highlight">
+                            <td class="summary-label">JUMLAH ANGGOTA DAN SAHAM SEHINGGA 31 OGOS {{ $summary['fiscal_end_year'] }}</td>
+                            <td>{{ $summary['active_count'] }}</td>
+                            <td>{{ $summaryNumber($summary['active_total']) }}</td>
                         </tr>
                     </tfoot>
                 </table>

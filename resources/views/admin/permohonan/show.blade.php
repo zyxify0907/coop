@@ -11,10 +11,12 @@
     $initials = collect(explode(' ', $application->nama_pemohon))->filter()->take(2)->map(fn ($part) => strtoupper(substr($part, 0, 1)))->implode('') ?: 'ST';
     $heirFields = ['nama_waris', 'telefon_waris', 'hubungan_waris', 'penama_nama', 'penama_nric', 'penama_hubungan', 'penama_no_tel', 'penama_alamat', 'penama_poskod', 'penama_peratus', 'penama2_nama', 'penama2_nric', 'penama2_hubungan', 'penama2_no_tel', 'penama2_alamat', 'penama2_poskod', 'penama2_peratus'];
     $witnessFields = ['saksi_nama', 'saksi_nric', 'saksi_tarikh'];
-    $memberData = collect($data)->reject(fn ($value, $key) => in_array($key, array_merge($heirFields, $witnessFields), true));
+    $hiddenStaffFields = $isStaffRequest ? ['no_pekerja', 'dokumen_sokongan', 'jawatan'] : [];
+    $memberData = collect($data)->reject(fn ($value, $key) => in_array($key, array_merge($heirFields, $witnessFields, $hiddenStaffFields), true));
     $heirData = collect($data)->only($heirFields)->filter(fn ($value) => filled($value));
     $witnessData = collect($data)->only($witnessFields)->filter(fn ($value) => filled($value));
     $isFinalDecision = in_array($application->status, ['diluluskan', 'ditolak'], true);
+    $displayNumber = $isStaffRequest ? ($data['no_anggota'] ?? 'Belum dijana') : ($application->no_matrik ?? '-');
 @endphp
 
 @section('content')
@@ -37,7 +39,7 @@
                 <span class="student-avatar">{{ $initials }}</span>
                 <div>
                     <h2>{{ $application->nama_pemohon }}</h2>
-                    <p>{{ $application->no_matrik }} &middot; {{ $application->email ?: 'Email tiada' }} &middot; {{ $application->no_tel ?: 'Telefon tiada' }}</p>
+                    <p>{{ $displayNumber }} &middot; {{ $application->email ?: 'Email tiada' }} &middot; {{ $application->no_tel ?: 'Telefon tiada' }}</p>
                 </div>
             </div>
             <div class="summary-badges">
@@ -152,10 +154,13 @@
                     <a class="mini-button mini-button--share" href="{{ route('admin.permohonan.saham.create', $application) }}">Tambah Saham</a>
                 @elseif ($application->jenis === 'berhenti')
                     <a class="mini-button mini-button--withdraw" href="{{ route('admin.permohonan.pengeluaran.create', $application) }}">Proses Pengeluaran</a>
+                @else
+                    <button class="mini-button mini-button--approve" type="button" data-decision-choice="diluluskan">Diluluskan</button>
                 @endif
-                <button class="mini-button mini-button--approve" type="button" data-decision-choice="diluluskan">Diluluskan</button>
-                <button class="mini-button mini-button--reject" type="button" data-decision-choice="ditolak">Ditolak</button>
-                <button class="mini-button mini-button--save" type="submit">Simpan Keputusan</button>
+                <button class="mini-button mini-button--reject" type="{{ in_array($application->jenis, ['saham', 'berhenti'], true) ? 'submit' : 'button' }}" data-decision-choice="ditolak">Ditolak</button>
+                @if (! in_array($application->jenis, ['saham', 'berhenti'], true))
+                    <button class="mini-button mini-button--save" type="submit">Simpan Keputusan</button>
+                @endif
             </form>
         @endif
 

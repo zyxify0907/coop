@@ -6,10 +6,13 @@
 
 @php
     $isStudent = $type === 'student';
-    $backRoute = $isStudent ? route('admin.users.students') : route('admin.users.staff');
+    $isCoopWorkerProfile = ! $isStudent && old('staff_type', $profile->staff_type) === 'coop_staff';
+    $backRoute = $isStudent
+        ? route('admin.users.students')
+        : ($profile->staff_type === 'coop_staff' ? route('admin.users.coop-workers') : route('admin.users.staff'));
     $programOptions = ['JTMK', 'JRKV'];
-    $semesterOptions = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5'];
-    $classOptionsBySemester = collect(range(1, 5))->mapWithKeys(fn ($semester) => [
+    $semesterOptions = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6'];
+    $classOptionsBySemester = collect(range(1, 6))->mapWithKeys(fn ($semester) => [
         'Sem '.$semester => ['DIT'.$semester.'A', 'DIT'.$semester.'B', 'DDC'.$semester.'A', 'DBF'.$semester.'A'],
     ])->all();
 @endphp
@@ -100,27 +103,33 @@
                             @error('tarikh_daftar')<div class="field-error">{{ $message }}</div>@enderror
                         </div>
                     @else
-                        <div class="field">
-                            <label for="no_pekerja">No Pekerja</label>
-                            <input id="no_pekerja" name="no_pekerja" value="{{ old('no_pekerja', $profile->no_pekerja) }}" placeholder="PBT-001" required>
-                            @error('no_pekerja')<div class="field-error">{{ $message }}</div>@enderror
-                        </div>
+                        @if ($isCoopWorkerProfile)
+                            <div class="field">
+                                <label for="no_pekerja">No Pekerja</label>
+                                <input id="no_pekerja" name="no_pekerja" value="{{ old('no_pekerja', $profile->no_pekerja) }}" placeholder="PBT-001" required>
+                                @error('no_pekerja')<div class="field-error">{{ $message }}</div>@enderror
+                            </div>
+                        @else
+                            <input type="hidden" name="no_pekerja" value="{{ old('no_pekerja', $profile->no_pekerja) }}">
+                        @endif
 
                         <div class="field">
                             <label for="staff_type">Jenis Staff</label>
                             <select id="staff_type" name="staff_type" required>
-                                <option value="lecturer_member" @selected(old('staff_type', $profile->staff_type) === 'lecturer_member')>Pensyarah / Staf Akademik (Anggota)</option>
+                                <option value="lecturer_member" @selected(old('staff_type', $profile->staff_type) === 'lecturer_member')>Pensyarah / Staf Akademik</option>
                                 <option value="coop_staff" @selected(old('staff_type', $profile->staff_type) === 'coop_staff')>Pekerja Koperasi</option>
                                 <option value="clothing_staff" @selected(old('staff_type', $profile->staff_type) === 'clothing_staff')>Staff Pengurusan Baju</option>
                             </select>
                             @error('staff_type')<div class="field-error">{{ $message }}</div>@enderror
                         </div>
 
-                        <div class="field">
-                            <label for="kadar_elaun">Kadar Elaun</label>
-                            <input id="kadar_elaun" name="kadar_elaun" type="number" min="0" step="0.01" value="{{ old('kadar_elaun', $profile->kadar_elaun) }}">
-                            @error('kadar_elaun')<div class="field-error">{{ $message }}</div>@enderror
-                        </div>
+                        @if ($isCoopWorkerProfile)
+                            <div class="field">
+                                <label for="kadar_elaun">Kadar Elaun</label>
+                                <input id="kadar_elaun" name="kadar_elaun" type="number" min="0" step="0.01" value="{{ old('kadar_elaun', $profile->kadar_elaun) }}">
+                                @error('kadar_elaun')<div class="field-error">{{ $message }}</div>@enderror
+                            </div>
+                        @endif
 
                         <div class="field">
                             <label for="tarikh_mula">Tarikh Mula Kerja</label>
@@ -128,13 +137,15 @@
                             @error('tarikh_mula')<div class="field-error">{{ $message }}</div>@enderror
                         </div>
 
-                        <div class="field">
-                            <label for="status_aktif">Status Staff</label>
-                            <select id="status_aktif" name="status_aktif">
-                                <option value="1" @selected(old('status_aktif', $profile->status_aktif ? '1' : '0') == '1')>Aktif</option>
-                                <option value="0" @selected(old('status_aktif', $profile->status_aktif ? '1' : '0') == '0')>Tidak Aktif</option>
-                            </select>
-                        </div>
+                        @if ($isCoopWorkerProfile)
+                            <div class="field">
+                                <label for="status_aktif">Status Pekerja</label>
+                                <select id="status_aktif" name="status_aktif">
+                                    <option value="1" @selected(old('status_aktif', $profile->status_aktif ? '1' : '0') == '1')>Aktif</option>
+                                    <option value="0" @selected(old('status_aktif', $profile->status_aktif ? '1' : '0') == '0')>Tidak Aktif</option>
+                                </select>
+                            </div>
+                        @endif
                     @endif
 
                     <div class="field">
@@ -271,7 +282,7 @@
                 }
 
                 const academicFromClass = (className) => {
-                    const match = String(className || '').match(/^(DIT|DDC|DBF)([1-5])[A-Z]$/);
+                    const match = String(className || '').match(/^(DIT|DDC|DBF)([1-6])[A-Z]$/);
 
                     if (!match) {
                         return null;

@@ -15,10 +15,10 @@
     $personLabel = $isStaffRequest ? 'Staff' : 'Pelajar';
     $initials = collect(explode(' ', $application->nama_pemohon))->filter()->take(2)->map(fn ($part) => strtoupper(substr($part, 0, 1)))->implode('') ?: 'ST';
     $selectedTypes = collect($data['jenis_permohonan'] ?? [])->filter();
-    $documents = collect($data['dokumen_sokongan'] ?? [])->filter();
     $requestedTotal = (float) ($requestedShare ?? 0);
     $shareInputValue = (float) $requestedShare;
     $shareBalanceAfter = $currentShare - $shareInputValue;
+    $displayNumber = $isStaffRequest ? ($data['no_anggota'] ?? 'Belum dijana') : ($application->no_matrik ?? '-');
 @endphp
 
 <div class="withdrawal-page">
@@ -40,7 +40,7 @@
                 <span class="applicant-avatar">{{ $initials }}</span>
                 <div>
                     <h2>{{ $application->nama_pemohon }}</h2>
-                    <p>{{ $application->no_matrik }} &middot; {{ $application->email ?: 'Email tiada' }} &middot; {{ $application->no_tel ?: 'Telefon tiada' }}</p>
+                    <p>{{ $displayNumber }} &middot; {{ $application->email ?: 'Email tiada' }} &middot; {{ $application->no_tel ?: 'Telefon tiada' }}</p>
                 </div>
             </div>
             <span class="status-pill status-pill--{{ $application->status }}">{{ str_replace('_', ' ', ucfirst($application->status)) }}</span>
@@ -70,7 +70,7 @@
 
         <form method="POST" action="{{ route('admin.permohonan.pengeluaran.store', $application) }}" class="withdrawal-form">
             @csrf
-            <input type="hidden" name="confirm_withdrawal_process" value="" data-withdrawal-confirm>
+            <input type="hidden" name="confirm_withdrawal_process" value="1">
 
             <div class="field">
                 <label for="saham_dipohon">Amaun Pengeluaran Saham</label>
@@ -89,14 +89,6 @@
                 <div class="info-table">
                     <span>Status Semasa</span>
                     <strong>{{ $defaultStudentStatus === 'aktif' ? 'Aktif' : 'Tidak Aktif / Berhenti / Pindah' }}</strong>
-                    <span>Dokumen Sokongan</span>
-                    <strong class="document-chip-list">
-                        @forelse ($documents as $document)
-                            <span>{{ $document }}</span>
-                        @empty
-                            <em>Tiada dokumen ditandakan</em>
-                        @endforelse
-                    </strong>
                     <span>Kaedah Terima Bayaran</span>
                     <strong>{{ $data['kaedah_terima_bayaran'] ?? '-' }}</strong>
                     <span>Nama Bank</span>
@@ -109,15 +101,10 @@
             </div>
 
             <div class="field">
-                <label for="status_pelajar">Status {{ $personLabel }} Selepas Proses</label>
-                <select id="status_pelajar" name="status_pelajar" required>
-                    <option value="aktif" @selected(old('status_pelajar', $defaultStudentStatus) === 'aktif')>{{ $personLabel }} Aktif</option>
-                    <option value="pindah_berhenti" @selected(old('status_pelajar', $defaultStudentStatus) === 'pindah_berhenti')>{{ $personLabel }} Tidak Aktif / Berhenti / Pindah</option>
-                </select>
-                <small>Pilih status selepas permohonan selesai diproses.</small>
-                @error('status_pelajar')
-                    <small class="error">{{ $message }}</small>
-                @enderror
+                <label>Status {{ $personLabel }} Selepas Proses</label>
+                <input type="hidden" name="status_pelajar" value="pindah_berhenti">
+                <input type="text" value="{{ $personLabel }} Tidak Aktif / Berhenti / Pindah" readonly>
+                <small>Status akan terus ditetapkan tidak aktif selepas permohonan selesai diproses.</small>
             </div>
 
             <div class="field field-full">
@@ -130,8 +117,7 @@
 
             <div class="form-actions">
                 <a class="link-button secondary" href="{{ route('admin.permohonan.show', $application) }}">Batal</a>
-                <button class="button withdrawal-pick-button" type="button" data-withdrawal-choice>Proses Pengeluaran</button>
-                <button class="button save-decision-button" type="submit">Simpan Keputusan</button>
+                <button class="button withdrawal-pick-button" type="submit">Diluluskan</button>
             </div>
         </form>
     </section>
@@ -433,31 +419,6 @@
         font-weight: 800;
     }
 
-    .document-chip-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-
-    .document-chip-list span {
-        display: inline-flex;
-        align-items: center;
-        min-height: 30px;
-        padding: 0 11px;
-        border: 1px solid #bfdbfe;
-        border-radius: 999px;
-        background: var(--secondary-soft);
-        color: var(--secondary);
-        font-size: 12px;
-        font-weight: 900;
-    }
-
-    .document-chip-list em {
-        color: var(--muted);
-        font-style: normal;
-        font-weight: 700;
-    }
-
     .form-actions {
         grid-column: 1 / -1;
         display: flex;
@@ -531,34 +492,4 @@
         }
     }
 </style>
-@endpush
-
-@push('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const form = document.querySelector('.withdrawal-form');
-
-            if (!form) {
-                return;
-            }
-
-            const confirmInput = form.querySelector('[data-withdrawal-confirm]');
-            const choiceButton = form.querySelector('[data-withdrawal-choice]');
-
-            if (choiceButton && confirmInput) {
-                choiceButton.addEventListener('click', () => {
-                    confirmInput.value = '1';
-                    choiceButton.classList.add('is-selected');
-                    choiceButton.setAttribute('aria-pressed', 'true');
-                });
-
-                form.addEventListener('submit', (event) => {
-                    if (confirmInput.value !== '1') {
-                        event.preventDefault();
-                        alert('Sila tekan Proses Pengeluaran dahulu sebelum simpan.');
-                    }
-                });
-            }
-        });
-    </script>
 @endpush

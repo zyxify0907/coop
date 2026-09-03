@@ -18,6 +18,10 @@ Route::get('/', function () {
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
+Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.forgot');
+Route::post('/forgot-password', [AuthController::class, 'resetForgottenPassword'])->name('password.forgot.submit');
+Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+Route::post('/register', [AuthController::class, 'register'])->name('register.submit');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('auth.dashboard');
 Route::get('/dashboard/chart-data', [AuthController::class, 'dashboardChartData'])->name('auth.dashboard.chart-data');
@@ -29,6 +33,7 @@ Route::get('/student/permohonan-status', [PermohonanController::class, 'studentS
 Route::get('/student/tempahan', [OperationsController::class, 'studentOrders'])->name('student.tempahan.index');
 Route::post('/student/tempahan', [OperationsController::class, 'storeStudentOrder'])->name('student.tempahan.store');
 Route::post('/student/tempahan/troli', [OperationsController::class, 'addStudentOrderCart'])->name('student.tempahan.cart.add');
+Route::patch('/student/tempahan/troli/{itemId}', [OperationsController::class, 'updateStudentOrderCart'])->name('student.tempahan.cart.update');
 Route::post('/student/tempahan/troli/hantar', [OperationsController::class, 'checkoutStudentOrderCart'])->name('student.tempahan.cart.checkout');
 Route::delete('/student/tempahan/troli/{itemId}', [OperationsController::class, 'removeStudentOrderCart'])->name('student.tempahan.cart.remove');
 Route::middleware('staff.type:lecturer_member,coop_staff,clothing_staff')->group(function (): void {
@@ -107,6 +112,7 @@ Route::get('/admin/anggota', [AhliController::class, 'anggotaIndex'])->name('adm
 Route::get('/admin/anggota-student', [AhliController::class, 'anggotaStudents'])->name('admin.anggota.students');
 Route::get('/admin/anggota-staff', [AhliController::class, 'anggotaStaff'])->name('admin.anggota.staff');
 Route::get('/admin/anggota/{permohonan}', [AhliController::class, 'anggotaShow'])->name('admin.anggota.show');
+Route::delete('/admin/anggota/{permohonan}', [AhliController::class, 'anggotaDestroy'])->name('admin.anggota.destroy');
 
 Route::middleware('staff.type:strict,clothing_staff')->group(function (): void {
     Route::get('/staff/tempahan', [OperationsController::class, 'tempahan'])->name('staff.tempahan.index');

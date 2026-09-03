@@ -57,7 +57,7 @@ class MembershipApplicationDocumentsTest extends TestCase
     public function test_share_application_requires_and_stores_payment_slip(): void
     {
         Storage::fake('local');
-        $student = $this->student();
+        $student = $this->student(['no_anggota' => 'PBT123']);
 
         $this
             ->withSession(['auth_role' => 'ahli', 'auth_id' => $student->id_ahli])
@@ -119,7 +119,7 @@ class MembershipApplicationDocumentsTest extends TestCase
     public function test_withdrawal_application_requires_and_stores_its_documents(): void
     {
         Storage::fake('local');
-        $student = $this->student();
+        $student = $this->student(['no_anggota' => 'PBT123']);
         $data = $this->withdrawalApplicationData();
         $data['salinan_ic'] = UploadedFile::fake()->create('salinan-ic.pdf', 100, 'application/pdf');
 
@@ -150,7 +150,7 @@ class MembershipApplicationDocumentsTest extends TestCase
         ]);
     }
 
-    private function student(): Ahli
+    private function student(array $overrides = []): Ahli
     {
         return Ahli::query()->create([
             'no_matrik' => 'A001',
@@ -158,7 +158,7 @@ class MembershipApplicationDocumentsTest extends TestCase
             'nric' => '010101010001',
             'semester' => 'Sem 1',
             'status_aktif' => true,
-        ]);
+        ] + $overrides);
     }
 
     private function applicationData(): array

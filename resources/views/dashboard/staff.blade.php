@@ -67,10 +67,10 @@
             </div>
 
             <nav class="staff-work-list" aria-label="Kerja harian staff">
-                <a class="staff-work-item" href="{{ route('student.permohonan.index') }}">
+                <a class="staff-work-item" href="{{ route('student.permohonan.status') }}">
                     <span>Permohonan</span>
-                    <strong>Semak permohonan koperasi</strong>
-                    <small>Semak status permohonan saham dan pengeluaran.</small>
+                    <strong>Semak status & slip</strong>
+                    <small>Lihat status permohonan dan slip bayaran akaun staff.</small>
                 </a>
                 <a class="staff-work-item" href="{{ route('koperasi.transactions.index') }}">
                     <span>Transaksi</span>

@@ -45,6 +45,10 @@ class PermohonanController extends Controller
             }
 
             $staffMemberNumber = $this->staffMemberNumber($user);
+            if (! $staffMemberNumber) {
+                $types = collect($types)->only('anggota')->all();
+            }
+
             $defaultType = $staffMemberNumber ? 'saham' : 'anggota';
             $activeType = $jenis && isset($types[$jenis]) ? $jenis : $defaultType;
             $portalRoutes = $this->staffPortalRoutes($user->staff_type);
@@ -75,6 +79,11 @@ class PermohonanController extends Controller
         }
 
         $types = $this->applicationTypesForRole('ahli');
+
+        if (blank($user->no_anggota)) {
+            $types = collect($types)->only('anggota')->all();
+        }
+
         $activeType = $jenis && isset($types[$jenis]) ? $jenis : 'anggota';
 
         return view('student.permohonan.index', [
@@ -96,8 +105,39 @@ class PermohonanController extends Controller
 
     public function studentStatus(Request $request): View|RedirectResponse
     {
-        if ($request->session()->get('auth_role') !== 'ahli') {
+        $authRole = $request->session()->get('auth_role');
+
+        if (! in_array($authRole, ['ahli', 'staff'], true)) {
             return redirect()->route('login');
+        }
+
+        if ($authRole === 'staff') {
+            $user = Pekerja::query()->find($request->session()->get('auth_id'));
+
+            if (! $user || ! in_array($user->staff_type, ['lecturer_member', 'coop_staff', 'clothing_staff'], true)) {
+                return redirect()->route('login');
+            }
+
+            return view('student.permohonan.status', [
+                'role' => 'staff',
+                'user' => $user,
+                'portalLabel' => 'Staff Portal',
+                'createRoute' => in_array($user->staff_type, ['lecturer_member', 'clothing_staff'], true)
+                    ? $this->staffPortalRoutes($user->staff_type)['permohonan_index']
+                    : null,
+                'applications' => Permohonan::query()
+                    ->whereNull('id_ahli')
+                    ->where('no_matrik', $user->no_pekerja)
+                    ->latest('tarikh_permohonan')
+                    ->latest('id_permohonan')
+                    ->paginate(15, ['*'], 'applications_page'),
+                'documents' => DocumentUpload::query()
+                    ->where('owner_role', 'staff')
+                    ->where('owner_id', $user->id_pekerja)
+                    ->where('category', '!=', 'penyata_bank')
+                    ->latest()
+                    ->paginate(15, ['*'], 'documents_page'),
+            ]);
         }
 
         $user = Ahli::query()->find($request->session()->get('auth_id'));
@@ -109,6 +149,8 @@ class PermohonanController extends Controller
         return view('student.permohonan.status', [
             'role' => 'ahli',
             'user' => $user,
+            'portalLabel' => 'Student Portal',
+            'createRoute' => 'student.permohonan.index',
             'applications' => Permohonan::query()
                 ->where('id_ahli', $user->id_ahli)
                 ->latest('tarikh_permohonan')
@@ -143,6 +185,19 @@ class PermohonanController extends Controller
         abort_unless(isset($types[$jenis]), 404);
 
         $isStaffApplicant = $authRole === 'staff';
+
+        if (! $isStaffApplicant && $jenis !== 'anggota' && blank($user->no_anggota)) {
+            return redirect()
+                ->route('student.permohonan.index', ['jenis' => 'anggota'])
+                ->withErrors(['permohonan' => 'Sila mohon menjadi anggota koperasi dahulu sebelum membuat permohonan lain.']);
+        }
+
+        if ($isStaffApplicant && $jenis !== 'anggota' && blank($this->staffMemberNumber($user))) {
+            return redirect()
+                ->route($this->staffPortalRoutes($user->staff_type)['permohonan_index'], ['jenis' => 'anggota'])
+                ->withErrors(['permohonan' => 'Sila mohon menjadi anggota koperasi dahulu sebelum membuat permohonan lain.']);
+        }
+
         $withdrawalTypes = $isStaffApplicant
             ? ['Berhenti Keahlian', 'Berpindah', 'Bersara', 'Lain-lain']
             : ['Berhenti Keahlian', 'Berpindah', 'Bersara', 'Tamat Pengajian', 'Lain-lain'];
@@ -341,16 +396,30 @@ class PermohonanController extends Controller
             $this->backfillApprovedStaffMemberNumbers();
         }
 
-        $applications = Permohonan::query()
+        $baseApplicationsQuery = Permohonan::query()
             ->with('ahli')
             ->when($selectedAudience === 'pelajar', fn ($query) => $query->whereNotNull('id_ahli'))
             ->when($selectedAudience === 'staff', fn ($query) => $query->whereNull('id_ahli'))
-            ->when($selectedJenis !== '', fn ($query) => $query->where('jenis', $selectedJenis))
+            ->when($selectedJenis !== '', fn ($query) => $query->where('jenis', $selectedJenis));
+
+        $statusCounts = (clone $baseApplicationsQuery)
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $applications = (clone $baseApplicationsQuery)
             ->when($selectedStatus !== '', fn ($query) => $query->where('status', $selectedStatus))
             ->latest('tarikh_permohonan')
             ->latest('id_permohonan')
             ->paginate(20)
             ->withQueryString();
+
+        $summary = [
+            'total' => $selectedStatus !== '' ? $applications->total() : (int) $statusCounts->sum(),
+            'baru' => (int) ($statusCounts['baru'] ?? 0),
+            'diluluskan' => (int) ($statusCounts['diluluskan'] ?? 0),
+            'ditolak' => (int) ($statusCounts['ditolak'] ?? 0),
+        ];
 
         return view('admin.permohonan.index', [
             'role' => 'admin',
@@ -361,6 +430,7 @@ class PermohonanController extends Controller
             'selectedStatus' => $selectedStatus,
             'selectedAudience' => $selectedAudience,
             'statuses' => ['baru', 'dalam_semakan', 'diluluskan', 'ditolak'],
+            'summary' => $summary,
         ]);
     }
 

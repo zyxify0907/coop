@@ -2,8 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Models\AttendanceRecord;
-use App\Models\Pekerja;
 use App\Services\AttendanceService;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
@@ -25,25 +23,9 @@ class FinalizeAttendanceDay extends Command
             return self::SUCCESS;
         }
 
-        $workers = Pekerja::query()->where('staff_type', 'coop_staff')->where('status_aktif', true)->get();
-        $updated = 0;
-        $absent = 0;
-
-        foreach ($workers as $worker) {
-            $record = AttendanceRecord::query()->firstOrNew(['staff_id' => $worker->id_pekerja, 'attendance_date' => $date->toDateString()]);
-            if (! $record->exists) {
-                $record->fill(['status' => 'absent', 'location_name' => $setting->location_name]);
-                $record->save();
-                $absent++;
-                continue;
-            }
-
-            if ($record->check_in_time && ! $record->check_out_time) {
-                $record->status = 'missing_checkout';
-                $record->save();
-                $updated++;
-            }
-        }
+        $result = $attendance->finalizeDate($date, $setting);
+        $updated = $result['missing_checkout'];
+        $absent = $result['absent'];
 
         $this->info("Selesai: {$updated} tiada Check Out, {$absent} tidak hadir.");
 

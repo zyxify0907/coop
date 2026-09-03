@@ -7,10 +7,14 @@ use App\Models\Ahli;
 use App\Models\AhliImport;
 use App\Models\Pekerja;
 use App\Models\Permohonan;
+use App\Models\Saham;
+use App\Models\SahamStaff;
+use App\Models\ShareTransaction;
 use App\Notifications\AhliImportCompleted;
 use App\Services\AhliImportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
@@ -215,5 +219,56 @@ class AhliController extends Controller
             'memberApplication' => $application,
             'staffMember' => $staffMember,
         ]);
+    }
+
+    public function anggotaDestroy(Request $request, Permohonan $permohonan): RedirectResponse
+    {
+        $role = $request->session()->get('auth_role');
+
+        if ($role !== 'admin') {
+            return redirect()->route('login');
+        }
+
+        $user = AdminUser::query()->find($request->session()->get('auth_id'));
+
+        if (! $user) {
+            return redirect()->route('login');
+        }
+
+        abort_unless($permohonan->jenis === 'anggota' && $permohonan->status === 'diluluskan', 404);
+
+        $isStaffMember = ($permohonan->data_permohonan['pemohon_role'] ?? null) === 'staff';
+        $redirectRoute = $isStaffMember ? 'admin.anggota.staff' : 'admin.anggota.students';
+
+        DB::transaction(function () use ($permohonan, $isStaffMember): void {
+            if ($isStaffMember) {
+                $staffNumber = $permohonan->data_permohonan['no_pekerja'] ?? $permohonan->no_matrik;
+                $staff = Pekerja::query()->where('no_pekerja', $staffNumber)->first();
+
+                if ($staff) {
+                    SahamStaff::query()->where('id_pekerja', $staff->id_pekerja)->delete();
+
+                    if (Schema::hasColumn('pekerja', 'no_anggota')) {
+                        $staff->update(['no_anggota' => null]);
+                    }
+                }
+            } elseif ($permohonan->id_ahli) {
+                Saham::query()->where('id_ahli', $permohonan->id_ahli)->delete();
+                Ahli::query()->where('id_ahli', $permohonan->id_ahli)->update(['no_anggota' => null]);
+            }
+
+            if (Schema::hasTable('share_transactions')) {
+                ShareTransaction::query()
+                    ->where('reference_type', Permohonan::class)
+                    ->where('reference_id', $permohonan->getKey())
+                    ->delete();
+            }
+
+            $permohonan->delete();
+        });
+
+        return redirect()
+            ->route($redirectRoute)
+            ->with('status', 'Rekod anggota berjaya dipadam.');
     }
 }

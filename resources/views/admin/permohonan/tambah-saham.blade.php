@@ -35,7 +35,7 @@
                 <span class="applicant-avatar">{{ $initials }}</span>
                 <div>
                     <h2>{{ $application->nama_pemohon }}</h2>
-                    <p>{{ $displayNumber }} &middot; {{ $application->email ?: 'Email tiada' }} &middot; {{ $application->no_tel ?: 'Telefon tiada' }}</p>
+                    <p>{{ $displayNumber }} &middot; {{ $application->no_tel ?: 'Telefon tiada' }}</p>
                 </div>
             </div>
             <span class="status-pill status-pill--{{ $application->status }}">{{ str_replace('_', ' ', ucfirst($application->status)) }}</span>
@@ -97,6 +97,21 @@
 <style>
     .page-heading {
         display: none;
+    }
+
+    body.dialog-mode .share-add-page {
+        padding: 20px;
+    }
+
+    body.dialog-mode .share-add-hero {
+        display: none;
+    }
+
+    body.dialog-mode .share-add-card {
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
     }
 
     .share-add-page {

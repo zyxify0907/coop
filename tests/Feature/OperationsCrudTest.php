@@ -5,7 +5,9 @@ namespace Tests\Feature;
 use App\Models\AdminUser;
 use App\Models\Ahli;
 use App\Models\Pekerja;
+use App\Models\Permohonan;
 use App\Models\Saham;
+use App\Models\SahamStaff;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -73,6 +75,94 @@ class OperationsCrudTest extends TestCase
 
         $this->assertDatabaseMissing('saham', [
             'id_saham' => $saham->id_saham,
+        ]);
+    }
+
+    public function test_admin_can_delete_student_member_record(): void
+    {
+        $admin = $this->admin();
+        $student = Ahli::query()->create([
+            'no_anggota' => 'PBT123',
+            'no_matrik' => 'A001',
+            'nama' => 'Ali Ahmad',
+            'status_aktif' => true,
+        ]);
+        Saham::query()->create([
+            'id_ahli' => $student->id_ahli,
+            'syer' => 10,
+            'yuran' => 10,
+        ]);
+        $application = Permohonan::query()->create([
+            'id_ahli' => $student->id_ahli,
+            'jenis' => 'anggota',
+            'nama_pemohon' => $student->nama,
+            'no_matrik' => $student->no_matrik,
+            'status' => 'diluluskan',
+            'data_permohonan' => ['no_anggota' => 'PBT123'],
+            'tarikh_permohonan' => now()->toDateString(),
+            'tarikh_keputusan' => now()->toDateString(),
+        ]);
+
+        $this
+            ->withSession(['auth_role' => 'admin', 'auth_id' => $admin->id_admin])
+            ->delete(route('admin.anggota.destroy', $application))
+            ->assertRedirect(route('admin.anggota.students'));
+
+        $this->assertDatabaseHas('ahli', [
+            'id_ahli' => $student->id_ahli,
+            'no_anggota' => null,
+        ]);
+        $this->assertDatabaseMissing('saham', [
+            'id_ahli' => $student->id_ahli,
+        ]);
+        $this->assertDatabaseMissing('permohonan', [
+            'id_permohonan' => $application->id_permohonan,
+        ]);
+    }
+
+    public function test_admin_can_delete_staff_member_record(): void
+    {
+        $admin = $this->admin();
+        $staff = Pekerja::query()->create([
+            'no_anggota' => 'PBT1001',
+            'no_pekerja' => 'STAFF-001',
+            'nama' => 'Staff One',
+            'status_aktif' => true,
+            'staff_type' => 'lecturer_member',
+        ]);
+        SahamStaff::query()->create([
+            'id_pekerja' => $staff->id_pekerja,
+            'syer' => 10,
+            'yuran' => 10,
+        ]);
+        $application = Permohonan::query()->create([
+            'jenis' => 'anggota',
+            'nama_pemohon' => $staff->nama,
+            'no_matrik' => $staff->no_pekerja,
+            'status' => 'diluluskan',
+            'data_permohonan' => [
+                'pemohon_role' => 'staff',
+                'no_pekerja' => $staff->no_pekerja,
+                'no_anggota' => 'PBT1001',
+            ],
+            'tarikh_permohonan' => now()->toDateString(),
+            'tarikh_keputusan' => now()->toDateString(),
+        ]);
+
+        $this
+            ->withSession(['auth_role' => 'admin', 'auth_id' => $admin->id_admin])
+            ->delete(route('admin.anggota.destroy', $application))
+            ->assertRedirect(route('admin.anggota.staff'));
+
+        $this->assertDatabaseHas('pekerja', [
+            'id_pekerja' => $staff->id_pekerja,
+            'no_anggota' => null,
+        ]);
+        $this->assertDatabaseMissing('saham_staff', [
+            'id_pekerja' => $staff->id_pekerja,
+        ]);
+        $this->assertDatabaseMissing('permohonan', [
+            'id_permohonan' => $application->id_permohonan,
         ]);
     }
 

@@ -419,25 +419,35 @@
         .login-card {
             height: auto;
             min-height: 0;
-            padding: 28px;
-            border: 1px solid var(--line);
-            border-radius: 10px;
-            box-shadow: none;
+            padding: 30px;
+            border: 1px solid #D7E3F5;
+            border-radius: 14px;
+            background: linear-gradient(180deg, #FFFFFF 0%, #FBFDFF 100%);
+            box-shadow: 0 18px 45px rgba(15, 23, 42, .07);
             display: flex;
             flex-direction: column;
             justify-content: center;
         }
-        .login-card-head { margin-bottom: 22px; }
-        .login-card-head h2 { font-size: 22px; font-weight: 700; }
+        .login-card-head { margin-bottom: 24px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+        .login-card-head h2 { margin: 0; font-size: 28px; line-height: 1.1; font-weight: 900; letter-spacing: 0; }
+        .login-card-head h2::after { content: ''; display: block; width: 46px; height: 4px; margin-top: 10px; border-radius: 999px; background: var(--primary); }
+        .login-card-head p { margin-top: 10px; font-size: 14px; line-height: 1.5; }
         .form-group { margin-bottom: 18px; }
-        .form-group label { margin-bottom: 6px; color: var(--body); font-size: 12px; font-weight: 600; letter-spacing: .02em; }
-        .form-group input[type="text"], .form-group input[type="password"] { height: 42px; border: 1px solid #CBD5E1; border-radius: 7px; background: #fff; font-weight: 500; }
+        .form-group label { margin-bottom: 7px; color: #334155; font-size: 12px; font-weight: 900; letter-spacing: .04em; }
+        .form-group input[type="text"], .form-group input[type="password"] { height: 48px; border: 1px solid #CBD5E1; border-radius: 9px; background: #fff; font-weight: 700; }
         .form-group input:focus { border-color: var(--secondary); box-shadow: 0 0 0 3px rgba(36,83,166,.14); }
-        .form-row { margin-bottom: 20px; }
-        .checkbox-label input { accent-color: var(--secondary); }
-        .role-guide { margin-top: 20px; padding-top: 16px; gap: 7px; font-size: 12px; }
-        .badge { min-width: 56px; border-radius: 4px; font-weight: 600; }
-        .badge.staff { background: #F1F5F9; color: #475569; }
+        .form-row { margin-bottom: 22px; }
+        .login-links-row { display:flex; align-items:center; justify-content:space-between; gap:14px; margin: 4px 0 14px; }
+        .login-links-row a { color: var(--secondary); font-weight: 900; font-size: 13px; }
+        .checkbox-label { display:inline-flex; align-items:center; gap:10px; color: #334155; font-weight: 800; line-height:1; }
+        .checkbox-label input { width:18px; height:18px; margin:0; accent-color: var(--secondary); }
+        .register-link-row { display:flex; justify-content:center; margin-top:16px; padding-top:16px; border-top:1px solid var(--line); }
+        .register-link-row a { color: var(--secondary); font-weight: 900; font-size: 13px; text-align:center; }
+        .login-card .button.primary { min-height: 48px; border-radius: 9px; background: #CF232B; font-weight: 900; }
+        .login-card .button.primary:hover { background: #B91C1C; }
+        .role-guide { display: none; }
+        .badge { min-width: 64px; border-radius: 7px; font-weight: 900; padding: 4px 9px; }
+        .badge.staff { background: #F1F5F9; color: #334155; }
         .badge.admin { background: #FEF2F2; color: var(--primary); }
         .site-footer { padding: 20px 0; background: #111827; border-color: #111827; color: #F8FAFC; font-size: 12px; }
         html, body { max-width: 100%; overflow-x: hidden; }
@@ -477,6 +487,7 @@
     </style>
 </head>
 <body>
+    @include('components.flash-notification')
 
     <!-- Site Header -->
     <header class="site-header">
@@ -529,7 +540,7 @@
             <div class="login-card">
                 <div class="login-card-head">
                     <h2>Log Masuk</h2>
-                    <p>Sila masukkan maklumat akaun anda untuk meneruskan.</p>
+                    <p>Sila masukkan maklumat anda untuk meneruskan.</p>
                 </div>
 
                 @if ($errors->any())
@@ -553,22 +564,22 @@
                         <input id="password" name="password" type="password" required placeholder="Masukkan kata laluan" autocomplete="current-password">
                     </div>
 
-                    <div class="form-row">
+                    <div class="login-links-row">
                         <label class="checkbox-label" for="remember">
                             <input id="remember" name="remember" type="checkbox" @checked(old('remember'))>
                             Ingat Saya
                         </label>
-                        <a href="#">Lupa Kata Laluan?</a>
+                        <a href="{{ route('password.forgot') }}">Lupa Kata Laluan?</a>
                     </div>
 
                     <button class="button primary" type="submit" id="login-btn">Log Masuk</button>
                 </form>
 
-                <div class="role-guide">
-                    <div class="role-row"><span class="badge">Pelajar</span><span>Log masuk menggunakan nombor matrik dan kata laluan berdaftar.</span></div>
-                    <div class="role-row"><span class="badge staff">Staff</span><span>Log masuk menggunakan No. KP dan akaun staff.</span></div>
-                    <div class="role-row"><span class="badge admin">Admin</span><span>Log masuk menggunakan No. KP pentadbir sistem.</span></div>
+                <div class="register-link-row">
+                    <a href="{{ route('register') }}">Daftar akaun baru</a>
                 </div>
+
+                <div class="role-guide" aria-hidden="true"></div>
             </div>
 
         </div>

@@ -168,13 +168,16 @@ class AhliImportService
                 $staffType = $this->normalizeStaffType((string) ($row['staff_type'] ?? '')) ?? 'lecturer_member';
                 $email = trim((string) ($row['email'] ?? ''));
                 $noTel = trim((string) ($row['no_tel'] ?? ''));
-                $tarikhMula = $this->normalizeDate((string) ($row['tarikh_mula'] ?? '')) ?? now()->toDateString();
+                $tarikhMula = $this->normalizeDate((string) ($row['tarikh_masuk'] ?? $row['tarikh_mula'] ?? '')) ?? now()->toDateString();
+                $existingStaff = $nric !== '' ? Pekerja::query()->where('nric', $nric)->first() : null;
 
                 if ($noPekerja === '') {
-                    $noPekerja = $this->formatStaffNumber($nextStaffNumber++);
+                    $noPekerja = $existingStaff?->no_pekerja ?: $this->formatStaffNumber($nextStaffNumber++);
                 }
 
-                $message = $this->validateStaffRow($nama, $noPekerja, $nric, $staffType, $email, $seenNoPekerja, $seenNric, $seenEmail);
+                $existingStaff ??= Pekerja::query()->where('no_pekerja', $noPekerja)->first();
+
+                $message = $this->validateStaffRow($nama, $noPekerja, $nric, $staffType, $email, $seenNoPekerja, $seenNric, $seenEmail, $existingStaff?->id_pekerja);
 
                 if ($message !== null) {
                     $errors[] = [
@@ -193,7 +196,7 @@ class AhliImportService
                     $seenEmail[strtolower($email)] = true;
                 }
 
-                Pekerja::query()->create([
+                $staffData = [
                     'no_pekerja' => $noPekerja,
                     'nama' => $nama,
                     'nric' => $nric,
@@ -204,7 +207,14 @@ class AhliImportService
                     'tarikh_mula' => $tarikhMula,
                     'password_hash' => Hash::make('staff12345'),
                     'status_aktif' => true,
-                ]);
+                ];
+
+                if ($existingStaff) {
+                    unset($staffData['password_hash']);
+                    $existingStaff->update($staffData);
+                } else {
+                    Pekerja::query()->create($staffData);
+                }
 
                 $imported++;
             }
@@ -238,7 +248,7 @@ class AhliImportService
         return null;
     }
 
-    private function validateStaffRow(string $nama, string $noPekerja, string $nric, ?string $staffType, string $email, array $seenNoPekerja, array $seenNric, array $seenEmail): ?string
+    private function validateStaffRow(string $nama, string $noPekerja, string $nric, ?string $staffType, string $email, array $seenNoPekerja, array $seenNric, array $seenEmail, ?int $existingStaffId = null): ?string
     {
         if ($nama === '') {
             return 'Nama tidak boleh kosong.';
@@ -272,15 +282,15 @@ class AhliImportService
             return 'Email berulang dalam fail import; dilangkau.';
         }
 
-        if (Pekerja::query()->where('no_pekerja', $noPekerja)->exists()) {
+        if (Pekerja::query()->where('no_pekerja', $noPekerja)->when($existingStaffId, fn ($query) => $query->where('id_pekerja', '!=', $existingStaffId))->exists()) {
             return 'No Pekerja sudah wujud dalam sistem; dilangkau.';
         }
 
-        if (Pekerja::query()->where('nric', $nric)->exists()) {
+        if (Pekerja::query()->where('nric', $nric)->when($existingStaffId, fn ($query) => $query->where('id_pekerja', '!=', $existingStaffId))->exists()) {
             return 'No KP sudah wujud dalam sistem; dilangkau.';
         }
 
-        if ($email !== '' && Pekerja::query()->where('email', $email)->exists()) {
+        if ($email !== '' && Pekerja::query()->where('email', $email)->when($existingStaffId, fn ($query) => $query->where('id_pekerja', '!=', $existingStaffId))->exists()) {
             return 'Email sudah wujud dalam sistem; dilangkau.';
         }
 

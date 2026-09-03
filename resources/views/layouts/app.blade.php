@@ -1,7 +1,8 @@
 @php
     $role = $role ?? session('auth_role');
     $staffType = $staffType ?? ($user->staff_type ?? session('staff_type'));
-    $showSidebar = in_array($role, ['admin', 'staff', 'ahli'], true);
+    $isDialogMode = request()->boolean('dialog');
+    $showSidebar = ! $isDialogMode && in_array($role, ['admin', 'staff', 'ahli'], true);
     $displayName = $user->nama ?? 'CoopBest';
     $initials = collect(explode(' ', $displayName))->filter()->take(2)->map(fn ($part) => strtoupper(substr($part, 0, 1)))->implode('') ?: 'CB';
     $roleLabel = $role === 'admin'
@@ -20,8 +21,6 @@
         ['section' => 'Dashboard', 'label' => 'Dashboard Baju', 'route' => 'admin.dashboard.baju', 'active' => 'admin.dashboard.baju', 'icon' => 'box'],
         ['section' => 'Dashboard', 'label' => 'Dashboard Kehadiran', 'route' => 'admin.attendance.dashboard', 'active' => 'admin.attendance.dashboard', 'icon' => 'clipboard'],
         ['section' => 'Kehadiran Pekerja', 'label' => 'Rekod Kehadiran', 'route' => 'admin.attendance.records', 'active' => 'admin.attendance.records*', 'icon' => 'book'],
-        ['section' => 'Kehadiran Pekerja', 'label' => 'Pekerja Koperasi', 'route' => 'admin.attendance.workers', 'active' => 'admin.attendance.workers', 'icon' => 'users'],
-        ['section' => 'Kehadiran Pekerja', 'label' => 'Pembetulan', 'route' => 'admin.attendance.corrections', 'active' => 'admin.attendance.corrections*', 'icon' => 'clipboard'],
         ['section' => 'Kehadiran Pekerja', 'label' => 'Laporan Attendance', 'route' => 'admin.attendance.reports', 'active' => 'admin.attendance.reports*', 'icon' => 'chart'],
         ['section' => 'Kehadiran Pekerja', 'label' => 'Tetapan Attendance', 'route' => 'admin.attendance.settings', 'active' => 'admin.attendance.settings*', 'icon' => 'book'],
         ['section' => 'SAHAM', 'label' => 'Permohonan Student', 'route' => 'admin.permohonan.index', 'params' => ['pemohon' => 'pelajar'], 'active' => 'admin.permohonan.*', 'audience' => 'pelajar', 'icon' => 'clipboard'],
@@ -34,7 +33,7 @@
         ['section' => 'Tempahan Baju', 'label' => 'Stok Baju', 'route' => 'admin.baju.index', 'active' => 'admin.baju.index', 'icon' => 'box'],
         ['section' => 'Pengguna', 'label' => 'Senarai Student', 'route' => 'admin.users.students', 'active' => 'admin.users.students', 'icon' => 'users'],
         ['section' => 'Pengguna', 'label' => 'Senarai Staff', 'route' => 'admin.users.staff', 'active' => 'admin.users.staff', 'icon' => 'shield'],
-        ['section' => 'Pengguna', 'label' => 'Pekerja Koperasi', 'route' => 'admin.users.coop-workers', 'active' => 'admin.users.coop-workers', 'icon' => 'users'],
+        ['section' => 'Pengguna', 'label' => 'Akaun Pekerja Koperasi', 'route' => 'admin.users.coop-workers', 'active' => 'admin.users.coop-workers', 'icon' => 'users'],
         ['section' => 'Pengurusan', 'label' => 'Urus Announcement', 'route' => 'admin.announcements.index', 'active' => 'admin.announcements.*', 'icon' => 'clipboard'],
     ];
 
@@ -42,6 +41,7 @@
         ['section' => 'Home', 'label' => 'Home', 'route' => 'lecturer-member.dashboard', 'active' => 'lecturer-member.dashboard', 'icon' => 'grid'],
         ['section' => 'Dashboard', 'label' => 'Dashboard Saham', 'route' => 'lecturer-member.dashboard.saham', 'active' => 'lecturer-member.dashboard.saham', 'icon' => 'chart'],
         ['section' => 'SAHAM', 'label' => 'Permohonan Anggota', 'route' => 'lecturer-member.permohonan.index', 'active' => 'lecturer-member.permohonan.*', 'icon' => 'clipboard'],
+        ['section' => 'SAHAM', 'label' => 'Semak Status & Slip', 'route' => 'student.permohonan.status', 'active' => 'student.permohonan.status', 'icon' => 'book'],
         ['section' => 'SAHAM', 'label' => 'Senarai Transaksi', 'route' => 'koperasi.transactions.index', 'active' => 'koperasi.transactions.*', 'icon' => 'chart'],
         ['section' => 'Akaun', 'label' => 'Profil', 'route' => 'lecturer-member.profile', 'active' => 'lecturer-member.profile', 'icon' => 'users'],
     ];
@@ -50,7 +50,6 @@
         ['section' => 'Home', 'label' => 'Home', 'route' => 'coop-staff.dashboard', 'active' => 'coop-staff.dashboard', 'icon' => 'grid'],
         ['section' => 'Kehadiran Pekerja', 'label' => 'Kehadiran Pekerja', 'route' => 'coop-staff.attendance.index', 'active' => 'coop-staff.attendance.index', 'icon' => 'clipboard'],
         ['section' => 'Kehadiran Pekerja', 'label' => 'Sejarah Kehadiran', 'route' => 'coop-staff.attendance.history', 'active' => 'coop-staff.attendance.history', 'icon' => 'book'],
-        ['section' => 'Kehadiran Pekerja', 'label' => 'Pembetulan Kehadiran', 'route' => 'coop-staff.attendance.corrections', 'active' => 'coop-staff.attendance.corrections*', 'icon' => 'clipboard'],
         ['section' => 'Akaun', 'label' => 'Profil', 'route' => 'coop-staff.profile', 'active' => 'coop-staff.profile', 'icon' => 'users'],
     ];
 
@@ -59,6 +58,7 @@
         ['section' => 'Dashboard', 'label' => 'Dashboard Saham', 'route' => 'clothing-staff.dashboard.saham', 'active' => 'clothing-staff.dashboard.saham', 'icon' => 'chart'],
         ['section' => 'Dashboard', 'label' => 'Dashboard Baju', 'route' => 'clothing-staff.dashboard.baju', 'active' => 'clothing-staff.dashboard.baju', 'icon' => 'box'],
         ['section' => 'SAHAM', 'label' => 'Permohonan', 'route' => 'clothing-staff.permohonan.index', 'active' => 'clothing-staff.permohonan.*', 'icon' => 'clipboard'],
+        ['section' => 'SAHAM', 'label' => 'Semak Status & Slip', 'route' => 'student.permohonan.status', 'active' => 'student.permohonan.status', 'icon' => 'book'],
         ['section' => 'SAHAM', 'label' => 'Senarai Transaksi', 'route' => 'koperasi.transactions.index', 'active' => 'koperasi.transactions.*', 'icon' => 'chart'],
         ['section' => 'Tempahan Baju', 'label' => 'Stok Baju', 'route' => 'clothing-staff.baju.index', 'active' => 'clothing-staff.baju.*', 'icon' => 'box'],
         ['section' => 'Tempahan Baju', 'label' => 'Senarai Tempahan', 'route' => 'clothing-staff.orders.index', 'active' => 'clothing-staff.orders.*', 'icon' => 'clipboard'],
@@ -87,7 +87,7 @@
     };
 @endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="{{ $isDialogMode ? 'dialog-mode embedded-frame' : '' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -965,7 +965,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 20px;
+            gap: 16px;
             width: 100%;
             margin: 0;
             padding: 16px 20px;
@@ -987,7 +987,16 @@
         .coop-pagination__pages {
             display: flex;
             align-items: center;
-            gap: 6px;
+        }
+        .coop-pagination__controls {
+            gap: 8px;
+        }
+        .coop-pagination__pages {
+            gap: 2px;
+            padding: 3px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--surface-soft);
         }
         .coop-pagination__direction,
         .coop-pagination__page,
@@ -995,12 +1004,11 @@
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
-            min-width: 36px !important;
-            min-height: 36px !important;
+            min-height: 34px !important;
             padding: 0 10px !important;
-            border: 1px solid var(--line-strong) !important;
-            border-radius: 7px !important;
-            background: #fff !important;
+            border: 0 !important;
+            border-radius: 6px !important;
+            background: transparent !important;
             color: var(--text) !important;
             font-size: 13px !important;
             font-weight: 600 !important;
@@ -1010,17 +1018,18 @@
             transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
         }
         .coop-pagination__direction {
-            gap: 7px;
             min-width: 112px !important;
+            border: 1px solid var(--line-strong) !important;
+            background: #fff !important;
         }
+        .coop-pagination__page { min-width: 34px !important; padding: 0 8px !important; }
         a.coop-pagination__direction:hover,
         a.coop-pagination__page:hover {
-            border-color: #86efac !important;
             background: var(--secondary-soft) !important;
             color: var(--secondary) !important;
         }
+        a.coop-pagination__direction:hover { border-color: #93c5fd !important; }
         .coop-pagination__page.is-current {
-            border-color: var(--secondary) !important;
             background: var(--secondary) !important;
             color: #fff !important;
         }
@@ -1033,7 +1042,6 @@
         .coop-pagination__ellipsis {
             min-width: 28px !important;
             padding: 0 4px !important;
-            border-color: transparent !important;
             background: transparent !important;
             color: var(--muted) !important;
         }
@@ -1413,7 +1421,30 @@
             container-name: coop-content;
             overflow-x: clip;
             overscroll-behavior-inline: contain;
-            scrollbar-gutter: stable;
+            scrollbar-gutter: auto;
+        }
+
+        @media (min-width: 768px) {
+            html,
+            body {
+                height: 100%;
+                overflow: hidden !important;
+            }
+
+            .app-shell,
+            .main-wrap {
+                height: 100dvh;
+                max-height: 100dvh;
+                overflow: hidden !important;
+            }
+
+            .content {
+                flex: 1 1 auto;
+                min-height: 0;
+                overflow-y: auto !important;
+                overflow-x: clip;
+                scrollbar-gutter: auto;
+            }
         }
 
         .content > *,
@@ -1609,9 +1640,332 @@
                 width: 100%;
             }
         }
+
+        html.dialog-mode,
+        body.dialog-mode {
+            background: #fff;
+            height: auto !important;
+            min-height: 100dvh !important;
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
+        }
+
+        body.dialog-mode .skip-link,
+        body.dialog-mode .topbar,
+        body.dialog-mode .page-heading {
+            display: none !important;
+        }
+
+        body.dialog-mode .app-shell,
+        body.dialog-mode .main-wrap {
+            display: block;
+            width: 100%;
+            min-height: 100dvh;
+            height: auto;
+            overflow: visible;
+        }
+
+        body.dialog-mode .content {
+            display: block;
+            width: 100%;
+            min-height: 100dvh;
+            padding: 0;
+            overflow: visible;
+            background: #fff;
+        }
+
+        body.dialog-mode .content > * {
+            max-width: none;
+        }
+
+        html.embedded-frame,
+        body.embedded-frame {
+            background: #f8fafc;
+            height: auto !important;
+            min-height: 100dvh !important;
+            overflow-y: auto !important;
+        }
+
+        body.embedded-frame .skip-link,
+        body.embedded-frame .topbar,
+        body.embedded-frame .page-heading,
+        body.embedded-frame .sidebar,
+        body.embedded-frame .sidebar-toggle,
+        body.embedded-frame .sidebar-backdrop {
+            display: none !important;
+        }
+
+        body.embedded-frame .app-shell,
+        body.embedded-frame .main-wrap {
+            display: block;
+            width: 100%;
+            min-height: auto;
+            height: auto;
+            overflow: visible;
+        }
+
+        body.embedded-frame .content {
+            display: block;
+            width: 100%;
+            min-height: auto;
+            padding: 22px 24px 28px !important;
+            overflow: visible;
+            background: #f8fafc;
+        }
+
+        body.embedded-frame .content > * {
+            max-width: none;
+        }
+
+        .view-dialog {
+            position: fixed !important;
+            inset: 0 !important;
+            width: min(1080px, calc(100vw - 96px)) !important;
+            max-width: 1080px !important;
+            height: min(80dvh, 760px) !important;
+            max-height: calc(100dvh - 96px) !important;
+            margin: auto !important;
+            padding: 0 !important;
+            border: 0 !important;
+            border-radius: 12px !important;
+            background: transparent !important;
+            overflow: hidden !important;
+            box-shadow: 0 24px 70px rgba(15, 23, 42, .30) !important;
+        }
+
+        .view-dialog--attendance {
+            width: min(1280px, calc(100vw - 32px)) !important;
+            max-width: 1280px !important;
+            height: min(88dvh, 860px) !important;
+            max-height: calc(100dvh - 32px) !important;
+        }
+
+        .view-dialog::backdrop {
+            background: rgba(15, 23, 42, .42) !important;
+            backdrop-filter: none !important;
+        }
+
+        .view-dialog__shell {
+            display: grid !important;
+            grid-template-rows: auto minmax(0, 1fr) !important;
+            width: 100% !important;
+            height: 100% !important;
+            min-height: 0 !important;
+            background: #fff !important;
+        }
+
+        .view-dialog__head {
+            min-height: 72px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 16px !important;
+            padding: 14px 18px 14px 22px !important;
+            border-bottom: 1px solid var(--line) !important;
+            background: #fff !important;
+        }
+
+        .view-dialog__head span {
+            display: none !important;
+        }
+
+        .view-dialog__head h2 {
+            margin: 0 !important;
+            color: var(--text) !important;
+            font-size: 22px !important;
+            line-height: 1.2 !important;
+            font-weight: 800 !important;
+            letter-spacing: 0 !important;
+        }
+
+        .view-dialog__close {
+            width: 42px !important;
+            height: 42px !important;
+            min-height: 42px !important;
+            padding: 0 !important;
+            border: 1px solid var(--line) !important;
+            border-radius: 8px !important;
+            background: #fff !important;
+            color: var(--text) !important;
+            font-size: 26px !important;
+            font-weight: 700 !important;
+            line-height: 1 !important;
+            box-shadow: none !important;
+        }
+
+        .view-dialog__close:hover {
+            border-color: var(--danger-soft) !important;
+            background: var(--danger-soft) !important;
+            color: var(--danger) !important;
+        }
+
+        .view-dialog__frame {
+            width: 100% !important;
+            height: 100% !important;
+            min-height: 0 !important;
+            border: 0 !important;
+            background: #f8fafc !important;
+            display: block !important;
+            overflow: hidden !important;
+        }
+
+        .view-dialog__body {
+            min-height: 0 !important;
+            overflow-y: scroll !important;
+            overflow-x: hidden !important;
+            overscroll-behavior: contain;
+            scrollbar-gutter: stable;
+            background: #f8fafc !important;
+        }
+
+        html.dialog-mode,
+        body.dialog-mode {
+            background: #f8fafc;
+            height: auto !important;
+            min-height: 100dvh !important;
+            overflow-y: auto !important;
+        }
+
+        body.dialog-mode .content {
+            min-height: auto;
+            padding: 18px 24px 22px !important;
+            background: #f8fafc;
+            overflow: visible !important;
+        }
+
+        body.dialog-mode .attendance-head,
+        body.dialog-mode .application-detail-hero {
+            display: none !important;
+        }
+
+        body.dialog-mode .attendance-page,
+        body.dialog-mode .applications-wrap {
+            gap: 20px !important;
+        }
+
+        body.dialog-mode .attendance-detail div {
+            display: grid !important;
+            align-content: center !important;
+            min-height: 104px !important;
+            padding: 18px 24px !important;
+        }
+
+        body.dialog-mode .attendance-detail span {
+            font-size: 13px !important;
+        }
+
+        body.dialog-mode .attendance-detail strong {
+            margin-top: 6px !important;
+            font-size: 20px !important;
+            line-height: 1.3 !important;
+        }
+
+        body.dialog-mode .attendance-panel__head {
+            padding: 20px 24px !important;
+        }
+
+        body.dialog-mode .attendance-panel__head h2 {
+            font-size: 20px !important;
+        }
+
+        body.dialog-mode .attendance-panel__head p {
+            margin-top: 5px !important;
+        }
+
+        body.dialog-mode .attendance-empty {
+            padding: 30px 24px !important;
+        }
+
+        body.dialog-mode .attendance-panel,
+        body.dialog-mode .panel,
+        body.dialog-mode .detail-summary-card,
+        body.dialog-mode .detail-section-card,
+        body.dialog-mode .application-documents,
+        body.dialog-mode .decision-card,
+        body.dialog-mode .profile-shell {
+            border-radius: 8px !important;
+            box-shadow: none !important;
+        }
+
+        body.dialog-mode .detail-summary-card,
+        body.dialog-mode .detail-metrics,
+        body.dialog-mode .profile-shell {
+            margin-bottom: 16px !important;
+        }
+
+        body.dialog-mode .summary-profile,
+        body.dialog-mode .profile-shell,
+        body.dialog-mode .detail-section-card,
+        body.dialog-mode .application-documents,
+        body.dialog-mode .decision-card {
+            padding: 18px 20px !important;
+        }
+
+        body.dialog-mode .summary-stat {
+            padding: 16px 20px !important;
+        }
+
+        body.dialog-mode .summary-stat strong,
+        body.dialog-mode .detail-metrics strong {
+            font-size: 20px !important;
+        }
+
+        body.dialog-mode .detail-hero {
+            margin-bottom: 16px !important;
+            padding: 20px 24px !important;
+        }
+
+        body.dialog-mode .detail-metrics {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px !important;
+        }
+
+        body.dialog-mode .detail-metrics section {
+            min-height: 92px !important;
+            padding: 14px 16px !important;
+        }
+
+        @media (max-width: 760px) {
+            .view-dialog {
+                width: calc(100vw - 28px) !important;
+                height: calc(100dvh - 28px) !important;
+                max-height: calc(100dvh - 28px) !important;
+                border-radius: 10px !important;
+            }
+
+            .view-dialog--attendance {
+                width: calc(100vw - 28px) !important;
+                height: calc(100dvh - 28px) !important;
+                max-height: calc(100dvh - 28px) !important;
+            }
+
+            .view-dialog__head {
+                min-height: 64px !important;
+                padding: 12px 14px !important;
+            }
+
+            .view-dialog__head h2 {
+                font-size: 18px !important;
+            }
+
+            body.dialog-mode .content {
+                padding: 14px !important;
+            }
+
+            body.dialog-mode .summary-stats,
+            body.dialog-mode .detail-metrics {
+                grid-template-columns: 1fr !important;
+            }
+        }
     </style>
 </head>
-<body>
+<body class="{{ $isDialogMode ? 'dialog-mode embedded-frame' : '' }}">
+    @include('components.flash-notification')
+    <script>
+        if (window.self !== window.top) {
+            document.body.classList.add('embedded-frame');
+        }
+    </script>
     <a class="skip-link" href="#main-content">Skip to main content</a>
     <div class="app-shell">
         @if ($showSidebar)
@@ -1752,9 +2106,6 @@
             </header>
 
             <main class="content" id="main-content" tabindex="-1">
-                @if (session('status'))
-                    <div class="alert" role="status">{{ session('status') }}</div>
-                @endif
                 @yield('content')
             </main>
         </div>

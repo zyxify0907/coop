@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\Ahli;
 use App\Models\AhliImport;
+use App\Models\Pekerja;
 use App\Notifications\AhliImportCompleted;
+use App\Services\AhliImportService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Notification;
@@ -117,6 +119,50 @@ class AhliImportTest extends TestCase
         $this->assertDatabaseHas('ahli', [
             'no_matrik' => 'X002',
             'nama' => 'Siti Aminah',
+        ]);
+    }
+
+    public function test_staff_import_uses_tarikh_masuk_column_for_start_date(): void
+    {
+        $file = $this->csvUpload("Nama,No KP,Tarikh Masuk\nNur Staff,900101015555,15/08/2026\n");
+
+        $result = app(AhliImportService::class)->importStaff($file);
+
+        $this->assertSame(1, $result->importedCount);
+        $this->assertSame(0, $result->failedCount);
+
+        $this->assertDatabaseHas('pekerja', [
+            'nama' => 'Nur Staff',
+            'nric' => '900101015555',
+            'tarikh_mula' => '2026-08-15',
+        ]);
+    }
+
+    public function test_staff_import_updates_existing_staff_from_tarikh_masuk_column(): void
+    {
+        Pekerja::query()->create([
+            'no_pekerja' => 'PBT-1',
+            'nama' => 'Nama Lama',
+            'nric' => '900101015555',
+            'staff_type' => 'lecturer_member',
+            'tarikh_mula' => '2026-08-01',
+            'password_hash' => bcrypt('staff12345'),
+            'status_aktif' => true,
+        ]);
+
+        $file = $this->csvUpload("Nama,No KP,Tarikh Masuk\nNama Baru,900101015555,15/08/2026\n");
+
+        $result = app(AhliImportService::class)->importStaff($file);
+
+        $this->assertSame(1, $result->importedCount);
+        $this->assertSame(0, $result->failedCount);
+        $this->assertDatabaseCount('pekerja', 1);
+
+        $this->assertDatabaseHas('pekerja', [
+            'no_pekerja' => 'PBT-1',
+            'nama' => 'Nama Baru',
+            'nric' => '900101015555',
+            'tarikh_mula' => '2026-08-15',
         ]);
     }
 

@@ -5,6 +5,9 @@
 @section('page-subtitle', 'Semak status permohonan dan dokumen yang telah dihantar.')
 
 @php
+    $portalLabel = $portalLabel ?? ($role === 'staff' ? 'STAFF PORTAL' : 'STUDENT PORTAL');
+    $createRoute = $createRoute ?? 'student.permohonan.index';
+    $canCreateApplication = filled($createRoute) && \Illuminate\Support\Facades\Route::has($createRoute);
     $applicationLabels = [
         'anggota' => 'Permohonan Anggota',
         'saham' => 'Penambahan Saham',
@@ -23,11 +26,13 @@
     <div class="coop-wrap status-page">
         <section class="coop-hero status-hero">
             <div>
-                <span class="coop-kicker">STUDENT PORTAL</span>
+                <span class="coop-kicker">{{ $portalLabel }}</span>
                 <h1>Semak Status & Slip</h1>
                 <p>Rekod permohonan dan dokumen yang telah anda hantar.</p>
             </div>
-            <a class="link-button secondary" href="{{ route('student.permohonan.index') }}">Permohonan Baharu</a>
+            @if ($canCreateApplication)
+                <a class="link-button secondary" href="{{ route($createRoute) }}">Permohonan Baharu</a>
+            @endif
         </section>
 
         <section class="status-summary" aria-label="Ringkasan permohonan">

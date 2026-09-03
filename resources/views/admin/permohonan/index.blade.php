@@ -21,7 +21,7 @@
 
             <div class="hero-meta">
                 <span>{{ now()->format('d M Y') }}</span>
-                <strong>{{ $applications->total() }} rekod</strong>
+                <strong>{{ $summary['total'] ?? $applications->total() }} rekod</strong>
             </div>
         </section>
 
@@ -39,10 +39,10 @@
             </div>
 
             <div class="request-summary">
-                <div class="summary-card"><span>Jumlah Permohonan</span><strong>{{ $applications->total() }}</strong></div>
-                <div class="summary-card"><span>Baru</span><strong>{{ $applications->getCollection()->where('status', 'baru')->count() }}</strong></div>
-                <div class="summary-card"><span>Diluluskan</span><strong>{{ $applications->getCollection()->where('status', 'diluluskan')->count() }}</strong></div>
-                <div class="summary-card"><span>Ditolak</span><strong>{{ $applications->getCollection()->where('status', 'ditolak')->count() }}</strong></div>
+                <div class="summary-card"><span>Jumlah Permohonan</span><strong>{{ $summary['total'] ?? $applications->total() }}</strong></div>
+                <div class="summary-card"><span>Baru</span><strong>{{ $summary['baru'] ?? 0 }}</strong></div>
+                <div class="summary-card"><span>Diluluskan</span><strong>{{ $summary['diluluskan'] ?? 0 }}</strong></div>
+                <div class="summary-card"><span>Ditolak</span><strong>{{ $summary['ditolak'] ?? 0 }}</strong></div>
             </div>
 
             <form method="GET" action="{{ route('admin.permohonan.index') }}" class="filters-grid">
@@ -99,7 +99,6 @@
                         <span class="student-avatar">{{ $initials }}</span>
                         <div>
                             <strong>{{ $application->nama_pemohon }}</strong>
-                            <span>{{ $application->email ?: 'Email tiada' }}</span>
                         </div>
                     </div>
 
@@ -122,7 +121,7 @@
                     <div class="date-cell">{{ optional($application->tarikh_permohonan)->format('d/m/Y') ?? '-' }}</div>
 
                     <div class="row-actions">
-                        <a class="mini-button mini-button--view" href="{{ route('admin.permohonan.show', $application) }}">Lihat</a>
+                        <a class="mini-button mini-button--view" href="{{ route('admin.permohonan.show', $application) }}" data-view-dialog-open data-dialog-title="Butiran Permohonan" data-dialog-url="{{ route('admin.permohonan.show', ['permohonan' => $application, 'dialog' => 1]) }}">Lihat</a>
                         <form method="POST" action="{{ route('admin.permohonan.destroy', $application) }}" onsubmit="return confirm('Padam permohonan ini? Tindakan ini tidak boleh dibatalkan.');">
                             @csrf
                             @method('DELETE')
@@ -137,6 +136,21 @@
         </section>
 
         <div class="panel-pad">{{ $applications->links() }}</div>
+
+        <dialog class="view-dialog" data-view-dialog aria-labelledby="viewDialogTitle">
+            <div class="view-dialog__shell">
+                <header class="view-dialog__head">
+                    <div>
+                        <span>Paparan Rekod</span>
+                        <h2 id="viewDialogTitle">Butiran Permohonan</h2>
+                    </div>
+                    <button class="view-dialog__close" type="button" data-view-dialog-close aria-label="Tutup dialog">&times;</button>
+                </header>
+                <div class="view-dialog__body" data-view-dialog-body>
+                    <iframe class="view-dialog__frame" data-view-dialog-frame title="Paparan butiran rekod" scrolling="no" tabindex="0"></iframe>
+                </div>
+            </div>
+        </dialog>
     </div>
 @endsection
 
@@ -430,6 +444,86 @@
             background: var(--danger-soft);
             color: var(--danger);
         }
+
+        .view-dialog {
+            width: min(1280px, calc(100vw - 32px));
+            max-width: 1280px;
+            height: min(90vh, 920px);
+            padding: 0;
+            border: 0;
+            border-radius: 18px;
+            background: transparent;
+            overflow: hidden;
+            box-shadow: 0 28px 80px rgba(15, 23, 42, .28);
+        }
+
+        .view-dialog::backdrop {
+            background: rgba(15, 23, 42, .45);
+            backdrop-filter: blur(2px);
+        }
+
+        .view-dialog__shell {
+            display: grid;
+            grid-template-rows: auto minmax(0, 1fr);
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            background: #fff;
+        }
+
+        .view-dialog__head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 18px 22px;
+            border-bottom: 1px solid var(--line);
+            background: #fff;
+        }
+
+        .view-dialog__head span {
+            display: inline-flex;
+            align-items: center;
+            min-height: 24px;
+            padding: 0 8px;
+            border-radius: 999px;
+            background: var(--secondary-soft);
+            color: var(--secondary);
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .view-dialog__head h2 {
+            margin: 8px 0 0;
+            font-size: 22px;
+            line-height: 1.2;
+            color: var(--text);
+        }
+
+        .view-dialog__close {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: #fff;
+            color: var(--text);
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .view-dialog__frame {
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            border: 0;
+            background: #f8fafc;
+            overflow: auto;
+        }
         @media (max-width: 1200px) {
             .request-row,
             .request-row--head {
@@ -469,5 +563,100 @@
                 flex-wrap: wrap;
             }
         }
+
+        @media (max-width: 760px) {
+            .view-dialog {
+                width: calc(100vw - 16px);
+                height: calc(100vh - 16px);
+                border-radius: 14px;
+            }
+
+            .view-dialog__head {
+                padding: 14px 16px;
+            }
+
+            .view-dialog__head h2 {
+                font-size: 18px;
+            }
+        }
     </style>
+@endpush
+
+@push('scripts')
+<script>
+    (function () {
+        const dialog = document.querySelector('[data-view-dialog]');
+        const frame = dialog?.querySelector('[data-view-dialog-frame]');
+        const body = dialog?.querySelector('[data-view-dialog-body]');
+        const title = dialog?.querySelector('h2');
+
+        if (!dialog || !frame || !body || !title) {
+            return;
+        }
+
+        const closeDialog = () => {
+            frame.removeAttribute('src');
+            dialog.close();
+        };
+
+        const prepareFrameScroll = () => {
+            try {
+                const doc = frame.contentDocument;
+                doc.documentElement.style.setProperty('height', 'auto', 'important');
+                doc.documentElement.style.setProperty('overflow-y', 'auto', 'important');
+                doc.body.style.setProperty('height', 'auto', 'important');
+                doc.body.style.setProperty('overflow-y', 'auto', 'important');
+
+                const frameHeight = Math.max(
+                    doc.documentElement.scrollHeight,
+                    doc.body.scrollHeight,
+                    doc.querySelector('.content')?.scrollHeight || 0,
+                    doc.querySelector('#main-content')?.scrollHeight || 0,
+                    body.clientHeight
+                );
+                frame.style.setProperty('height', `${frameHeight}px`, 'important');
+
+                doc.addEventListener('wheel', (event) => {
+                    body.scrollBy({ top: event.deltaY, left: event.deltaX });
+                    event.preventDefault();
+                }, { passive: false });
+
+                doc.addEventListener('keydown', (event) => {
+                    const offsets = { ArrowDown: 48, ArrowUp: -48, PageDown: body.clientHeight * .8, PageUp: -body.clientHeight * .8, Home: -body.scrollTop, End: body.scrollHeight };
+                    if (!(event.key in offsets)) return;
+                    body.scrollBy({ top: offsets[event.key] });
+                    event.preventDefault();
+                });
+            } catch (error) {
+                // Same-origin pages can be adjusted; external pages keep browser defaults.
+            }
+
+            body.scrollTop = 0;
+        };
+
+        frame.addEventListener('load', prepareFrameScroll);
+
+        document.querySelectorAll('[data-view-dialog-open]').forEach((button) => {
+            button.addEventListener('click', (event) => {
+                event.preventDefault();
+                title.textContent = button.dataset.dialogTitle || 'Butiran';
+                frame.src = button.dataset.dialogUrl || button.getAttribute('href');
+                dialog.showModal();
+                window.setTimeout(() => frame.focus(), 100);
+            });
+        });
+
+        dialog.querySelector('[data-view-dialog-close]')?.addEventListener('click', closeDialog);
+        dialog.addEventListener('click', (event) => {
+            if (event.target === dialog) {
+                closeDialog();
+            }
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && dialog.open) {
+                closeDialog();
+            }
+        });
+    })();
+</script>
 @endpush

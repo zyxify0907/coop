@@ -18,9 +18,11 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class AuthController extends Controller
@@ -30,11 +32,24 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
+    public function showForgotPassword(): View
+    {
+        return view('auth.password.forgot');
+    }
+
+    public function showRegister(): View
+    {
+        return view('auth.register', [
+            'studentClasses' => $this->studentClassOptions(),
+        ]);
+    }
+
     public function login(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'identifier' => ['required', 'string'],
             'password' => ['required', 'string'],
+            'remember' => ['nullable'],
         ]);
 
         [$role, $user] = $this->findLoginUser($validated['identifier']);
@@ -51,7 +66,109 @@ class AuthController extends Controller
         $request->session()->put('staff_type', $role === 'staff' ? $user->staff_type : null);
         $request->session()->put('last_login_at', now()->timezone('Asia/Kuala_Lumpur')->toDateTimeString());
 
+        if ($request->boolean('remember')) {
+            Cookie::queue($this->rememberMeCookie($role, $user));
+        } else {
+            Cookie::queue(Cookie::forget($this->rememberMeCookieName()));
+        }
+
         return redirect()->route('auth.dashboard');
+    }
+
+    public function resetForgottenPassword(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'identifier' => ['required', 'string'],
+            'nric' => ['required', 'string', 'max:20'],
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
+        ]);
+
+        [$role, $user] = $this->findLoginUser($validated['identifier']);
+        $normalizedNric = preg_replace('/\D+/', '', $validated['nric']) ?: $validated['nric'];
+
+        if (! $user || (string) ($user->nric ?? '') !== (string) $normalizedNric) {
+            return back()
+                ->withErrors(['identifier' => 'Maklumat pengesahan tidak sah. Sila semak ID akaun dan No. KP anda.'])
+                ->withInput($request->except(['password', 'password_confirmation']));
+        }
+
+        $user->password_hash = Hash::make($validated['password']);
+        $user->save();
+
+        $roleLabel = match ($role) {
+            'admin' => 'admin',
+            'staff' => 'staff',
+            default => 'pelajar',
+        };
+
+        return redirect()
+            ->route('login')
+            ->with('status', 'Kata laluan akaun '.$roleLabel.' berjaya dikemaskini. Sila log masuk semula.');
+    }
+
+    public function register(Request $request): RedirectResponse
+    {
+        $role = $request->string('role')->toString();
+
+        abort_unless(in_array($role, ['student', 'staff'], true), 422);
+
+        $baseRules = [
+            'role' => ['required', Rule::in(['student', 'staff'])],
+            'nama' => ['required', 'string', 'max:100'],
+            'nric' => ['required', 'string', 'max:20'],
+            'email' => ['nullable', 'email', 'max:100'],
+            'no_tel' => ['nullable', 'string', 'max:20'],
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
+        ];
+
+        $rules = $role === 'student'
+            ? $baseRules + [
+                'no_matrik' => ['required', 'string', 'max:20', 'unique:ahli,no_matrik'],
+                'nric' => ['required', 'string', 'max:20', 'unique:ahli,nric', 'unique:pekerja,nric', 'unique:admin,nric'],
+                'email' => ['nullable', 'email', 'max:100', 'unique:ahli,email', 'unique:pekerja,email'],
+                'kelas' => ['nullable', Rule::in($this->studentClassOptions())],
+            ]
+            : $baseRules + [
+                'nric' => ['required', 'string', 'max:20', 'unique:pekerja,nric', 'unique:ahli,nric', 'unique:admin,nric'],
+                'email' => ['nullable', 'email', 'max:100', 'unique:pekerja,email', 'unique:ahli,email'],
+                'staff_type' => ['required', Rule::in(['lecturer_member', 'coop_staff', 'clothing_staff'])],
+            ];
+
+        $validated = $request->validate($rules);
+
+        if ($role === 'student') {
+            $academic = $this->academicFromClass($validated['kelas'] ?? null);
+            $user = Ahli::query()->create([
+                'no_matrik' => strtoupper(trim($validated['no_matrik'])),
+                'nama' => $validated['nama'],
+                'nric' => preg_replace('/\D+/', '', $validated['nric']) ?: $validated['nric'],
+                'email' => $validated['email'] ?? null,
+                'no_tel' => $validated['no_tel'] ?? null,
+                'kelas' => $validated['kelas'] ?? null,
+                'semester' => $academic['semester'] ?? null,
+                'program' => $academic['program'] ?? null,
+                'password_hash' => Hash::make($validated['password']),
+                'tarikh_daftar' => now()->toDateString(),
+                'status_aktif' => true,
+            ]);
+
+            return $this->completeRegistrationLogin($request, 'ahli', $user);
+        }
+
+        $user = Pekerja::query()->create([
+            'no_pekerja' => $this->nextStaffNumber(),
+            'nama' => $validated['nama'],
+            'nric' => preg_replace('/\D+/', '', $validated['nric']) ?: $validated['nric'],
+            'email' => $validated['email'] ?? null,
+            'no_tel' => $validated['no_tel'] ?? null,
+            'staff_type' => $validated['staff_type'],
+            'kadar_elaun' => 0,
+            'tarikh_mula' => now()->toDateString(),
+            'password_hash' => Hash::make($validated['password']),
+            'status_aktif' => true,
+        ]);
+
+        return $this->completeRegistrationLogin($request, 'staff', $user);
     }
 
     public function dashboard(Request $request): View|RedirectResponse
@@ -207,6 +324,7 @@ class AuthController extends Controller
         $request->session()->flush();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+        Cookie::queue(Cookie::forget($this->rememberMeCookieName()));
 
         return redirect()->route('login');
     }
@@ -642,6 +760,58 @@ class AuthController extends Controller
         return [null, null];
     }
 
+    private function completeRegistrationLogin(Request $request, string $role, Model $user): RedirectResponse
+    {
+        $request->session()->regenerate();
+        $request->session()->put('auth_role', $role);
+        $request->session()->put('auth_id', $user->getKey());
+        $request->session()->put('staff_type', $role === 'staff' ? $user->staff_type : null);
+        $request->session()->put('last_login_at', now()->timezone('Asia/Kuala_Lumpur')->toDateTimeString());
+
+        return redirect()
+            ->route('auth.dashboard')
+            ->with('status', 'Akaun berjaya didaftarkan.');
+    }
+
+    /** @return array<int, string> */
+    private function studentClassOptions(): array
+    {
+        $classes = [];
+
+        foreach (range(1, 6) as $semester) {
+            $classes[] = 'DIT'.$semester.'A';
+            $classes[] = 'DIT'.$semester.'B';
+            $classes[] = 'DDC'.$semester.'A';
+            $classes[] = 'DBF'.$semester.'A';
+        }
+
+        return $classes;
+    }
+
+    /** @return array{semester:string,program:string}|null */
+    private function academicFromClass(?string $kelas): ?array
+    {
+        if (! $kelas || ! preg_match('/^(DIT|DDC|DBF)([1-6])[A-Z]$/', strtoupper(trim($kelas)), $matches)) {
+            return null;
+        }
+
+        return [
+            'semester' => 'Sem '.$matches[2],
+            'program' => $matches[1] === 'DIT' ? 'JTMK' : 'JRKV',
+        ];
+    }
+
+    private function nextStaffNumber(): string
+    {
+        $next = ((int) Pekerja::query()
+            ->where('no_pekerja', 'like', 'PBT-%')
+            ->pluck('no_pekerja')
+            ->map(fn ($value): int => (int) preg_replace('/\D+/', '', (string) $value))
+            ->max()) + 1;
+
+        return 'PBT-'.$next;
+    }
+
     private function staffDashboardRoute(?string $staffType): string
     {
         return match ($staffType) {
@@ -649,5 +819,76 @@ class AuthController extends Controller
             'clothing_staff' => 'clothing-staff.dashboard',
             default => 'coop-staff.dashboard',
         };
+    }
+
+    public static function rememberedUserFromCookie(Request $request): ?array
+    {
+        $payload = $request->cookie(self::rememberMeCookieNameStatic());
+
+        if (! is_string($payload) || $payload === '') {
+            return null;
+        }
+
+        $payload = json_decode($payload, true);
+
+        if (! is_array($payload)) {
+            return null;
+        }
+
+        $role = $payload['role'] ?? null;
+        $id = isset($payload['id']) ? (int) $payload['id'] : null;
+        $staffType = $payload['staff_type'] ?? null;
+
+        if (! in_array($role, ['ahli', 'staff', 'admin'], true) || ! $id) {
+            return null;
+        }
+
+        $user = match ($role) {
+            'ahli' => Ahli::query()->whereKey($id)->first(),
+            'staff' => Pekerja::query()->whereKey($id)->where('status_aktif', true)->first(),
+            'admin' => AdminUser::query()->whereKey($id)->where('status_aktif', true)->first(),
+            default => null,
+        };
+
+        if (! $user) {
+            return null;
+        }
+
+        return [
+            'role' => $role,
+            'id' => $user->getKey(),
+            'staff_type' => $role === 'staff' ? ($user->staff_type ?? $staffType) : null,
+        ];
+    }
+
+    private function rememberMeCookie(string $role, Model $user)
+    {
+        $payload = json_encode([
+            'role' => $role,
+            'id' => $user->getKey(),
+            'staff_type' => $role === 'staff' ? $user->staff_type : null,
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        return cookie(
+            $this->rememberMeCookieName(),
+            $payload ?: '',
+            60 * 24 * 30,
+            config('session.path', '/'),
+            config('session.domain'),
+            (bool) config('session.secure'),
+            true,
+            false,
+            config('session.same_site', 'lax')
+        );
+    }
+
+    private function rememberMeCookieName(): string
+    {
+        return self::rememberMeCookieNameStatic();
+    }
+
+    private static function rememberMeCookieNameStatic(): string
+    {
+        return 'coopbest_remember';
     }
 }

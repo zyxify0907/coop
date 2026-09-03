@@ -162,7 +162,11 @@ class OperationsController extends Controller
         return view('student.tempahan.index', [
             'role' => 'ahli',
             'user' => $user,
-            'items' => $this->studentBajuItemsQuery()->where('item_baju.stok_tertinggal', '>', 0)->orderBy('item_baju.nama_item')->orderBy('item_baju.saiz')->get(),
+            'items' => $this->studentBajuItemsQuery()
+                ->where('item_baju.stok_tertinggal', '>', 0)
+                ->orderBy('item_baju.nama_item')
+                ->orderByRaw("FIELD(UPPER(item_baju.saiz), 'S', 'M', 'L', 'XL', 'XXL')")
+                ->get(),
             'orders' => $this->ordersQuery()->where('no_matrik', $user->no_matrik)->paginate(20),
             'cartItems' => $this->studentOrderCartItems($request),
         ]);
@@ -212,6 +216,34 @@ class OperationsController extends Controller
         $request->session()->put($this->studentOrderCartKey(), $cart);
 
         return redirect()->route('student.tempahan.index')->with('status', 'Item troli telah dibuang.');
+    }
+
+    public function updateStudentOrderCart(Request $request, int $itemId): RedirectResponse
+    {
+        if ($request->session()->get('auth_role') !== 'ahli') {
+            return redirect()->route('login');
+        }
+
+        $validated = $request->validate([
+            'quantity' => ['required', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        if (! Schema::hasTable('item_baju')) {
+            return back()->withErrors(['cart' => 'Senarai baju tidak tersedia.']);
+        }
+
+        $item = DB::table('item_baju')->where('id_item', $itemId)->first();
+        abort_if(! $item, 404);
+
+        if ((int) $item->stok_tertinggal < (int) $validated['quantity']) {
+            return back()->withErrors(['quantity' => 'Kuantiti melebihi stok baju semasa.'])->withInput();
+        }
+
+        $cart = $request->session()->get($this->studentOrderCartKey(), []);
+        $cart[(string) $itemId] = ['quantity' => (int) $validated['quantity']];
+        $request->session()->put($this->studentOrderCartKey(), $cart);
+
+        return redirect()->route('student.tempahan.index')->with('status', 'Kuantiti troli berjaya dikemaskini.');
     }
 
     public function checkoutStudentOrderCart(Request $request): RedirectResponse
@@ -378,15 +410,18 @@ class OperationsController extends Controller
 
         $validated = $request->validate([
             'search' => ['nullable', 'string', 'max:100'],
+            'item' => ['nullable', 'string', 'max:100'],
+            'size' => ['nullable', 'string', 'max:10'],
             'status' => ['nullable', 'in:baru,belum_ambil,sudah_ambil'],
         ]);
 
         $ordersQuery = $this->ordersQuery();
         $search = trim((string) ($validated['search'] ?? ''));
+        $itemSearch = trim((string) ($validated['item'] ?? ''));
+        $sizeSearch = strtoupper(trim((string) ($validated['size'] ?? '')));
+        $hasTempahanNoMatrik = $this->hasColumn('tempahan', 'no_matrik');
 
         if ($search !== '') {
-            $hasTempahanNoMatrik = $this->hasColumn('tempahan', 'no_matrik');
-
             $ordersQuery->where(function ($query) use ($search, $hasTempahanNoMatrik): void {
                 $query
                     ->where('ahli.nama', 'like', "%{$search}%")
@@ -398,8 +433,25 @@ class OperationsController extends Controller
             });
         }
 
+        if ($itemSearch !== '') {
+            $ordersQuery->where($hasTempahanNoMatrik ? 'tempahan.item' : 'item_baju.nama_item', 'like', "%{$itemSearch}%");
+        }
+
+        if ($sizeSearch !== '') {
+            if ($hasTempahanNoMatrik && $this->hasColumn('tempahan', 'saiz')) {
+                $ordersQuery->where(DB::raw('UPPER(tempahan.saiz)'), $sizeSearch);
+            } elseif ($hasTempahanNoMatrik && $this->hasColumn('tempahan', 'size')) {
+                $ordersQuery->where(DB::raw('UPPER(tempahan.size)'), $sizeSearch);
+            } elseif (! $hasTempahanNoMatrik) {
+                $ordersQuery->where(DB::raw('UPPER(item_baju.saiz)'), $sizeSearch);
+            }
+        }
+
         if (filled($validated['status'] ?? null)) {
-            $ordersQuery->whereIn(DB::raw('LOWER(tempahan.status)'), $this->orderStatusAliases($validated['status']));
+            $statusColumn = $this->hasColumn('item_tempahan', 'status')
+                ? DB::raw('LOWER(COALESCE(item_tempahan.status, tempahan.status))')
+                : DB::raw('LOWER(tempahan.status)');
+            $ordersQuery->whereIn($statusColumn, $this->orderStatusAliases($validated['status']));
         }
 
         return view('staff.tempahan.index', [
@@ -418,24 +470,43 @@ class OperationsController extends Controller
         }
 
         $validated = $request->validate([
-            'status' => ['required', 'string'],
+            'pickup_status' => ['required', 'in:belum_ambil,sudah_ambil'],
             'tarikh_ambil' => ['nullable', 'date'],
         ]);
-        $status = $this->normalizeOrderStatus($validated['status'], $validated['tarikh_ambil'] ?? null);
+
+        $status = $validated['pickup_status'];
 
         if (! $status) {
             return back()->withErrors(['status' => 'Status tempahan tidak sah.']);
         }
 
-        $payload = [
-            'status' => $status,
-        ];
+        $pickupDate = $validated['tarikh_ambil'] ?? null;
 
-        if ($this->hasColumn('tempahan', 'tarikh_ambil')) {
-            $payload['tarikh_ambil'] = $validated['tarikh_ambil'] ?: null;
+        if ($status === 'sudah_ambil' && blank($pickupDate)) {
+            $pickupDate = now()->toDateString();
         }
 
-        DB::table('tempahan')->where($this->orderKeyColumn(), $id)->update($payload);
+        if ($status !== 'sudah_ambil') {
+            $pickupDate = null;
+        }
+
+        if ($this->hasColumn('item_tempahan', 'status')) {
+            $payload = ['status' => $status];
+
+            if ($this->hasColumn('item_tempahan', 'tarikh_ambil')) {
+                $payload['tarikh_ambil'] = $pickupDate;
+            }
+
+            DB::table('item_tempahan')->where('id_item_tempahan', $id)->update($payload);
+        } else {
+            $payload = ['status' => $status];
+
+            if ($this->hasColumn('tempahan', 'tarikh_ambil')) {
+                $payload['tarikh_ambil'] = $pickupDate;
+            }
+
+            DB::table('tempahan')->where($this->orderKeyColumn(), $id)->update($payload);
+        }
 
         return redirect()->route($this->tempahanIndexRoute($auth))->with('status', 'Status tempahan berjaya dikemaskini.');
     }
@@ -449,7 +520,11 @@ class OperationsController extends Controller
         }
 
         try {
-            DB::table('tempahan')->where($this->orderKeyColumn(), $id)->delete();
+            if ($this->hasColumn('item_tempahan', 'status')) {
+                DB::table('item_tempahan')->where('id_item_tempahan', $id)->delete();
+            } else {
+                DB::table('tempahan')->where($this->orderKeyColumn(), $id)->delete();
+            }
         } catch (QueryException) {
             return back()->withErrors(['delete' => 'Tempahan tidak boleh dipadam kerana masih mempunyai data berkaitan.']);
         }
@@ -1030,12 +1105,9 @@ class OperationsController extends Controller
         $kelas = trim((string) $request->query('kelas', ''));
         $staffType = trim((string) $request->query('staff_type', ''));
         $tarikh = trim((string) $request->query('tarikh', ''));
-        $defaultFiscalEndYear = now()->month >= 9 ? now()->year + 1 : now()->year;
-        $fiscalEndYear = (int) $request->query('tahun', $defaultFiscalEndYear);
-        $fiscalEndYear = $fiscalEndYear >= 2000 && $fiscalEndYear <= ($defaultFiscalEndYear + 10)
-            ? $fiscalEndYear
-            : $defaultFiscalEndYear;
-        $financialSummary = $this->financialShareSummary($fiscalEndYear);
+        $summaryMemberType = $this->summaryMemberTypeFromRequest($request);
+        [$summaryStart, $summaryEnd, $fiscalStartYear, $fiscalEndYear] = $this->summaryDateRangeFromRequest($request);
+        $financialSummary = $this->financialShareSummary($fiscalStartYear, $fiscalEndYear, $summaryStart, $summaryEnd, $summaryMemberType);
 
         $studentSharesQuery = $this->filteredStudentSharesQuery($request);
         $printStudentShares = $category === 'pelajar' ? (clone $studentSharesQuery)->get() : collect();
@@ -1122,7 +1194,7 @@ class OperationsController extends Controller
             'inactiveReasons' => $inactiveReasons,
             'inactiveStaffReasons' => $inactiveStaffReasons,
             'annualSummaryTables' => $this->annualShareSummaries(),
-            'fiscalYearOptions' => $this->fiscalYearOptions($fiscalEndYear),
+            'fiscalYearOptions' => $this->fiscalYearOptions($fiscalEndYear, $fiscalStartYear),
             'filters' => [
                 'search' => $search,
                 'status' => $status,
@@ -1131,6 +1203,11 @@ class OperationsController extends Controller
                 'staff_type' => $staffType,
                 'tarikh' => $tarikh,
                 'tahun' => $fiscalEndYear,
+                'tahun_awal' => $fiscalStartYear,
+                'tahun_akhir' => $fiscalEndYear,
+                'tarikh_awal' => trim((string) $request->query('tarikh_awal', '')),
+                'tarikh_akhir' => trim((string) $request->query('tarikh_akhir', '')),
+                'kategori_anggota' => $summaryMemberType,
             ],
             'studentPrograms' => collect(['JTMK', 'JRKV']),
             'studentClasses' => collect(range(1, 6))
@@ -1183,19 +1260,16 @@ class OperationsController extends Controller
 
         $category = $request->query('kategori', 'pelajar');
         $category = in_array($category, ['pelajar', 'staff', 'rumusan'], true) ? $category : 'pelajar';
-        $defaultFiscalEndYear = now()->month >= 9 ? now()->year + 1 : now()->year;
-        $fiscalEndYear = (int) $request->query('tahun', $defaultFiscalEndYear);
-        $fiscalEndYear = $fiscalEndYear >= 2000 && $fiscalEndYear <= ($defaultFiscalEndYear + 10)
-            ? $fiscalEndYear
-            : $defaultFiscalEndYear;
+        $summaryMemberType = $this->summaryMemberTypeFromRequest($request);
+        [$summaryStart, $summaryEnd, $fiscalStartYear, $fiscalEndYear] = $this->summaryDateRangeFromRequest($request);
         $this->backfillApprovedStaffMemberNumbers();
         $filename = match ($category) {
             'pelajar' => 'senarai_saham_pelajar_'.now()->format('Y-m-d').'.csv',
             'staff' => 'senarai_saham_staff_'.now()->format('Y-m-d').'.csv',
-            default => 'rumusan_saham_tahun_kewangan_'.$fiscalEndYear.'.csv',
+            default => 'rumusan_saham_tahun_kewangan_'.$fiscalStartYear.'_hingga_'.$fiscalEndYear.'.csv',
         };
 
-        return response()->streamDownload(function () use ($category, $request, $fiscalEndYear): void {
+        return response()->streamDownload(function () use ($category, $request, $fiscalStartYear, $fiscalEndYear, $summaryStart, $summaryEnd, $summaryMemberType): void {
             $handle = fopen('php://output', 'w');
 
             if ($handle === false) {
@@ -1258,17 +1332,22 @@ class OperationsController extends Controller
                     ]);
                 }
             } else {
-                $summary = $this->financialShareSummary($fiscalEndYear);
+                $summary = $this->financialShareSummary($fiscalStartYear, $fiscalEndYear, $summaryStart, $summaryEnd, $summaryMemberType);
 
-                fputcsv($handle, ['REKOD PENAMBAHAN SAHAM ANGGOTA KOPERASI POLITEKNIK BESUT TAHUN KEWANGAN SEPTEMBER '.$summary['fiscal_start']->format('Y').' SEHINGGA 31 OGOS '.$summary['fiscal_end_year']]);
+                fputcsv($handle, ['REKOD PENAMBAHAN SAHAM ANGGOTA KOPERASI POLITEKNIK BESUT TEMPOH '.$summary['period_start_label'].' HINGGA '.$summary['period_end_label']]);
+                fputcsv($handle, ['KATEGORI', $summary['member_type_label']]);
                 fputcsv($handle, ['SAHAM ANGGOTA', 'ANGGOTA', 'SAHAM']);
-                fputcsv($handle, ['STAFF', $summary['period_staff_count'], number_format($summary['period_staff_total'], 2, '.', '')]);
-                fputcsv($handle, ['PELAJAR', $summary['period_student_count'], number_format($summary['period_student_total'], 2, '.', '')]);
-                fputcsv($handle, ['PENAMBAHAN ANGGOTA & SAHAM SEHINGGA 31 OGOS '.$summary['fiscal_end_year'], $summary['period_count'], number_format($summary['period_total'], 2, '.', '')]);
-                fputcsv($handle, ['JUMLAH ANGGOTA & SAHAM TERKUMPUL SEHINGGA 31 OGOS '.$summary['fiscal_previous_end_year'], $summary['previous_count'], number_format($summary['previous_total'], 2, '.', '')]);
-                fputcsv($handle, ['JUMLAH ANGGOTA & SAHAM TERKUMPUL SEHINGGA 31 OGOS '.$summary['fiscal_end_year'], $summary['current_cumulative_count'], number_format($summary['current_cumulative_total'], 2, '.', '')]);
-                fputcsv($handle, ['JUMLAH ANGGOTA BERHENTI/BERPINDAH SEHINGGA 31 OGOS '.$summary['fiscal_end_year'], $summary['stopped_count'], number_format($summary['stopped_share_total'], 2, '.', '')]);
-                fputcsv($handle, ['JUMLAH ANGGOTA DAN SAHAM SEHINGGA 31 OGOS '.$summary['fiscal_end_year'], $summary['active_count'], number_format($summary['active_total'], 2, '.', '')]);
+                if (in_array($summary['member_type'], ['all', 'staff'], true)) {
+                    fputcsv($handle, ['STAFF', $summary['period_staff_count'], number_format($summary['period_staff_total'], 2, '.', '')]);
+                }
+                if (in_array($summary['member_type'], ['all', 'student'], true)) {
+                    fputcsv($handle, ['PELAJAR', $summary['period_student_count'], number_format($summary['period_student_total'], 2, '.', '')]);
+                }
+                fputcsv($handle, ['PENAMBAHAN ANGGOTA & SAHAM TEMPOH '.$summary['period_start_label'].' HINGGA '.$summary['period_end_label'], $summary['period_count'], number_format($summary['period_total'], 2, '.', '')]);
+                fputcsv($handle, ['JUMLAH ANGGOTA & SAHAM TERKUMPUL SEBELUM '.$summary['period_start_label'], $summary['previous_count'], number_format($summary['previous_total'], 2, '.', '')]);
+                fputcsv($handle, ['JUMLAH ANGGOTA & SAHAM TERKUMPUL TEMPOH '.$summary['period_start_label'].' HINGGA '.$summary['period_end_label'], $summary['current_cumulative_count'], number_format($summary['current_cumulative_total'], 2, '.', '')]);
+                fputcsv($handle, ['JUMLAH ANGGOTA BERHENTI/BERPINDAH TEMPOH '.$summary['period_start_label'].' HINGGA '.$summary['period_end_label'], $summary['stopped_count'], number_format($summary['stopped_share_total'], 2, '.', '')]);
+                fputcsv($handle, ['JUMLAH ANGGOTA DAN SAHAM TEMPOH '.$summary['period_start_label'].' HINGGA '.$summary['period_end_label'], $summary['active_count'], number_format($summary['active_total'], 2, '.', '')]);
             }
 
             fclose($handle);
@@ -1486,13 +1565,18 @@ class OperationsController extends Controller
             ->leftJoin('item_baju', 'item_tempahan.id_item', '=', 'item_baju.id_item')
             ->select([
                 'tempahan.id_tempahan as tempahan_id',
+                'item_tempahan.id_item_tempahan as order_item_id',
                 'ahli.no_matrik',
                 'ahli.nama',
                 DB::raw('COALESCE(item_baju.nama_item, "-") as item'),
                 DB::raw('COALESCE(item_baju.saiz, "-") as saiz'),
                 DB::raw('COALESCE(item_tempahan.kuantiti, 1) as quantity'),
-                'tempahan.status',
-                'tempahan.tarikh_ambil',
+                $this->hasColumn('item_tempahan', 'status')
+                    ? DB::raw('COALESCE(item_tempahan.status, tempahan.status) as status')
+                    : 'tempahan.status',
+                $this->hasColumn('item_tempahan', 'tarikh_ambil')
+                    ? DB::raw('COALESCE(item_tempahan.tarikh_ambil, tempahan.tarikh_ambil) as tarikh_ambil')
+                    : 'tempahan.tarikh_ambil',
                 DB::raw('tempahan.tarikh_tempahan as created_at'),
             ])
             ->orderByDesc('tempahan.id_tempahan');
@@ -2018,11 +2102,21 @@ class OperationsController extends Controller
             : 0;
     }
 
-    private function financialShareSummary(int $fiscalEndYear): array
+    private function financialShareSummary(int $fiscalStartYear, ?int $fiscalEndYear = null, ?Carbon $periodStart = null, ?Carbon $periodEnd = null, string $memberType = 'all'): array
     {
-        $fiscalStart = Carbon::create($fiscalEndYear - 1, 9, 1)->startOfDay();
-        $fiscalEnd = Carbon::create($fiscalEndYear, 8, 31)->endOfDay();
+        $memberType = in_array($memberType, ['all', 'student', 'staff'], true) ? $memberType : 'all';
+        $fiscalEndYear ??= $fiscalStartYear;
+        [$fiscalStartYear, $fiscalEndYear] = $fiscalStartYear > $fiscalEndYear
+            ? [$fiscalEndYear, $fiscalStartYear]
+            : [$fiscalStartYear, $fiscalEndYear];
+
+        $fiscalStart = ($periodStart ?: Carbon::create($fiscalStartYear, 1, 1))->copy()->startOfDay();
+        $fiscalEnd = ($periodEnd ?: Carbon::create($fiscalEndYear, 12, 31))->copy()->endOfDay();
         $rows = $this->shareSummaryRows();
+
+        if ($memberType !== 'all') {
+            $rows = $rows->where('type', $memberType)->values();
+        }
 
         $periodRows = $rows->filter(fn (array $row): bool => $row['date']->betweenIncluded($fiscalStart, $fiscalEnd));
         $previousRows = $rows->filter(fn (array $row): bool => $row['date']->lt($fiscalStart));
@@ -2039,8 +2133,17 @@ class OperationsController extends Controller
         return [
             'fiscal_start' => $fiscalStart,
             'fiscal_end' => $fiscalEnd,
+            'fiscal_start_year' => $fiscalStartYear,
             'fiscal_end_year' => $fiscalEndYear,
-            'fiscal_previous_end_year' => $fiscalEndYear - 1,
+            'fiscal_previous_end_year' => $fiscalStartYear - 1,
+            'period_start_label' => $fiscalStart->format('d/m/Y'),
+            'period_end_label' => $fiscalEnd->format('d/m/Y'),
+            'member_type' => $memberType,
+            'member_type_label' => match ($memberType) {
+                'student' => 'Pelajar',
+                'staff' => 'Staff',
+                default => 'Semua',
+            },
             'period_student_count' => $studentRows->count(),
             'period_student_total' => (float) $studentRows->sum('amount'),
             'period_staff_count' => $staffRows->count(),
@@ -2058,17 +2161,91 @@ class OperationsController extends Controller
         ];
     }
 
-    private function fiscalYearOptions(int $selectedYear): \Illuminate\Support\Collection
+    private function summaryDateRangeFromRequest(Request $request): array
+    {
+        $startDate = trim((string) $request->query('tarikh_awal', ''));
+        $endDate = trim((string) $request->query('tarikh_akhir', ''));
+
+        if ($startDate !== '' || $endDate !== '') {
+            $start = $this->parseDateFilter($startDate) ?: $this->parseDateFilter($endDate) ?: now();
+            $end = $this->parseDateFilter($endDate) ?: $start->copy();
+
+            return $this->normalizedSummaryRange($start->copy()->startOfDay(), $end->copy()->endOfDay());
+        }
+
+        [$startYear, $endYear] = $this->fiscalYearRangeFromRequest($request);
+
+        return $this->normalizedSummaryRange(
+            Carbon::create($startYear, 1, 1)->startOfDay(),
+            Carbon::create($endYear, 12, 31)->endOfDay()
+        );
+    }
+
+    private function summaryMemberTypeFromRequest(Request $request): string
+    {
+        $memberType = trim((string) $request->query('kategori_anggota', 'all'));
+
+        return in_array($memberType, ['all', 'student', 'staff'], true) ? $memberType : 'all';
+    }
+
+    private function normalizedSummaryRange(Carbon $start, Carbon $end): array
+    {
+        if ($start->gt($end)) {
+            [$start, $end] = [$end->copy()->startOfDay(), $start->copy()->endOfDay()];
+        }
+
+        return [
+            $start,
+            $end,
+            (int) $start->format('Y'),
+            (int) $end->format('Y'),
+        ];
+    }
+
+    private function parseDateFilter(string $date): ?Carbon
+    {
+        if ($date === '') {
+            return null;
+        }
+
+        try {
+            if (preg_match('/^\d{1,2}\/\d{1,2}\/\d{4}$/', $date)) {
+                return Carbon::createFromFormat('d/m/Y', $date);
+            }
+
+            return Carbon::parse($date);
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    private function fiscalYearRangeFromRequest(Request $request): array
+    {
+        $defaultFiscalEndYear = now()->month >= 9 ? now()->year + 1 : now()->year;
+        $maxFiscalEndYear = $defaultFiscalEndYear + 10;
+        $legacyYear = (int) $request->query('tahun', $defaultFiscalEndYear);
+        $startYear = (int) $request->query('tahun_awal', $legacyYear);
+        $endYear = (int) $request->query('tahun_akhir', $legacyYear);
+
+        $startYear = $startYear >= 2000 && $startYear <= $maxFiscalEndYear ? $startYear : $defaultFiscalEndYear;
+        $endYear = $endYear >= 2000 && $endYear <= $maxFiscalEndYear ? $endYear : $startYear;
+
+        return $startYear > $endYear
+            ? [$endYear, $startYear]
+            : [$startYear, $endYear];
+    }
+
+    private function fiscalYearOptions(int ...$selectedYears): \Illuminate\Support\Collection
     {
         $years = $this->shareSummaryRows()
             ->map(fn (array $row): int => $row['date']->month >= 9 ? $row['date']->year + 1 : $row['date']->year)
             ->push(now()->month >= 9 ? now()->year + 1 : now()->year)
-            ->push($selectedYear)
+            ->merge($selectedYears)
             ->unique()
             ->sortDesc()
             ->values();
 
-        return $years->isEmpty() ? collect([$selectedYear]) : $years;
+        return $years->isEmpty() ? collect($selectedYears) : $years;
     }
 
     private function shareSummaryRows(): \Illuminate\Support\Collection

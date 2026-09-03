@@ -39,7 +39,7 @@
             <div class="staff-import-copy">
                 <span class="staff-import-kicker">IMPORT EXCEL</span>
                 <h2>Muat Naik Senarai Staff</h2>
-                <p>Kolum diperlukan: Nama dan No KP sahaja. No Pekerja dijana automatik jika tiada dalam fail.</p>
+                <p>Kolum diperlukan: Nama dan No KP sahaja. Tarikh Masuk akan digunakan jika ada dalam fail.</p>
             </div>
             <form class="staff-import-form" method="POST" action="{{ $importRoute }}" enctype="multipart/form-data">
                 @csrf
@@ -107,7 +107,7 @@
                         <th>Jenis Staff</th>
                         <th>Email</th>
                         <th>No Telefon</th>
-                        <th>Tarikh Mula</th>
+                        <th>Tarikh Masuk</th>
                         @if ($showWorkerFields)
                             <th>Elaun</th>
                             <th>Status</th>

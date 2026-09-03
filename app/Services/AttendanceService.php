@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSetting;
+use App\Models\Pekerja;
 use Carbon\CarbonImmutable;
 
 class AttendanceService
@@ -118,6 +119,66 @@ class AttendanceService
         $start = $this->scheduledDateTime($record, $setting->work_start_time);
 
         return max(0, $start->diffInMinutes($checkIn, false));
+    }
+
+    /** @return array{missing_checkout:int, absent:int} */
+    public function finalizeDate(CarbonImmutable $date, ?AttendanceSetting $setting = null): array
+    {
+        $setting ??= $this->setting();
+        $updated = 0;
+        $absent = 0;
+
+        if (! $this->isWorkingDay($date, $setting)) {
+            return ['missing_checkout' => 0, 'absent' => 0];
+        }
+
+        Pekerja::query()
+            ->where('staff_type', Pekerja::COOP_WORKER_STAFF_TYPE)
+            ->where('status_aktif', true)
+            ->get()
+            ->each(function (Pekerja $worker) use ($date, $setting, &$updated, &$absent): void {
+                $record = AttendanceRecord::query()->firstOrNew([
+                    'staff_id' => $worker->id_pekerja,
+                    'attendance_date' => $date->toDateString(),
+                ]);
+
+                if (! $record->exists) {
+                    $record->fill([
+                        'status' => 'absent',
+                        'location_name' => $setting->location_name,
+                        'notes' => 'Rekod tidak hadir dijana automatik oleh sistem.',
+                    ]);
+                    $record->save();
+                    $absent++;
+
+                    return;
+                }
+
+                if ($record->check_in_time && ! $record->check_out_time && $record->status !== 'missing_checkout') {
+                    $record->status = 'missing_checkout';
+                    $record->save();
+                    $updated++;
+                }
+            });
+
+        return ['missing_checkout' => $updated, 'absent' => $absent];
+    }
+
+    public function finalizeDueDates(?CarbonImmutable $now = null, ?AttendanceSetting $setting = null): void
+    {
+        $now ??= CarbonImmutable::now(self::TIMEZONE);
+        $setting ??= $this->setting();
+        $today = $now->startOfDay();
+
+        $this->finalizeDate($today->subDay(), $setting);
+
+        if ($this->isWorkingDay($today, $setting)) {
+            $cutoff = CarbonImmutable::parse($today->toDateString().' '.$setting->checkout_cutoff_time, self::TIMEZONE);
+
+            if ($now->greaterThanOrEqualTo($cutoff)) {
+                $this->finalizeDate($today, $setting);
+            }
+        }
     }
 
     private function localDateTime(mixed $value): CarbonImmutable

@@ -91,7 +91,13 @@ class AttendanceController extends Controller
 
         $gps = $this->attendance->verifyLocation((float) $validated['latitude'], (float) $validated['longitude'], $setting);
         if (! $gps['verified']) {
-            return back()->withErrors(['attendance' => $gps['message']]);
+            $this->audit($request, 'check_in_blocked_outside_area', $staff, 'Cubaan Check In ditolak kerana di luar kawasan kehadiran.', [
+                'gps_distance_meter' => round((float) ($gps['distance'] ?? 0), 2),
+                'gps_verified' => false,
+            ]);
+            $this->notifyWorker($staff, 'Check In ditolak', 'Akses Check In ditolak kerana anda berada di luar kawasan Politeknik.', route('coop-staff.attendance.index'));
+
+            return back()->withErrors(['attendance' => 'Anda berada di luar kawasan Politeknik. Check In tidak dibenarkan.']);
         }
 
         $record = new AttendanceRecord([
@@ -133,29 +139,43 @@ class AttendanceController extends Controller
         }
 
         $gps = $this->attendance->verifyLocation((float) $validated['latitude'], (float) $validated['longitude'], $setting);
-        if (! $gps['verified']) {
-            return back()->withErrors(['attendance' => $gps['message']]);
-        }
+        $gpsVerified = (bool) ($gps['verified'] ?? false);
 
         $record->fill([
             'check_out_time' => now(),
             'check_out_latitude' => $validated['latitude'],
             'check_out_longitude' => $validated['longitude'],
-            'check_out_gps_verified' => true,
+            'check_out_gps_verified' => $gpsVerified,
         ]);
         $this->attendance->applyCheckoutStatus($record, $setting);
         $record->save();
 
         $earlyMessage = $record->early_leave_minutes > 0 ? ' Rekod keluar awal: '.$this->duration($record->early_leave_minutes).'.' : '';
-        $this->audit($request, 'check_out', $record, 'Check Out direkodkan.'.$earlyMessage, ['gps_distance_meter' => round((float) $gps['distance'], 2)]);
-        $this->notifyWorker($staff, 'Check Out berjaya', 'Jumlah masa bekerja hari ini: '.$this->duration($record->working_minutes).'.'.$earlyMessage, route('coop-staff.attendance.history'));
+        $outsideMessage = $gpsVerified ? '' : ' GPS check out berada di luar kawasan Politeknik.';
+        $this->audit(
+            $request,
+            $gpsVerified ? 'check_out' : 'check_out_outside_area',
+            $record,
+            'Check Out direkodkan.'.$earlyMessage.$outsideMessage,
+            [
+                'gps_distance_meter' => round((float) ($gps['distance'] ?? 0), 2),
+                'gps_verified' => $gpsVerified,
+            ]
+        );
+        $this->notifyWorker(
+            $staff,
+            'Check Out berjaya',
+            'Jumlah masa bekerja hari ini: '.$this->duration($record->working_minutes).'.'.$earlyMessage.$outsideMessage,
+            route('coop-staff.attendance.history')
+        );
 
-        return back()->with('status', 'Check Out berjaya. Jumlah masa bekerja: '.$this->duration($record->working_minutes).'.');
+        return back()->with('status', 'Check Out berjaya. Jumlah masa bekerja: '.$this->duration($record->working_minutes).'.'.$outsideMessage);
     }
 
     public function history(Request $request): View
     {
         $staff = $this->worker($request);
+        $this->attendance->finalizeDueDates();
         $month = (int) $request->query('month', now()->month);
         $year = (int) $request->query('year', now()->year);
         $status = (string) $request->query('status', '');
@@ -174,6 +194,8 @@ class AttendanceController extends Controller
             'records' => $records,
             'filters' => compact('month', 'year', 'status'),
             'statuses' => $this->statusLabels(),
+            'correctionTypes' => $this->correctionTypes(),
+            'absenceReasons' => $this->absenceReasons(),
         ]);
     }
 
@@ -186,6 +208,7 @@ class AttendanceController extends Controller
             'records' => AttendanceRecord::query()->where('staff_id', $staff->id_pekerja)->latest('attendance_date')->limit(60)->get(),
             'corrections' => AttendanceCorrection::query()->with('attendance')->where('staff_id', $staff->id_pekerja)->latest()->paginate(20),
             'correctionTypes' => $this->correctionTypes(),
+            'absenceReasons' => $this->absenceReasons(),
         ]);
     }
 
@@ -197,6 +220,7 @@ class AttendanceController extends Controller
             'correction_date' => ['required', 'date', 'before_or_equal:today'],
             'correction_type' => ['required', 'in:missing_check_in,missing_check_out,wrong_check_in_time,wrong_check_out_time,other'],
             'requested_time' => ['nullable', 'date_format:H:i'],
+            'absence_reason' => ['nullable', 'in:'.implode(',', array_keys($this->absenceReasons()))],
             'reason' => ['required', 'string', 'max:1500'],
             'supporting_document' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
         ]);
@@ -210,13 +234,18 @@ class AttendanceController extends Controller
         }
 
         $path = $request->hasFile('supporting_document') ? $request->file('supporting_document')->store('attendance-corrections') : null;
+        $compiledReason = $this->composeCorrectionReason(
+            $validated['reason'],
+            $validated['absence_reason'] ?? null
+        );
+
         $correction = AttendanceCorrection::query()->create([
             'attendance_id' => $record?->id,
             'staff_id' => $staff->id_pekerja,
             'correction_date' => $validated['correction_date'],
             'correction_type' => $validated['correction_type'],
             'requested_time' => $validated['requested_time'] ?? null,
-            'reason' => $validated['reason'],
+            'reason' => $compiledReason,
             'supporting_document' => $path,
             'status' => 'pending',
         ]);
@@ -248,6 +277,7 @@ class AttendanceController extends Controller
     {
         $admin = $this->admin($request);
         $setting = $this->attendance->setting();
+        $this->attendance->finalizeDueDates(setting: $setting);
         $today = CarbonImmutable::today();
         $workers = Pekerja::query()->where('staff_type', 'coop_staff')->where('status_aktif', true)->orderBy('nama')->get();
         $records = AttendanceRecord::query()->with('staff')->whereDate('attendance_date', $today)->get()->keyBy('staff_id');
@@ -289,6 +319,7 @@ class AttendanceController extends Controller
     {
         $admin = $this->admin($request);
         $setting = $this->attendance->setting();
+        $this->attendance->finalizeDueDates(setting: $setting);
         $today = CarbonImmutable::today();
         $workers = Pekerja::query()->where('staff_type', 'coop_staff')->where('status_aktif', true)->orderBy('nama')->get();
         $records = AttendanceRecord::query()->whereDate('attendance_date', $today)->get()->keyBy('staff_id');
@@ -303,6 +334,7 @@ class AttendanceController extends Controller
     public function records(Request $request): View
     {
         $admin = $this->admin($request);
+        $this->attendance->finalizeDueDates();
         $filters = [
             'date' => (string) $request->query('date', ''),
             'month' => (string) $request->query('month', ''),
@@ -455,6 +487,7 @@ class AttendanceController extends Controller
     public function reports(Request $request): View
     {
         $admin = $this->admin($request);
+        $this->attendance->finalizeDueDates();
         $filters = $this->reportFilters($request);
         $records = $this->filteredRecords($filters)->with('staff')->get();
 
@@ -468,6 +501,7 @@ class AttendanceController extends Controller
     public function exportReport(Request $request): StreamedResponse
     {
         $this->admin($request);
+        $this->attendance->finalizeDueDates();
         $records = $this->filteredRecords($this->reportFilters($request))->with('staff')->get();
 
         return response()->streamDownload(function () use ($records): void {
@@ -589,7 +623,7 @@ class AttendanceController extends Controller
         return [
             'records' => $records->count(),
             'present' => $records->where('status', 'present')->count(),
-            'late' => $records->where('status', 'late')->count(),
+            'late' => $records->whereIn('status', ['late', 'outside_area'])->count(),
             'early_leave' => $records->where('status', 'early_leave')->count(),
             'working_minutes' => $records->sum('working_minutes'),
         ];
@@ -602,7 +636,7 @@ class AttendanceController extends Controller
 
     private function recordStatuses(): array
     {
-        return ['present', 'late', 'early_leave', 'missing_checkout', 'absent'];
+        return ['present', 'late', 'early_leave', 'missing_checkout', 'outside_area', 'absent'];
     }
 
     private function statusLabels(): array
@@ -610,7 +644,7 @@ class AttendanceController extends Controller
         return [
             'present' => 'Hadir', 'late' => 'Lewat', 'early_leave' => 'Keluar Awal',
             'missing_checkout' => 'Tiada Check Out', 'working' => 'Sedang Bekerja',
-            'not_checked_in' => 'Belum Check In', 'absent' => 'Tidak Hadir',
+            'not_checked_in' => 'Belum Check In', 'outside_area' => 'Di Luar Kawasan', 'absent' => 'Tidak Hadir',
         ];
     }
 
@@ -621,6 +655,36 @@ class AttendanceController extends Controller
             'wrong_check_in_time' => 'Masa Check In Salah', 'wrong_check_out_time' => 'Masa Check Out Salah',
             'other' => 'Lain-lain',
         ];
+    }
+
+    private function absenceReasons(): array
+    {
+        return [
+            'sakit' => 'Sakit',
+            'cuti_diluluskan' => 'Cuti Diluluskan',
+            'urusan_kecemasan' => 'Urusan Kecemasan',
+            'urusan_keluarga' => 'Urusan Keluarga',
+            'masalah_pengangkutan' => 'Masalah Pengangkutan',
+            'tanpa_kebenaran' => 'Tidak Hadir Tanpa Kebenaran',
+            'lain_lain' => 'Lain-lain',
+        ];
+    }
+
+    private function composeCorrectionReason(string $reason, ?string $absenceReason): string
+    {
+        $reason = trim($reason);
+
+        if (! $absenceReason) {
+            return $reason;
+        }
+
+        $label = $this->absenceReasons()[$absenceReason] ?? null;
+
+        if (! $label) {
+            return $reason;
+        }
+
+        return 'Sebab Tidak Hadir: '.$label.PHP_EOL.'Catatan: '.$reason;
     }
 
     private function duration(?int $minutes): string

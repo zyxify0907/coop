@@ -538,11 +538,13 @@
     }
 
     .summary-year-form .field {
-        min-width: 180px;
+        min-width: 155px;
     }
 
-    .summary-year-form select {
+    .summary-year-form select,
+    .summary-year-form input {
         min-height: 40px;
+        width: 100%;
         border: 1px solid var(--line);
         border-radius: 10px;
         background: #fff;
@@ -574,13 +576,32 @@
             margin: 8mm;
         }
 
+        *,
+        *::before,
+        *::after {
+            overflow: visible !important;
+            scrollbar-width: none !important;
+        }
+
+        *::-webkit-scrollbar {
+            display: none !important;
+        }
+
+        html,
+        body {
+            width: auto !important;
+            height: auto !important;
+            overflow: visible !important;
+        }
+
         body {
             background: #fff !important;
             font-family: Arial, Helvetica, sans-serif;
         }
 
         .panel,
-        .share-wrap {
+        .share-wrap,
+        .table-wrap {
             overflow: visible !important;
         }
 
@@ -702,13 +723,16 @@
         .print-report__name {
             display: block;
             font-weight: 700;
+            width: 100%;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            font-size: 9.5px !important;
+            letter-spacing: 0;
         }
 
         .print-report__email {
-            display: block;
-            margin-top: 2px;
-            color: #475569 !important;
-            font-size: 7.5px;
+            display: none !important;
         }
     }
 
@@ -886,7 +910,7 @@
 
         <div class="head-actions">
             @if ($category === 'rumusan')
-                <a class="link-button" href="{{ route('admin.saham.export.csv', array_merge(request()->query(), ['kategori' => $category])) }}">CSV</a>
+                <a class="link-button" href="{{ route('admin.saham.export.csv', array_merge(request()->query(), ['kategori' => $category])) }}" download>CSV</a>
             @endif
             <nav class="tabs" aria-label="Kategori saham">
                 <a class="tab {{ $category === 'pelajar' ? 'is-active' : '' }}" href="{{ route('admin.saham.index', ['kategori' => 'pelajar']) }}">Pelajar</a>
@@ -913,7 +937,7 @@
                 <input type="hidden" name="kategori" value="pelajar">
                 <div class="field search-compact">
                     <label for="student_search">Cari Pelajar</label>
-                    <input id="student_search" name="search" type="search" value="{{ $filters['search'] ?? '' }}" placeholder="Nama, no matrik, IC atau email">
+                    <input id="student_search" name="search" type="search" value="{{ $filters['search'] ?? '' }}" placeholder="Nama, no matrik atau IC">
                 </div>
                 <div class="field date-compact">
                     <label for="student_tarikh">Tarikh Daftar</label>
@@ -947,8 +971,8 @@
                 </div>
                 <div class="share-filter__actions">
                     <button class="button" type="submit">Cari</button>
-                    <a class="link-button export-button" href="{{ route('admin.saham.export.csv', array_merge(request()->query(), ['kategori' => 'pelajar'])) }}">Export CSV</a>
-                    <button class="link-button print-button" type="button" onclick="window.print()">Print</button>
+                    <a class="link-button export-button" href="{{ route('admin.saham.export.csv', array_merge(request()->query(), ['kategori' => 'pelajar'])) }}" download>Export CSV</a>
+                    <button class="link-button print-button" type="button" onclick="openSahamPrintPreview()">Print</button>
                     <a class="link-button secondary" href="{{ route('admin.saham.index', ['kategori' => 'pelajar']) }}">Reset</a>
                 </div>
             </form>
@@ -978,7 +1002,6 @@
                                 <td>{{ $records->firstItem() + $loop->index }}</td>
                                 <td>
                                     <span class="name">{{ $record->ahli->nama ?? '-' }}</span>
-                                    <span class="sub">{{ $record->ahli->email ?? '-' }}</span>
                                 </td>
                                 <td>{{ $record->ahli->nric ?? '-' }}</td>
                                 <td>{{ $record->ahli->no_matrik ?? '-' }}</td>
@@ -1028,16 +1051,16 @@
                 <table class="print-table">
                     <colgroup>
                         <col style="width: 3%;">
-                        <col style="width: 12%;">
-                        <col style="width: 9%;">
+                        <col style="width: 18%;">
+                        <col style="width: 8%;">
                         <col style="width: 10%;">
                         <col style="width: 6%;">
                         <col style="width: 5%;">
-                        <col style="width: 9%;">
-                        <col style="width: 8%;">
-                        <col style="width: 9%;">
                         <col style="width: 8%;">
                         <col style="width: 7%;">
+                        <col style="width: 8%;">
+                        <col style="width: 7%;">
+                        <col style="width: 6%;">
                         <col style="width: 7%;">
                     </colgroup>
                     <thead>
@@ -1062,7 +1085,6 @@
                                 <td>{{ $loop->iteration }}</td>
                                 <td>
                                     <span class="print-report__name">{{ $printRecord->ahli->nama ?? '-' }}</span>
-                                    <span class="print-report__email">{{ $printRecord->ahli->email ?? '-' }}</span>
                                 </td>
                                 <td>{{ $printRecord->ahli->nric ?? '-' }}</td>
                                 <td>{{ $printRecord->ahli->no_matrik ?? '-' }}</td>
@@ -1097,7 +1119,7 @@
                 <input type="hidden" name="kategori" value="staff">
                 <div class="field search-compact">
                     <label for="staff_search">Cari Staff</label>
-                    <input id="staff_search" name="search" type="search" value="{{ $filters['search'] ?? '' }}" placeholder="Nama, no pekerja, IC atau email">
+                    <input id="staff_search" name="search" type="search" value="{{ $filters['search'] ?? '' }}" placeholder="Nama, no pekerja atau IC">
                 </div>
                 <div class="field date-compact">
                     <label for="staff_tarikh">Tarikh Mula</label>
@@ -1122,8 +1144,8 @@
                 </div>
                 <div class="share-filter__actions">
                     <button class="button" type="submit">Cari</button>
-                    <a class="link-button export-button" href="{{ route('admin.saham.export.csv', array_merge(request()->query(), ['kategori' => 'staff'])) }}">Export CSV</a>
-                    <button class="link-button print-button" type="button" onclick="window.print()">Print</button>
+                    <a class="link-button export-button" href="{{ route('admin.saham.export.csv', array_merge(request()->query(), ['kategori' => 'staff'])) }}" download>Export CSV</a>
+                    <button class="link-button print-button" type="button" onclick="openSahamPrintPreview()">Print</button>
                     <a class="link-button secondary" href="{{ route('admin.saham.index', ['kategori' => 'staff']) }}">Reset</a>
                 </div>
             </form>
@@ -1159,7 +1181,6 @@
                                 <td>{{ $staffMembers->firstItem() + $loop->index }}</td>
                                 <td>
                                     <span class="name">{{ $staff->nama }}</span>
-                                    <span class="sub">{{ $staff->email ?? '-' }}</span>
                                 </td>
                                 <td>{{ $staffMemberNumber }}</td>
                                 <td>{{ $staff->nric ?? '-' }}</td>
@@ -1203,15 +1224,15 @@
                 <table class="print-table print-table--staff">
                     <colgroup>
                         <col style="width: 4%;">
-                        <col style="width: 15%;">
+                        <col style="width: 22%;">
                         <col style="width: 10%;">
                         <col style="width: 10%;">
-                        <col style="width: 13%;">
-                        <col style="width: 10%;">
-                        <col style="width: 8%;">
+                        <col style="width: 12%;">
                         <col style="width: 9%;">
                         <col style="width: 8%;">
-                        <col style="width: 7%;">
+                        <col style="width: 8%;">
+                        <col style="width: 8%;">
+                        <col style="width: 9%;">
                     </colgroup>
                     <thead>
                         <tr>
@@ -1241,7 +1262,6 @@
                                 <td>{{ $loop->iteration }}</td>
                                 <td>
                                     <span class="print-report__name">{{ $printStaff->nama ?? '-' }}</span>
-                                    <span class="print-report__email">{{ $printStaff->email ?? '-' }}</span>
                                 </td>
                                 <td>{{ $printStaffMemberNumber }}</td>
                                 <td>{{ $printStaff->nric ?? '-' }}</td>
@@ -1266,23 +1286,30 @@
             <div class="panel-head">
                 <div>
                     <h2 class="summary-report-title">
-                        REKOD PENAMBAHAN SAHAM ANGGOTA KOPERASI POLITEKNIK BESUT TAHUN KEWANGAN SEPTEMBER {{ $summary['fiscal_start']->format('Y') }} SEHINGGA 31 OGOS {{ $summary['fiscal_end_year'] }}
+                        REKOD PENAMBAHAN SAHAM ANGGOTA KOPERASI POLITEKNIK BESUT TEMPOH {{ $summary['period_start_label'] }} HINGGA {{ $summary['period_end_label'] }}
                     </h2>
                     <span>Rumusan digital berdasarkan nilai anggota dan saham dalam sistem.</span>
                 </div>
                 <form class="summary-year-form" method="GET" action="{{ route('admin.saham.index') }}">
                     <input type="hidden" name="kategori" value="rumusan">
                     <div class="field">
-                        <label for="summary_year">Pilih Tahun</label>
-                        <select id="summary_year" name="tahun">
-                            @foreach ($fiscalYearOptions as $yearOption)
-                                <option value="{{ $yearOption }}" @selected((int) ($filters['tahun'] ?? $summary['fiscal_end_year']) === (int) $yearOption)>
-                                    Sept {{ $yearOption - 1 }} - Ogos {{ $yearOption }}
-                                </option>
-                            @endforeach
+                        <label for="summary_member_type">Kategori</label>
+                        <select id="summary_member_type" name="kategori_anggota">
+                            <option value="all" @selected(($filters['kategori_anggota'] ?? 'all') === 'all')>Semua</option>
+                            <option value="student" @selected(($filters['kategori_anggota'] ?? 'all') === 'student')>Pelajar</option>
+                            <option value="staff" @selected(($filters['kategori_anggota'] ?? 'all') === 'staff')>Staff</option>
                         </select>
                     </div>
+                    <div class="field">
+                        <label for="summary_start_date">Tarikh Awal</label>
+                        <input id="summary_start_date" type="date" name="tarikh_awal" value="{{ $filters['tarikh_awal'] ?? '' }}">
+                    </div>
+                    <div class="field">
+                        <label for="summary_end_date">Tarikh Akhir</label>
+                        <input id="summary_end_date" type="date" name="tarikh_akhir" value="{{ $filters['tarikh_akhir'] ?? '' }}">
+                    </div>
                     <button class="button" type="submit">Papar</button>
+                    <a class="link-button" href="{{ route('admin.saham.index', ['kategori' => 'rumusan']) }}">Reset</a>
                 </form>
             </div>
 
@@ -1296,40 +1323,44 @@
                         </tr>
                     </thead>
                     <tbody>
+                        @if (in_array($summary['member_type'], ['all', 'staff'], true))
+                            <tr>
+                                <td class="summary-label">STAFF</td>
+                                <td>{{ $summary['period_staff_count'] }}</td>
+                                <td>{{ $summaryNumber($summary['period_staff_total']) }}</td>
+                            </tr>
+                        @endif
+                        @if (in_array($summary['member_type'], ['all', 'student'], true))
+                            <tr>
+                                <td class="summary-label">PELAJAR</td>
+                                <td>{{ $summary['period_student_count'] }}</td>
+                                <td>{{ $summaryNumber($summary['period_student_total']) }}</td>
+                            </tr>
+                        @endif
                         <tr>
-                            <td class="summary-label">STAFF</td>
-                            <td>{{ $summary['period_staff_count'] }}</td>
-                            <td>{{ $summaryNumber($summary['period_staff_total']) }}</td>
-                        </tr>
-                        <tr>
-                            <td class="summary-label">PELAJAR</td>
-                            <td>{{ $summary['period_student_count'] }}</td>
-                            <td>{{ $summaryNumber($summary['period_student_total']) }}</td>
-                        </tr>
-                        <tr>
-                            <td class="summary-label">PENAMBAHAN ANGGOTA & SAHAM SEHINGGA 31 OGOS {{ $summary['fiscal_end_year'] }}</td>
+                            <td class="summary-label">PENAMBAHAN ANGGOTA & SAHAM TEMPOH {{ $summary['period_start_label'] }} HINGGA {{ $summary['period_end_label'] }}</td>
                             <td>{{ $summary['period_count'] }}</td>
                             <td>{{ $summaryNumber($summary['period_total']) }}</td>
                         </tr>
                         <tr>
-                            <td class="summary-label">JUMLAH ANGGOTA & SAHAM TERKUMPUL SEHINGGA 31 OGOS {{ $summary['fiscal_previous_end_year'] }}</td>
+                            <td class="summary-label">JUMLAH ANGGOTA & SAHAM TERKUMPUL SEBELUM {{ $summary['period_start_label'] }}</td>
                             <td>{{ $summary['previous_count'] }}</td>
                             <td>{{ $summaryNumber($summary['previous_total']) }}</td>
                         </tr>
                         <tr>
-                            <td class="summary-label">JUMLAH ANGGOTA & SAHAM TERKUMPUL SEHINGGA 31 OGOS {{ $summary['fiscal_end_year'] }}</td>
+                            <td class="summary-label">JUMLAH ANGGOTA & SAHAM TERKUMPUL TEMPOH {{ $summary['period_start_label'] }} HINGGA {{ $summary['period_end_label'] }}</td>
                             <td>{{ $summary['current_cumulative_count'] }}</td>
                             <td>{{ $summaryNumber($summary['current_cumulative_total']) }}</td>
                         </tr>
                         <tr>
-                            <td class="summary-label">JUMLAH ANGGOTA BERHENTI/BERPINDAH SEHINGGA 31 OGOS {{ $summary['fiscal_end_year'] }}</td>
+                            <td class="summary-label">JUMLAH ANGGOTA BERHENTI/BERPINDAH TEMPOH {{ $summary['period_start_label'] }} HINGGA {{ $summary['period_end_label'] }}</td>
                             <td>{{ $summary['stopped_count'] }}</td>
                             <td>{{ $summaryNumber($summary['stopped_share_total']) }}</td>
                         </tr>
                     </tbody>
                     <tfoot>
                         <tr class="summary-highlight">
-                            <td class="summary-label">JUMLAH ANGGOTA DAN SAHAM SEHINGGA 31 OGOS {{ $summary['fiscal_end_year'] }}</td>
+                            <td class="summary-label">JUMLAH ANGGOTA DAN SAHAM TEMPOH {{ $summary['period_start_label'] }} HINGGA {{ $summary['period_end_label'] }}</td>
                             <td>{{ $summary['active_count'] }}</td>
                             <td>{{ $summaryNumber($summary['active_total']) }}</td>
                         </tr>
@@ -1341,3 +1372,48 @@
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+    function openSahamPrintPreview() {
+        const report = document.querySelector('.print-report');
+
+        if (!report) {
+            return;
+        }
+
+        const printWindow = window.open('', '_blank', 'width=1200,height=820');
+
+        if (!printWindow) {
+            window.print();
+            return;
+        }
+
+        const title = report.querySelector('.print-report__title')?.textContent.trim() || 'Laporan Saham';
+        const reportMarkup = report.outerHTML.replace(' aria-hidden="true"', '');
+
+        printWindow.document.open();
+        printWindow.document.write(`<!doctype html>
+<html lang="ms"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title}</title>
+<style>
+    @page { size: A4 landscape; margin: 8mm; }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #111827; background: #f1f5f9; font-family: Arial, sans-serif; }
+    .print-preview-actions { display: flex; justify-content: flex-end; width: min(1240px, calc(100% - 32px)); margin: 18px auto 0; }
+    .print-preview-actions button { min-height: 40px; padding: 0 16px; border: 0; border-radius: 6px; background: #2453a6; color: #fff; font: 700 14px Arial, sans-serif; cursor: pointer; }
+    .print-preview-actions button:hover { background: #1e40af; }
+    .print-report { display: block; width: 100%; }
+    .print-preview-sheet { width: min(1240px, calc(100% - 32px)); margin: 16px auto 32px; padding: 22px; background: #fff; box-shadow: 0 10px 30px rgba(15, 23, 42, .14); }
+    .print-report__title { margin: 0; padding: 0 0 6px; border-bottom: 1px solid #111827; text-align: center; font-size: 15px; font-weight: 700; letter-spacing: .04em; }
+    .print-report__meta { margin: 8px 0 10px; font-size: 9px; }
+    .print-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 8px; }
+    .print-table th, .print-table td { padding: 4px 3px; border: 1px solid #94a3b8; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+    .print-table th { background: #e2e8f0; font-size: 7.5px; font-weight: 700; text-align: center; }
+    .print-report__name { display: block; font-weight: 700; }
+    @media print { body { padding: 0; background: #fff; } .print-preview-actions { display: none; } .print-preview-sheet { width: 100%; margin: 0; padding: 0; box-shadow: none; } }
+</style></head><body><div class="print-preview-actions"><button type="button" onclick="window.print()">Print / Save PDF</button></div><main class="print-preview-sheet">${reportMarkup}</main></body></html>`);
+        printWindow.document.close();
+        printWindow.focus();
+    }
+</script>
+@endpush

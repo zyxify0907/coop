@@ -60,7 +60,7 @@
 
         <form class="anggota-search" method="GET" action="{{ route($isStaffList ? 'admin.anggota.staff' : 'admin.anggota.students') }}">
             <label for="search">Cari {{ $isStaffList ? 'Anggota Staff' : 'Anggota Student' }}</label>
-            <input id="search" name="search" type="search" value="{{ $filters['search'] ?? '' }}" placeholder="{{ $isStaffList ? 'Nama, no anggota, no pekerja, no KP, jenis staff atau email' : 'Nama, no anggota, no matrik, no KP atau program' }}">
+            <input id="search" name="search" type="search" value="{{ $filters['search'] ?? '' }}" placeholder="{{ $isStaffList ? 'Nama, no anggota, no pekerja, no KP atau jenis staff' : 'Nama, no anggota, no matrik, no KP atau program' }}">
             <button type="submit">Cari</button>
             @if (($filters['search'] ?? '') !== '')
                 <a href="{{ route($isStaffList ? 'admin.anggota.staff' : 'admin.anggota.students') }}">Reset</a>
@@ -74,7 +74,7 @@
                         <th>Nama</th>
                         <th>{{ $isStaffList ? 'No Anggota Staff' : 'No Anggota' }}</th>
                         @unless ($isStaffList)
-                            <th>Identiti</th>
+                            <th>No Matrik</th>
                         @endunless
                         <th>No KP</th>
                         <th>{{ $isStaffList ? 'Jenis Staff' : 'Program' }}</th>
@@ -94,7 +94,6 @@
                             $profile = $isStaffList ? $staffMembers->get($member->no_matrik) : $member->ahli;
                             $memberSaham = $isStaffList ? optional($profile)->sahamStaff : optional($profile)->saham;
                             $memberNumber = $isStaffList ? ($profile->no_anggota ?? $data['no_anggota'] ?? '-') : ($profile->no_anggota ?? '-');
-                            $identityLabel = $isStaffList ? 'No Pekerja' : 'No Matrik';
                             $typeLabel = $isStaffList ? ($profile->staff_type_label ?? '-') : ($data['program_pengajian'] ?? $profile->program ?? '-');
                             $registeredDate = $isStaffList
                                 ? (optional(optional($profile)->tarikh_mula)->format('d/m/Y') ?? (optional($member->tarikh_keputusan)->format('d/m/Y') ?? '-'))
@@ -107,13 +106,12 @@
                                     <span class="member-avatar">{{ $initials }}</span>
                                     <div>
                                         <strong>{{ $memberName }}</strong>
-                                        <span>{{ $member->email ?: 'Email tiada' }}</span>
                                     </div>
                                 </div>
                             </td>
                             <td><span class="table-chip">{{ $memberNumber }}</span></td>
                             @unless ($isStaffList)
-                                <td><span class="table-chip">{{ $member->no_matrik }}<small>{{ $identityLabel }}</small></span></td>
+                                <td><span class="table-chip">{{ $member->no_matrik }}</span></td>
                             @endunless
                             <td>{{ $profile->nric ?? $data['no_kad_pengenalan'] ?? '-' }}</td>
                             <td>{{ $typeLabel }}</td>
@@ -126,7 +124,14 @@
                                 </span>
                             </td>
                             <td>
-                                <a class="action-link" href="{{ route('admin.anggota.show', $member) }}">Lihat Profil</a>
+                                <div class="action-group">
+                                    <a class="action-link" href="{{ route('admin.anggota.show', $member) }}" data-view-dialog-open data-dialog-title="Profil Anggota" data-dialog-url="{{ route('admin.anggota.show', ['permohonan' => $member, 'dialog' => 1]) }}">Lihat Profil</a>
+                                    <form method="POST" action="{{ route('admin.anggota.destroy', $member) }}" onsubmit="return confirm('Padam anggota ini? Rekod saham dan nombor anggota akan dibuang.');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="action-delete" type="submit">Delete</button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     @empty
@@ -148,6 +153,20 @@
                 {{ $members->links() }}
             </div>
         @endif
+        <dialog class="view-dialog" data-view-dialog aria-labelledby="memberViewDialogTitle">
+            <div class="view-dialog__shell">
+                <header class="view-dialog__head">
+                    <div>
+                        <span>Paparan Rekod</span>
+                        <h2 id="memberViewDialogTitle">Profil Anggota</h2>
+                    </div>
+                    <button class="view-dialog__close" type="button" data-view-dialog-close aria-label="Tutup dialog">&times;</button>
+                </header>
+                <div class="view-dialog__body" data-view-dialog-body>
+                    <iframe class="view-dialog__frame" data-view-dialog-frame title="Paparan profil anggota" scrolling="no" tabindex="0"></iframe>
+                </div>
+            </div>
+        </dialog>
     </section>
 @endsection
 
@@ -423,6 +442,36 @@
         box-shadow:0 8px 18px rgba(30,64,175,.10);
         transform:translateY(-1px);
     }
+    .action-group{
+        display:flex;
+        align-items:center;
+        gap:8px;
+        flex-wrap:wrap;
+    }
+    .action-group form{
+        margin:0;
+    }
+    .action-delete{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:38px;
+        padding:0 14px;
+        border-radius:10px;
+        border:1px solid var(--danger-soft);
+        background:var(--danger-soft);
+        color:var(--danger);
+        font:inherit;
+        font-weight:900;
+        cursor:pointer;
+        transition:background var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+    }
+    .action-delete:hover{
+        background:var(--danger);
+        color:#fff;
+        box-shadow:0 8px 18px rgba(220,38,38,.12);
+        transform:translateY(-1px);
+    }
     .empty-state{
         padding:30px 18px;
         text-align:center;
@@ -452,5 +501,170 @@
             grid-template-columns:1fr;
         }
     }
+
+    .view-dialog{
+        width:min(1280px,calc(100vw - 32px));
+        max-width:1280px;
+        height:min(90vh,920px);
+        padding:0;
+        border:0;
+        border-radius:18px;
+        background:transparent;
+        overflow:hidden;
+        box-shadow:0 28px 80px rgba(15,23,42,.28);
+    }
+    .view-dialog::backdrop{
+        background:rgba(15,23,42,.45);
+        backdrop-filter:blur(2px);
+    }
+    .view-dialog__shell{
+        display:grid;
+        grid-template-rows:auto minmax(0,1fr);
+        width:100%;
+        height:100%;
+        min-height:0;
+        background:#fff;
+    }
+    .view-dialog__head{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:16px;
+        padding:18px 22px;
+        border-bottom:1px solid var(--line);
+        background:#fff;
+    }
+    .view-dialog__head span{
+        display:inline-flex;
+        align-items:center;
+        min-height:24px;
+        padding:0 8px;
+        border-radius:999px;
+        background:var(--secondary-soft);
+        color:var(--secondary);
+        font-size:11px;
+        font-weight:800;
+        letter-spacing:.04em;
+        text-transform:uppercase;
+    }
+    .view-dialog__head h2{
+        margin:8px 0 0;
+        font-size:22px;
+        line-height:1.2;
+        color:var(--text);
+    }
+    .view-dialog__close{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        width:42px;
+        height:42px;
+        border:1px solid var(--line);
+        border-radius:10px;
+        background:#fff;
+        color:var(--text);
+        font-size:24px;
+        font-weight:700;
+    }
+    .view-dialog__frame{
+        width:100%;
+        height:100%;
+        min-height:0;
+        border:0;
+        background:#f8fafc;
+        overflow:auto;
+    }
+    @media (max-width: 760px){
+        .view-dialog{
+            width:calc(100vw - 16px);
+            height:calc(100vh - 16px);
+            border-radius:14px;
+        }
+        .view-dialog__head{
+            padding:14px 16px;
+        }
+        .view-dialog__head h2{
+            font-size:18px;
+        }
+    }
 </style>
+@endpush
+
+@push('scripts')
+<script>
+    (function () {
+        const dialog = document.querySelector('[data-view-dialog]');
+        const frame = dialog?.querySelector('[data-view-dialog-frame]');
+        const body = dialog?.querySelector('[data-view-dialog-body]');
+        const title = dialog?.querySelector('h2');
+
+        if (!dialog || !frame || !body || !title) {
+            return;
+        }
+
+        const closeDialog = () => {
+            frame.removeAttribute('src');
+            dialog.close();
+        };
+
+        const prepareFrameScroll = () => {
+            try {
+                const doc = frame.contentDocument;
+                doc.documentElement.style.setProperty('height', 'auto', 'important');
+                doc.documentElement.style.setProperty('overflow-y', 'auto', 'important');
+                doc.body.style.setProperty('height', 'auto', 'important');
+                doc.body.style.setProperty('overflow-y', 'auto', 'important');
+
+                const frameHeight = Math.max(
+                    doc.documentElement.scrollHeight,
+                    doc.body.scrollHeight,
+                    doc.querySelector('.content')?.scrollHeight || 0,
+                    doc.querySelector('#main-content')?.scrollHeight || 0,
+                    body.clientHeight
+                );
+                frame.style.setProperty('height', `${frameHeight}px`, 'important');
+
+                doc.addEventListener('wheel', (event) => {
+                    body.scrollBy({ top: event.deltaY, left: event.deltaX });
+                    event.preventDefault();
+                }, { passive: false });
+
+                doc.addEventListener('keydown', (event) => {
+                    const offsets = { ArrowDown: 48, ArrowUp: -48, PageDown: body.clientHeight * .8, PageUp: -body.clientHeight * .8, Home: -body.scrollTop, End: body.scrollHeight };
+                    if (!(event.key in offsets)) return;
+                    body.scrollBy({ top: offsets[event.key] });
+                    event.preventDefault();
+                });
+            } catch (error) {
+                // Same-origin pages can be adjusted; external pages keep browser defaults.
+            }
+
+            body.scrollTop = 0;
+        };
+
+        frame.addEventListener('load', prepareFrameScroll);
+
+        document.querySelectorAll('[data-view-dialog-open]').forEach((button) => {
+            button.addEventListener('click', (event) => {
+                event.preventDefault();
+                title.textContent = button.dataset.dialogTitle || 'Butiran';
+                frame.src = button.dataset.dialogUrl || button.getAttribute('href');
+                dialog.showModal();
+                window.setTimeout(() => frame.focus(), 100);
+            });
+        });
+
+        dialog.querySelector('[data-view-dialog-close]')?.addEventListener('click', closeDialog);
+        dialog.addEventListener('click', (event) => {
+            if (event.target === dialog) {
+                closeDialog();
+            }
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && dialog.open) {
+                closeDialog();
+            }
+        });
+    })();
+</script>
 @endpush

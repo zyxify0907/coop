@@ -5,6 +5,7 @@
 @section('page-subtitle', 'Semak maklumat lengkap permohonan dan buat keputusan.')
 
 @php
+    $isDialogMode = request()->boolean('dialog');
     $data = $application->data_permohonan ?? [];
     $isStaffRequest = ($data['pemohon_role'] ?? 'ahli') === 'staff';
     $amountFields = ['amaun_tambahan', 'amaun_dipohon', 'syer_semasa', 'yuran_anggota', 'modal_saham', 'saham_dipohon', 'jumlah_dipohon'];
@@ -151,9 +152,17 @@
                     <textarea id="catatan_admin" name="catatan_admin" rows="5" placeholder="Catatan admin">{{ $application->catatan_admin }}</textarea>
                 </div>
                 @if ($application->jenis === 'saham')
-                    <a class="mini-button mini-button--share" href="{{ route('admin.permohonan.saham.create', $application) }}">Tambah Saham</a>
+                    @if ($isDialogMode)
+                        <a class="mini-button mini-button--share" href="{{ route('admin.permohonan.saham.create', ['permohonan' => $application, 'dialog' => 1]) }}">Tambah Saham</a>
+                    @else
+                        <a class="mini-button mini-button--share" href="{{ route('admin.permohonan.saham.create', $application) }}" data-share-dialog-open data-dialog-title="Tambah Saham" data-dialog-url="{{ route('admin.permohonan.saham.create', ['permohonan' => $application, 'dialog' => 1]) }}">Tambah Saham</a>
+                    @endif
                 @elseif ($application->jenis === 'berhenti')
-                    <a class="mini-button mini-button--withdraw" href="{{ route('admin.permohonan.pengeluaran.create', $application) }}">Proses Pengeluaran</a>
+                    @if ($isDialogMode)
+                        <a class="mini-button mini-button--withdraw" href="{{ route('admin.permohonan.pengeluaran.create', ['permohonan' => $application, 'dialog' => 1]) }}">Proses Pengeluaran</a>
+                    @else
+                        <a class="mini-button mini-button--withdraw" href="{{ route('admin.permohonan.pengeluaran.create', $application) }}" data-share-dialog-open data-dialog-title="Proses Pengeluaran Saham" data-dialog-url="{{ route('admin.permohonan.pengeluaran.create', ['permohonan' => $application, 'dialog' => 1]) }}">Proses Pengeluaran</a>
+                    @endif
                 @else
                     <button class="mini-button mini-button--approve" type="button" data-decision-choice="diluluskan">Diluluskan</button>
                 @endif
@@ -177,8 +186,27 @@
             <button class="delete-button" type="submit">Delete Permohonan</button>
         </form>
 
-        <a class="back-under-delete" href="{{ route('admin.permohonan.index') }}">Kembali</a>
+        @unless ($isDialogMode)
+            <a class="back-under-delete" href="{{ route('admin.permohonan.index') }}">Kembali</a>
+        @endunless
     </section>
+
+    @unless ($isDialogMode)
+        <dialog class="share-process-dialog" data-share-process-dialog aria-labelledby="shareProcessDialogTitle">
+            <div class="share-process-dialog__shell">
+                <header class="share-process-dialog__head">
+                    <div>
+                        <span>Permohonan Saham</span>
+                        <h2 id="shareProcessDialogTitle">Proses Permohonan</h2>
+                    </div>
+                    <button class="share-process-dialog__close" type="button" data-share-dialog-close aria-label="Tutup dialog">&times;</button>
+                </header>
+                <div class="share-process-dialog__body" data-share-dialog-body>
+                    <iframe class="share-process-dialog__frame" data-share-dialog-frame title="Dialog permohonan saham" scrolling="no" tabindex="0"></iframe>
+                </div>
+            </div>
+        </dialog>
+    @endunless
 @endsection
 
 @push('styles')
@@ -764,6 +792,87 @@
             min-height: 140px;
             resize: vertical;
         }
+        .share-process-dialog {
+            width: min(1040px, calc(100vw - 32px));
+            max-width: 1040px;
+            height: min(780px, calc(100dvh - 32px));
+            max-height: 780px;
+            padding: 0;
+            border: 0;
+            border-radius: 18px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 28px 80px rgba(15, 23, 42, .28);
+        }
+        .share-process-dialog::backdrop {
+            background: rgba(15, 23, 42, .58);
+            backdrop-filter: blur(3px);
+        }
+        .share-process-dialog__shell {
+            display: grid;
+            grid-template-rows: auto minmax(0, 1fr);
+            height: 100%;
+            min-height: 0;
+            background: #fff;
+        }
+        .share-process-dialog__head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 18px 22px;
+            border-bottom: 1px solid var(--line);
+            background: #fff;
+        }
+        .share-process-dialog__head span {
+            color: var(--secondary);
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+        .share-process-dialog__head h2 {
+            margin: 4px 0 0;
+            color: #0f172a;
+            font-size: 21px;
+            line-height: 1.2;
+        }
+        .share-process-dialog__close {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border: 1px solid var(--line);
+            border-radius: 9px;
+            background: #fff;
+            color: #0f172a;
+            font-size: 22px;
+            font-weight: 900;
+            line-height: 1;
+            cursor: pointer;
+        }
+        .share-process-dialog__close:hover {
+            background: var(--primary-soft);
+            color: var(--primary);
+        }
+        .share-process-dialog__frame {
+            display: block;
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            border: 0;
+            background: #fff;
+            overflow: hidden;
+        }
+        .share-process-dialog__body {
+            min-height: 0;
+            overflow-y: scroll;
+            overflow-x: hidden;
+            overscroll-behavior: contain;
+            scrollbar-gutter: stable;
+            background: #f8fafc;
+        }
         @media (max-width: 1000px) {
             .application-detail-hero,
             .summary-profile {
@@ -817,6 +926,15 @@
             .application-document-actions {
                 flex-wrap: wrap;
             }
+            .share-process-dialog {
+                width: 100vw;
+                height: 100dvh;
+                max-height: none;
+                border-radius: 0;
+            }
+            .share-process-dialog__head {
+                padding: 14px 16px;
+            }
         }
     </style>
 @endpush
@@ -825,6 +943,82 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const form = document.querySelector('[data-decision-form]');
+            const dialog = document.querySelector('[data-share-process-dialog]');
+            const frame = document.querySelector('[data-share-dialog-frame]');
+            const body = document.querySelector('[data-share-dialog-body]');
+            const title = document.getElementById('shareProcessDialogTitle');
+            const openButtons = document.querySelectorAll('[data-share-dialog-open]');
+            const closeButton = document.querySelector('[data-share-dialog-close]');
+            const completionPath = @json(parse_url(route('admin.permohonan.show', $application), PHP_URL_PATH));
+
+            openButtons.forEach((button) => {
+                button.addEventListener('click', (event) => {
+                    if (!dialog || !frame) {
+                        return;
+                    }
+
+                    event.preventDefault();
+                    title.textContent = button.dataset.dialogTitle || 'Proses Permohonan';
+                    frame.src = button.dataset.dialogUrl || button.href;
+
+                    if (typeof dialog.showModal === 'function') {
+                        dialog.showModal();
+                    }
+                });
+            });
+
+            closeButton?.addEventListener('click', () => {
+                dialog?.close();
+            });
+
+            dialog?.addEventListener('close', () => {
+                if (frame) {
+                    frame.removeAttribute('src');
+                }
+            });
+
+            frame?.addEventListener('load', () => {
+                try {
+                    const doc = frame.contentDocument;
+                    const framePath = frame.contentWindow.location.pathname;
+
+                    if (framePath === completionPath) {
+                        dialog?.close();
+                        window.location.reload();
+                        return;
+                    }
+
+                    doc.documentElement.style.setProperty('height', 'auto', 'important');
+                    doc.documentElement.style.setProperty('overflow-y', 'auto', 'important');
+                    doc.body.style.setProperty('height', 'auto', 'important');
+                    doc.body.style.setProperty('overflow-y', 'auto', 'important');
+
+                    const frameHeight = Math.max(
+                        doc.documentElement.scrollHeight,
+                        doc.body.scrollHeight,
+                        doc.querySelector('.content')?.scrollHeight || 0,
+                        doc.querySelector('#main-content')?.scrollHeight || 0,
+                        body?.clientHeight || 0
+                    );
+                    frame.style.setProperty('height', `${frameHeight}px`, 'important');
+                    body.scrollTop = 0;
+
+                    doc.addEventListener('wheel', (event) => {
+                        body?.scrollBy({ top: event.deltaY, left: event.deltaX });
+                        event.preventDefault();
+                    }, { passive: false });
+
+                    doc.addEventListener('keydown', (event) => {
+                        if (!body) return;
+                        const offsets = { ArrowDown: 48, ArrowUp: -48, PageDown: body.clientHeight * .8, PageUp: -body.clientHeight * .8, Home: -body.scrollTop, End: body.scrollHeight };
+                        if (!(event.key in offsets)) return;
+                        body.scrollBy({ top: offsets[event.key] });
+                        event.preventDefault();
+                    });
+                } catch (error) {
+                    // Ignore cross-document timing while iframe is loading.
+                }
+            });
 
             if (!form) {
                 return;

@@ -7,13 +7,13 @@
 @section('content')
     @include('attendance.partials.styles')
     @php
-        $labels = ['not_checked_in' => 'Belum Check In', 'working' => 'Sedang Bekerja', 'present' => 'Hadir', 'late' => 'Lewat', 'early_leave' => 'Keluar Awal', 'missing_checkout' => 'Tiada Check Out'];
+        $labels = ['not_checked_in' => 'Belum Check In', 'working' => 'Sedang Bekerja', 'present' => 'Hadir', 'late' => 'Lewat', 'early_leave' => 'Keluar Awal', 'missing_checkout' => 'Tiada Check Out', 'outside_area' => 'Di Luar Kawasan'];
         $statusClass = $todayStatus === 'not_checked_in' ? 'missing_checkout' : $todayStatus;
         $duration = fn ($minutes) => intdiv((int) ($minutes ?? 0), 60).' jam '.((int) ($minutes ?? 0) % 60).' minit';
     @endphp
     <div class="attendance-page">
         <header class="attendance-head">
-            <div><h1>Kehadiran Hari Ini</h1><p>Check In dan Check Out menggunakan lokasi semasa anda.</p></div>
+            <div><h1>Kehadiran Hari Ini</h1><p>Check In perlu dibuat dalam kawasan Politeknik. Check Out masih boleh direkodkan, tetapi GPS akan ditanda jika di luar kawasan.</p></div>
             <div class="attendance-head__meta">Tarikh<strong>{{ now()->timezone('Asia/Kuala_Lumpur')->translatedFormat('d F Y') }}</strong></div>
         </header>
         <div class="attendance-overview">
@@ -25,11 +25,11 @@
                     <div><span>Lewat</span><strong>{{ $record?->check_in_time ? $duration($displayLateMinutes) : '--' }}</strong></div>
                     <div><span>Waktu Bekerja</span><strong>{{ $record?->check_in_time ? $duration($displayWorkingMinutes) : '--' }}</strong></div>
                     <div><span>Lokasi</span><strong>{{ $record?->location_name ?? $setting->location_name ?? '--' }}</strong></div>
-                    <div><span>GPS</span><strong>{{ $record?->check_in_gps_verified ? 'Disahkan' : '--' }}</strong></div>
+                    <div><span>GPS</span><strong>{{ $record ? ($record->check_in_gps_verified ? 'Disahkan' : 'Luar kawasan') : '--' }}</strong></div>
                 </div>
             </section>
             <section class="attendance-panel">
-                <header class="attendance-panel__head"><div><h2>Tindakan Kehadiran</h2><p>Lokasi perlu berada dalam radius {{ $setting->allowed_radius_meter }} meter.</p></div></header>
+                <header class="attendance-panel__head"><div><h2>Tindakan Kehadiran</h2><p>Check In perlu berada dalam radius {{ $setting->allowed_radius_meter }} meter dari {{ $setting->location_name }}.</p></div></header>
                 <div class="attendance-action">
                     @if (! $setting->status)
                         <div class="attendance-note">GPS belum diaktifkan oleh admin. Sila minta admin melengkapkan tetapan lokasi attendance.</div>
@@ -59,7 +59,7 @@
                         <div class="attendance-action__status"><span>Rekod hari ini</span><strong>Selesai direkodkan</strong></div>
                         <a class="attendance-secondary" href="{{ route('coop-staff.attendance.history') }}">Lihat Sejarah Kehadiran</a>
                     @endif
-                    <p class="attendance-help">Sistem meminta kebenaran lokasi daripada pelayar anda sebelum menyimpan kehadiran.</p>
+                    <p class="attendance-help">Sistem meminta kebenaran lokasi daripada pelayar anda. Check In akan ditolak jika di luar kawasan Politeknik, manakala Check Out akan direkodkan dengan status GPS tidak disahkan.</p>
                 </div>
             </section>
         </div>

@@ -5,6 +5,7 @@
 @section('page-subtitle', 'Maklumat penuh anggota koperasi yang telah diluluskan.')
 
 @php
+    $isDialogMode = request()->boolean('dialog');
     $application = $memberApplication;
     $data = $application->data_permohonan ?? [];
     $isStaffMember = ($data['pemohon_role'] ?? null) === 'staff';
@@ -21,7 +22,6 @@
     $heirFields = ['nama_waris', 'telefon_waris', 'hubungan_waris', 'penama_nama', 'penama_nric', 'penama_hubungan', 'penama_no_tel', 'penama_alamat', 'penama_poskod', 'penama_peratus', 'penama2_nama', 'penama2_nric', 'penama2_hubungan', 'penama2_no_tel', 'penama2_alamat', 'penama2_poskod', 'penama2_peratus'];
     $memberInfo = $isStaffMember ? collect([
         'nama_penuh' => $application->nama_pemohon,
-        'email' => $application->email,
         'no_tel' => $application->no_tel,
         'no_anggota' => $memberNumber,
         'no_kp' => optional($member)->nric ?? $data['no_kad_pengenalan'] ?? '-',
@@ -41,7 +41,6 @@
         'taraf_perkahwinan' => $data['taraf_perkahwinan'] ?? null,
     ])->filter(fn ($value) => filled($value) || is_numeric($value)) : collect([
         'nama_penuh' => $application->nama_pemohon,
-        'email' => $application->email,
         'no_tel' => $application->no_tel,
         'no_matrik' => $application->no_matrik,
         'no_anggota' => optional($member)->no_anggota,
@@ -67,27 +66,56 @@
 @endphp
 
 @section('page-actions')
+    @unless ($isDialogMode)
     <a class="link-button secondary" href="{{ route($isStaffMember ? 'admin.anggota.staff' : 'admin.anggota.students') }}">Kembali</a>
+    <form method="POST" action="{{ route('admin.anggota.destroy', $application) }}" onsubmit="return confirm('Padam anggota ini? Rekod saham dan nombor anggota akan dibuang.');" class="page-delete-form">
+        @csrf
+        @method('DELETE')
+        <button class="link-button danger" type="submit">Delete</button>
+    </form>
+    @endunless
 @endsection
 
 @section('content')
-    <section class="panel panel-pad detail-hero">
+    <section class="detail-hero">
         <div class="student-cell">
             <span class="student-avatar">{{ $initials }}</span>
             <div>
                 <h2>{{ $application->nama_pemohon }}</h2>
-                <p>{{ $isStaffMember ? $memberNumber : $application->no_matrik }} - {{ $application->email ?: 'Email tiada' }} - {{ $application->no_tel ?: 'Telefon tiada' }}</p>
+                <p>
+                    <span>{{ $isStaffMember ? $memberNumber : $application->no_matrik }}</span>
+                    <span>{{ $application->no_tel ?: 'Telefon tiada' }}</span>
+                </p>
             </div>
         </div>
 
         <div class="hero-meta">
-            <span>Anggota Koperasi</span>
+            <span class="hero-meta__label">Anggota Koperasi</span>
             <strong>{{ optional($application->tarikh_keputusan)->format('d/m/Y') ?? '-' }}</strong>
             <span class="status-pill status-pill--diluluskan">Diluluskan</span>
         </div>
     </section>
 
-    <section class="panel panel-pad">
+    <div class="detail-metrics">
+        <section>
+            <span>No Anggota</span>
+            <strong>{{ $memberNumber ?: '-' }}</strong>
+        </section>
+        <section>
+            <span>Yuran Anggota</span>
+            <strong>{{ 'RM '.number_format((float) $memberFee, 2) }}</strong>
+        </section>
+        <section>
+            <span>Jumlah Saham</span>
+            <strong>{{ 'RM '.number_format($totalShare, 2) }}</strong>
+        </section>
+        <section>
+            <span>Jumlah Bayaran</span>
+            <strong>{{ 'RM '.number_format($grandTotal, 2) }}</strong>
+        </section>
+    </div>
+
+    <section class="profile-shell">
         <div class="section-title">
             <h2>Maklumat Profil Anggota</h2>
             <p>Semua maklumat {{ $isStaffMember ? 'staff' : 'pelajar' }}, maklumat anggota dan ringkasan saham.</p>
@@ -105,90 +133,193 @@
 
 @push('styles')
     <style>
+        .page-heading{display:none}
         .detail-hero {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 18px;
             margin-bottom: 24px;
+            padding: 28px 30px;
+            border: 1px solid var(--line);
+            border-left: 5px solid var(--secondary);
+            border-radius: 8px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+            box-shadow: 0 14px 34px rgba(15, 23, 42, .055);
         }
         .student-cell {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 18px;
             min-width: 0;
         }
         .student-avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 999px;
+            width: 64px;
+            height: 64px;
+            border-radius: 8px;
             display: grid;
             place-items: center;
-            background: var(--secondary-hover);
+            background: var(--secondary);
             color: #fff;
-            font-size: 13px;
+            font-size: 16px;
             font-weight: 900;
             flex: 0 0 auto;
+            box-shadow: 0 12px 22px rgba(30, 64, 175, .18);
         }
         .student-cell h2 {
             margin: 0;
-            font-size: 20px;
+            color: var(--text);
+            font-size: 26px;
+            line-height: 1.18;
+            font-weight: 900;
+            letter-spacing: 0;
         }
         .student-cell p {
-            margin: 6px 0 0;
-            color: var(--muted);
-            font-size: 13px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 10px 0 0;
+            color: var(--muted-2);
+            font-size: 14px;
+            font-weight: 800;
+        }
+        .student-cell p span {
+            display: inline-flex;
+            align-items: center;
+            min-height: 28px;
+            padding: 0 10px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fff;
         }
         .hero-meta {
             display: grid;
-            gap: 7px;
+            gap: 8px;
             justify-items: end;
+            flex: 0 0 auto;
+            text-align: right;
         }
-        .hero-meta > span:first-child {
-            color: var(--muted);
+        .hero-meta__label {
+            color: var(--muted-2);
             font-size: 12px;
             font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+        .hero-meta strong {
+            color: var(--text);
+            font-size: 22px;
+            line-height: 1;
+            font-weight: 900;
+        }
+        .detail-metrics {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+        .detail-metrics section {
+            display: grid;
+            gap: 8px;
+            min-height: 104px;
+            align-content: center;
+            padding: 18px 20px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, .045);
+        }
+        .detail-metrics span {
+            color: var(--muted-2);
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+        .detail-metrics strong {
+            color: var(--text);
+            font-size: 24px;
+            line-height: 1.1;
+            font-weight: 900;
+            overflow-wrap: anywhere;
+        }
+        .profile-shell {
+            padding: 26px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: 0 14px 34px rgba(15, 23, 42, .055);
         }
         .section-title {
-            margin-bottom: 18px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 20px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid var(--line);
         }
         .section-title h2 {
             margin: 0;
-            font-size: 18px;
+            color: var(--text);
+            font-size: 24px;
+            line-height: 1.2;
+            font-weight: 900;
         }
         .section-title p {
             margin: 6px 0 0;
-            color: var(--muted);
-            font-size: 13px;
+            color: var(--muted-2);
+            font-size: 14px;
+            font-weight: 700;
         }
         .compact-sections {
             display: grid;
-            gap: 12px;
+            gap: 14px;
+        }
+        .page-delete-form {
+            margin: 0;
+        }
+        .link-button.danger {
+            border-color: var(--danger-soft);
+            background: var(--danger-soft);
+            color: var(--danger);
+        }
+        .link-button.danger:hover {
+            background: var(--danger);
+            color: #fff;
         }
         .detail-group {
             border: 1px solid var(--line);
-            border-radius: 12px;
+            border-radius: 8px;
             overflow: hidden;
             background: #fff;
         }
         .detail-group summary {
-            min-height: 46px;
+            min-height: 58px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            padding: 0 14px;
+            padding: 0 18px;
             cursor: pointer;
             list-style: none;
-            background: #f8fafc;
+            background: var(--surface-soft);
         }
         .detail-group summary::-webkit-details-marker {
             display: none;
         }
         .detail-group summary::after {
             content: '+';
+            display: grid;
+            width: 28px;
+            height: 28px;
+            place-items: center;
+            border-radius: 8px;
+            background: #fff;
             color: var(--primary);
             font-weight: 900;
+            border: 1px solid var(--line);
         }
         .detail-group[open] summary::after {
             content: '-';
@@ -196,20 +327,22 @@
         .detail-group h3 {
             margin: 0;
             color: #16345c;
-            font-size: 15px;
+            font-size: 17px;
+            font-weight: 900;
         }
         .detail-list {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            column-gap: 22px;
-            padding: 6px 14px;
+            gap: 0 24px;
+            padding: 10px 18px 16px;
         }
         .detail-row {
             display: grid;
-            grid-template-columns: minmax(130px, .45fr) minmax(0, 1fr);
+            grid-template-columns: minmax(150px, .42fr) minmax(0, 1fr);
             gap: 12px;
             align-items: start;
-            padding: 10px 0;
+            min-height: 56px;
+            padding: 14px 0;
             border-bottom: 1px solid var(--line);
         }
         .detail-row:last-child,
@@ -220,22 +353,37 @@
             display: block;
             color: var(--muted);
             font-size: 12px;
-            font-weight: 800;
+            font-weight: 900;
             text-transform: capitalize;
         }
         .detail-row strong {
             display: block;
-            font-size: 14px;
-            line-height: 1.5;
+            color: var(--text);
+            font-size: 15px;
+            line-height: 1.45;
+            font-weight: 900;
             overflow-wrap: anywhere;
+        }
+        .status-pill {
+            border-radius: 8px;
+            min-height: 30px;
         }
         @media (max-width: 1000px) {
             .detail-hero {
                 align-items: flex-start;
                 flex-direction: column;
+                padding: 24px;
             }
             .hero-meta {
                 justify-items: start;
+                text-align: left;
+            }
+            .detail-metrics {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            .section-title {
+                align-items: flex-start;
+                flex-direction: column;
             }
             .detail-list,
             .detail-row {
@@ -246,6 +394,24 @@
             }
             .detail-row {
                 gap: 6px;
+            }
+        }
+        @media (max-width: 640px) {
+            .student-cell {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+            .student-cell h2 {
+                font-size: 22px;
+            }
+            .student-cell p span {
+                width: 100%;
+            }
+            .detail-metrics {
+                grid-template-columns: 1fr;
+            }
+            .profile-shell {
+                padding: 20px;
             }
         }
     </style>

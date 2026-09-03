@@ -12,6 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->web(append: [
+            \App\Http\Middleware\RestoreRememberedSession::class,
+        ]);
+
         $middleware->alias([
             'staff.type' => \App\Http\Middleware\EnsureStaffType::class,
             'attendance.access' => \App\Http\Middleware\EnsureAttendanceAccess::class,

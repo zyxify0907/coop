@@ -27,8 +27,12 @@ Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('auth.dashb
 Route::get('/dashboard/chart-data', [AuthController::class, 'dashboardChartData'])->name('auth.dashboard.chart-data');
 Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
 Route::get('/admin/dashboard', [AuthController::class, 'adminDashboard'])->name('admin.dashboard');
+Route::get('/admin/profile', [AdminProfileController::class, 'profile'])->name('admin.profile');
+Route::patch('/admin/profile/password', [AdminProfileController::class, 'updatePassword'])->name('admin.profile.password');
 Route::get('/student/dashboard-saham', [AuthController::class, 'studentShareDashboard'])->name('student.dashboard.saham');
 Route::get('/student/profile', [AuthController::class, 'studentProfile'])->name('student.profile');
+Route::patch('/student/profile', [AuthController::class, 'updateStudentProfile'])->name('student.profile.update');
+Route::patch('/student/profile/password', [AuthController::class, 'updateStudentPassword'])->name('student.profile.password');
 Route::get('/student/permohonan-status', [PermohonanController::class, 'studentStatus'])->name('student.permohonan.status');
 Route::get('/student/tempahan', [OperationsController::class, 'studentOrders'])->name('student.tempahan.index');
 Route::post('/student/tempahan', [OperationsController::class, 'storeStudentOrder'])->name('student.tempahan.store');
@@ -56,11 +60,15 @@ Route::prefix('lecturer-member')->middleware('staff.type:strict,lecturer_member'
     Route::post('/permohonan/{jenis}', [PermohonanController::class, 'store'])->name('permohonan.store');
     Route::get('/saham', [StaffPortalController::class, 'shares'])->name('shares');
     Route::get('/profil', [StaffPortalController::class, 'profile'])->name('profile');
+    Route::patch('/profil', [StaffPortalController::class, 'updateProfile'])->name('profile.update');
+    Route::patch('/profil/password', [StaffPortalController::class, 'updatePassword'])->name('profile.password');
 });
 
 Route::prefix('coop-staff')->middleware('staff.type:strict,coop_staff')->name('coop-staff.')->group(function (): void {
     Route::get('/dashboard', [StaffPortalController::class, 'cooperativeDashboard'])->name('dashboard');
     Route::get('/profil', [StaffPortalController::class, 'profile'])->name('profile');
+    Route::patch('/profil', [StaffPortalController::class, 'updateProfile'])->name('profile.update');
+    Route::patch('/profil/password', [StaffPortalController::class, 'updatePassword'])->name('profile.password');
 });
 
 Route::prefix('coop-staff/attendance')->middleware('attendance.access:worker')->name('coop-staff.attendance.')->group(function (): void {
@@ -91,7 +99,12 @@ Route::prefix('clothing-staff')->middleware('staff.type:strict,clothing_staff')-
     Route::get('/notifikasi', [CooperativeController::class, 'notifications'])->name('notifications.index');
     Route::post('/notifikasi/read', [CooperativeController::class, 'markNotificationsRead'])->name('notifications.read');
     Route::get('/profil', [StaffPortalController::class, 'profile'])->name('profile');
+    Route::patch('/profil', [StaffPortalController::class, 'updateProfile'])->name('profile.update');
+    Route::patch('/profil/password', [StaffPortalController::class, 'updatePassword'])->name('profile.password');
 });
+
+Route::get('/notifikasi', [CooperativeController::class, 'notifications'])->name('notifications.index');
+Route::post('/notifikasi/read', [CooperativeController::class, 'markNotificationsRead'])->name('notifications.read');
 
 Route::get('/admin/users', [AdminProfileController::class, 'index'])->name('admin.users.index');
 Route::get('/admin/users/students', [AdminProfileController::class, 'students'])->name('admin.users.students');

@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\AdminUser;
 use App\Models\Ahli;
 use App\Models\AhliImport;
-use App\Models\Permohonan;
 use App\Models\Pekerja;
+use App\Models\Permohonan;
 use App\Models\Saham;
 use App\Models\SahamStaff;
 use App\Services\AhliImportService;
@@ -15,14 +15,62 @@ use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class AdminProfileController extends Controller
 {
+    public function profile(Request $request): View|RedirectResponse
+    {
+        if (! $this->isAdmin($request)) {
+            return redirect()->route('login');
+        }
+
+        $role = 'admin';
+        $user = AdminUser::query()->find($request->session()->get('auth_id'));
+
+        if (! $user) {
+            return redirect()->route('login');
+        }
+
+        return view('admin.profile', compact('role', 'user'));
+    }
+
+    public function updatePassword(Request $request): RedirectResponse
+    {
+        if (! $this->isAdmin($request)) {
+            return redirect()->route('login');
+        }
+
+        $user = AdminUser::query()->find($request->session()->get('auth_id'));
+
+        if (! $user) {
+            return redirect()->route('login');
+        }
+
+        $validated = $request->validate([
+            'current_password' => ['required', 'string'],
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
+        ], [
+            'current_password.required' => 'Sila masukkan kata laluan semasa.',
+            'password.required' => 'Sila masukkan kata laluan baharu.',
+            'password.min' => 'Kata laluan baharu mesti sekurang-kurangnya 6 aksara.',
+            'password.confirmed' => 'Pengesahan kata laluan baharu tidak sepadan.',
+        ]);
+
+        if (! $this->passwordMatches($user, $validated['current_password'])) {
+            return back()->withErrors(['current_password' => 'Kata laluan semasa tidak sah.']);
+        }
+
+        $user->password_hash = Hash::make($validated['password']);
+        $user->save();
+
+        return back()->with('success', 'Kata laluan berjaya dikemaskini.');
+    }
+
     public function index(Request $request): RedirectResponse
     {
         if (! $this->isAdmin($request)) {
@@ -166,7 +214,7 @@ class AdminProfileController extends Controller
             $staffQuery->where(function ($query) use ($search) {
                 $query
                     ->where('nama', 'like', '%'.$search.'%')
-                    ->orWhere('no_pekerja', 'like', '%'.$search.'%')
+                    ->orWhere('no_anggota', 'like', '%'.$search.'%')
                     ->orWhere('nric', 'like', '%'.$search.'%')
                     ->orWhere('staff_type', 'like', '%'.$search.'%');
             });
@@ -291,8 +339,10 @@ class AdminProfileController extends Controller
             return redirect()->route('login');
         }
 
+        $requestedStaffType = (string) $request->input('staff_type');
+
         $validated = $request->validate([
-            'no_pekerja' => ['required', 'string', 'max:20', 'regex:/^PBT-\d+$/', 'unique:pekerja,no_pekerja'],
+            'no_pekerja' => [Rule::requiredIf($requestedStaffType === Pekerja::COOP_WORKER_STAFF_TYPE), 'nullable', 'string', 'max:20', 'regex:/^PBT-\d+$/', 'unique:pekerja,no_pekerja'],
             'nama' => ['required', 'string', 'max:100'],
             'nric' => ['required', 'string', 'max:20', 'unique:pekerja,nric'],
             'staff_type' => ['required', Rule::in(['lecturer_member', 'coop_staff', 'clothing_staff'])],
@@ -304,8 +354,12 @@ class AdminProfileController extends Controller
             'password' => ['nullable', 'string', 'min:6'],
         ]);
 
+        $staffNumber = $validated['staff_type'] === Pekerja::COOP_WORKER_STAFF_TYPE
+            ? strtoupper(trim((string) $validated['no_pekerja']))
+            : $this->nextStaffNumber();
+
         $staff = Pekerja::query()->create([
-            'no_pekerja' => $validated['no_pekerja'],
+            'no_pekerja' => $staffNumber,
             'nama' => $validated['nama'],
             'nric' => $validated['nric'],
             'staff_type' => $validated['staff_type'],
@@ -375,7 +429,8 @@ class AdminProfileController extends Controller
         } else {
             $rules['nric'][] = Rule::unique('pekerja', 'nric')->ignore($id, 'id_pekerja');
             $rules['email'][] = Rule::unique('pekerja', 'email')->ignore($id, 'id_pekerja');
-            $rules['no_pekerja'] = ['required', 'string', 'max:20', 'regex:/^PBT-\d+$/', Rule::unique('pekerja', 'no_pekerja')->ignore($id, 'id_pekerja')];
+            $requestedStaffType = (string) $request->input('staff_type', $user->staff_type);
+            $rules['no_pekerja'] = [Rule::requiredIf($requestedStaffType === Pekerja::COOP_WORKER_STAFF_TYPE), 'nullable', 'string', 'max:20', 'regex:/^PBT-\d+$/', Rule::unique('pekerja', 'no_pekerja')->ignore($id, 'id_pekerja')];
             $rules['staff_type'] = ['required', Rule::in(['lecturer_member', 'coop_staff', 'clothing_staff'])];
             $rules['kadar_elaun'] = ['nullable', 'numeric', 'min:0'];
             $rules['tarikh_mula'] = ['nullable', 'date'];
@@ -391,6 +446,10 @@ class AdminProfileController extends Controller
                 $validated['semester'] = $academic['semester'];
                 $validated['program'] = $academic['program'];
             }
+        }
+
+        if ($type === 'staff' && ($validated['staff_type'] ?? null) !== Pekerja::COOP_WORKER_STAFF_TYPE) {
+            unset($validated['no_pekerja'], $validated['kadar_elaun']);
         }
 
         $user->fill(Arr::except($validated, ['password']));
@@ -488,6 +547,21 @@ class AdminProfileController extends Controller
         };
     }
 
+    private function passwordMatches(AdminUser $user, string $password): bool
+    {
+        $storedHash = (string) $user->password_hash;
+
+        if ($storedHash === '') {
+            return false;
+        }
+
+        if (str_starts_with($storedHash, '$2a$')) {
+            return password_verify($password, '$2y$'.substr($storedHash, 4));
+        }
+
+        return Hash::check($password, $storedHash);
+    }
+
     /**
      * @return array<int, string>
      */
@@ -544,5 +618,16 @@ class AdminProfileController extends Controller
         }
 
         return null;
+    }
+
+    private function nextStaffNumber(): string
+    {
+        $numbers = Pekerja::query()
+            ->where('no_pekerja', 'like', 'PBT-%')
+            ->pluck('no_pekerja')
+            ->map(fn ($value): int => (int) preg_replace('/\D+/', '', (string) $value))
+            ->filter(fn (int $number): bool => $number > 0);
+
+        return 'PBT-'.(((int) $numbers->max()) + 1);
     }
 }

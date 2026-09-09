@@ -14,6 +14,22 @@
                 default => 'Pekerja Koperasi',
             }
             : 'Student / Ahli');
+    $headerNotifications = collect();
+    $unreadNotificationCount = 0;
+
+    if ($showSidebar && \Illuminate\Support\Facades\Schema::hasTable('notifications')) {
+        $headerNotifications = \App\Models\CooperativeNotification::query()
+            ->where('recipient_role', $role)
+            ->where('recipient_id', $user->getKey())
+            ->latest()
+            ->limit(5)
+            ->get();
+        $unreadNotificationCount = \App\Models\CooperativeNotification::query()
+            ->where('recipient_role', $role)
+            ->where('recipient_id', $user->getKey())
+            ->whereNull('read_at')
+            ->count();
+    }
 
     $adminLinks = [
         ['section' => 'Home', 'label' => 'Admin Home', 'route' => 'auth.dashboard', 'active' => 'auth.dashboard', 'icon' => 'grid'],
@@ -41,16 +57,14 @@
         ['section' => 'Home', 'label' => 'Home', 'route' => 'lecturer-member.dashboard', 'active' => 'lecturer-member.dashboard', 'icon' => 'grid'],
         ['section' => 'Dashboard', 'label' => 'Dashboard Saham', 'route' => 'lecturer-member.dashboard.saham', 'active' => 'lecturer-member.dashboard.saham', 'icon' => 'chart'],
         ['section' => 'SAHAM', 'label' => 'Permohonan Anggota', 'route' => 'lecturer-member.permohonan.index', 'active' => 'lecturer-member.permohonan.*', 'icon' => 'clipboard'],
-        ['section' => 'SAHAM', 'label' => 'Semak Status & Slip', 'route' => 'student.permohonan.status', 'active' => 'student.permohonan.status', 'icon' => 'book'],
+        ['section' => 'SAHAM', 'label' => 'Semak Permohonan', 'route' => 'student.permohonan.status', 'active' => 'student.permohonan.status', 'icon' => 'book'],
         ['section' => 'SAHAM', 'label' => 'Senarai Transaksi', 'route' => 'koperasi.transactions.index', 'active' => 'koperasi.transactions.*', 'icon' => 'chart'],
-        ['section' => 'Akaun', 'label' => 'Profil', 'route' => 'lecturer-member.profile', 'active' => 'lecturer-member.profile', 'icon' => 'users'],
     ];
 
     $coopStaffLinks = [
         ['section' => 'Home', 'label' => 'Home', 'route' => 'coop-staff.dashboard', 'active' => 'coop-staff.dashboard', 'icon' => 'grid'],
         ['section' => 'Kehadiran Pekerja', 'label' => 'Kehadiran Pekerja', 'route' => 'coop-staff.attendance.index', 'active' => 'coop-staff.attendance.index', 'icon' => 'clipboard'],
         ['section' => 'Kehadiran Pekerja', 'label' => 'Sejarah Kehadiran', 'route' => 'coop-staff.attendance.history', 'active' => 'coop-staff.attendance.history', 'icon' => 'book'],
-        ['section' => 'Akaun', 'label' => 'Profil', 'route' => 'coop-staff.profile', 'active' => 'coop-staff.profile', 'icon' => 'users'],
     ];
 
     $clothingStaffLinks = [
@@ -58,21 +72,19 @@
         ['section' => 'Dashboard', 'label' => 'Dashboard Saham', 'route' => 'clothing-staff.dashboard.saham', 'active' => 'clothing-staff.dashboard.saham', 'icon' => 'chart'],
         ['section' => 'Dashboard', 'label' => 'Dashboard Baju', 'route' => 'clothing-staff.dashboard.baju', 'active' => 'clothing-staff.dashboard.baju', 'icon' => 'box'],
         ['section' => 'SAHAM', 'label' => 'Permohonan', 'route' => 'clothing-staff.permohonan.index', 'active' => 'clothing-staff.permohonan.*', 'icon' => 'clipboard'],
-        ['section' => 'SAHAM', 'label' => 'Semak Status & Slip', 'route' => 'student.permohonan.status', 'active' => 'student.permohonan.status', 'icon' => 'book'],
+        ['section' => 'SAHAM', 'label' => 'Semak Permohonan', 'route' => 'student.permohonan.status', 'active' => 'student.permohonan.status', 'icon' => 'book'],
         ['section' => 'SAHAM', 'label' => 'Senarai Transaksi', 'route' => 'koperasi.transactions.index', 'active' => 'koperasi.transactions.*', 'icon' => 'chart'],
         ['section' => 'Tempahan Baju', 'label' => 'Stok Baju', 'route' => 'clothing-staff.baju.index', 'active' => 'clothing-staff.baju.*', 'icon' => 'box'],
         ['section' => 'Tempahan Baju', 'label' => 'Senarai Tempahan', 'route' => 'clothing-staff.orders.index', 'active' => 'clothing-staff.orders.*', 'icon' => 'clipboard'],
-        ['section' => 'Akaun', 'label' => 'Profil', 'route' => 'clothing-staff.profile', 'active' => 'clothing-staff.profile', 'icon' => 'users'],
     ];
 
     $studentLinks = [
         ['section' => 'Home', 'label' => 'Home', 'route' => 'auth.dashboard', 'active' => 'auth.dashboard', 'icon' => 'grid'],
         ['section' => 'Dashboard', 'label' => 'Dashboard Saham', 'route' => 'student.dashboard.saham', 'active' => 'student.dashboard.saham', 'icon' => 'chart'],
-        ['section' => 'SAHAM', 'label' => 'Permohonan', 'route' => 'student.permohonan.index', 'active' => 'student.permohonan.index', 'icon' => 'clipboard'],
-        ['section' => 'SAHAM', 'label' => 'Semak Status & Slip', 'route' => 'student.permohonan.status', 'active' => 'student.permohonan.status', 'icon' => 'book'],
+        ['section' => 'SAHAM', 'label' => 'Urus Saham', 'route' => 'student.permohonan.index', 'active' => 'student.permohonan.index', 'icon' => 'clipboard'],
+        ['section' => 'SAHAM', 'label' => 'Semak Permohonan', 'route' => 'student.permohonan.status', 'active' => 'student.permohonan.status', 'icon' => 'book'],
         ['section' => 'SAHAM', 'label' => 'Transaksi Saham', 'route' => 'koperasi.transactions.index', 'active' => 'koperasi.transactions.*', 'icon' => 'chart'],
         ['section' => 'Tempahan Baju', 'label' => 'Senarai Tempahan', 'route' => 'student.tempahan.index', 'active' => 'student.tempahan.*', 'icon' => 'box'],
-        ['section' => 'Account', 'label' => 'Profil', 'route' => 'student.profile', 'active' => 'student.profile', 'icon' => 'users'],
     ];
 
     $links = match ($role) {
@@ -85,6 +97,15 @@
         'ahli' => $studentLinks,
         default => [],
     };
+    $profileRoute = match (true) {
+        $role === 'admin' => 'admin.profile',
+        $role === 'staff' && $staffType === 'lecturer_member' => 'lecturer-member.profile',
+        $role === 'staff' && $staffType === 'clothing_staff' => 'clothing-staff.profile',
+        $role === 'staff' => 'coop-staff.profile',
+        $role === 'ahli' => 'student.profile',
+        default => null,
+    };
+    $profileUrl = $profileRoute ? route($profileRoute) : '#';
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="{{ $isDialogMode ? 'dialog-mode embedded-frame' : '' }}">
@@ -390,28 +411,6 @@
             color: #1D4ED8;
         }
 
-        /* Sidebar Footer & Buttons */
-        .sidebar-footer { padding: 16px; border-top: 1px solid var(--sidebar-border); }
-
-        .logout-button {
-            width: 100%;
-            min-height: 42px;
-            border: 1px solid #CBD5E1;
-            border-radius: var(--radius-sm);
-            background: transparent;
-            color: #334155;
-            font-weight: 700;
-            font-size: 14px;
-            transition: all var(--transition-fast);
-        }
-
-        .logout-button:hover {
-            background: #FFFFFF;
-            border-color: #2453A6;
-            color: #1D4ED8;
-            box-shadow: none;
-        }
-
         /* Content Area Infrastructure */
         .main-wrap {
             flex: 1;
@@ -502,7 +501,8 @@
             box-shadow: none;
         }
 
-        .profile-chip span {
+        .profile-chip__text,
+        .profile-chip__name {
             font-size: 13px;
             font-weight: 700;
             color: #0F172A;
@@ -514,6 +514,294 @@
             font-size: 11px;
             font-weight: 600;
             color: var(--muted-2);
+        }
+
+        .profile-menu {
+            position: relative;
+        }
+
+        .profile-menu > summary {
+            list-style: none;
+            cursor: pointer;
+        }
+
+        .profile-menu > summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .profile-menu[open] .profile-chip {
+            background: var(--surface-soft);
+            color: #1D4ED8;
+        }
+
+        .profile-dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            z-index: 65;
+            width: 230px;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .profile-dropdown__head {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .profile-dropdown__head strong {
+            display: block;
+            overflow: hidden;
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 800;
+            line-height: 1.3;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .profile-dropdown__head span {
+            display: block;
+            margin-top: 3px;
+            color: var(--muted-2);
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .profile-dropdown__item {
+            width: 100%;
+            min-height: 42px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 14px;
+            border: 0;
+            background: #fff;
+            color: var(--sidebar-text);
+            font-size: 13px;
+            font-weight: 750;
+            text-align: left;
+            text-decoration: none;
+        }
+
+        .profile-dropdown__item:hover {
+            background: #EFF6FF;
+            color: #1D4ED8;
+        }
+
+        .profile-dropdown__item svg {
+            width: 17px;
+            height: 17px;
+            flex: 0 0 auto;
+        }
+
+        .profile-dropdown form {
+            margin: 0;
+            border-top: 1px solid var(--line);
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .notification-menu {
+            position: relative;
+        }
+
+        .notification-menu > summary {
+            list-style: none;
+        }
+
+        .notification-menu > summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .notification-trigger {
+            position: relative;
+        }
+
+        .notification-trigger[aria-expanded='true'],
+        .notification-menu[open] .notification-trigger {
+            background: #EFF6FF;
+            color: #1D4ED8;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -3px;
+            right: -3px;
+            display: grid;
+            place-items: center;
+            min-width: 17px;
+            height: 17px;
+            padding: 0 4px;
+            border: 2px solid #fff;
+            border-radius: 999px;
+            background: var(--danger);
+            color: #fff;
+            font-size: 9px;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .notification-dropdown {
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            z-index: 60;
+            width: min(390px, calc(100vw - 28px));
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .notification-dropdown__head,
+        .notification-dropdown__foot {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 16px;
+        }
+
+        .notification-dropdown__head {
+            border-bottom: 1px solid var(--line);
+        }
+
+        .notification-dropdown__head strong {
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        .notification-dropdown__head span {
+            color: var(--muted-2);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .notification-dropdown__mark-all,
+        .notification-dropdown__read {
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: var(--secondary);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .notification-dropdown__mark-all:hover,
+        .notification-dropdown__read:hover {
+            color: var(--secondary-hover);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        .notification-dropdown__list {
+            max-height: min(390px, calc(100dvh - 185px));
+            overflow-y: auto;
+        }
+
+        .notification-dropdown__item {
+            padding: 13px 16px;
+            border-bottom: 1px solid var(--line);
+            background: #fff;
+        }
+
+        .notification-dropdown__item--unread {
+            background: #F8FBFF;
+            box-shadow: inset 3px 0 0 var(--secondary);
+        }
+
+        .notification-dropdown__link {
+            display: block;
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .notification-dropdown__link:hover .notification-dropdown__title {
+            color: var(--secondary);
+        }
+
+        .notification-dropdown__title {
+            display: block;
+            overflow: hidden;
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 750;
+            line-height: 1.35;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .notification-dropdown__message {
+            display: -webkit-box;
+            margin: 4px 0 0;
+            overflow: hidden;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.45;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+        }
+
+        .notification-dropdown__meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .notification-dropdown__date {
+            color: var(--muted-2);
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .notification-dropdown__empty {
+            padding: 30px 20px;
+            color: var(--muted);
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .notification-dropdown__foot {
+            justify-content: center;
+            background: var(--surface-soft);
+        }
+
+        .notification-dropdown__foot a {
+            font-size: 12px;
+            text-decoration: none;
+        }
+
+        @media (max-width: 560px) {
+            .notification-dropdown {
+                position: fixed;
+                top: 62px;
+                right: 12px;
+                left: 12px;
+                width: auto;
+            }
+
+            .profile-dropdown {
+                position: fixed;
+                top: 62px;
+                right: 12px;
+            }
         }
 
         .topbar-logout {
@@ -818,7 +1106,7 @@
             .topbar-logout { min-height: 42px; }
             .icon-button { width: 42px; height: 42px; }
             .content { padding: 20px 16px; }
-            .profile-chip span { display: none; }
+            .profile-chip__text { display: none; }
         }
     </style>
     @stack('styles')
@@ -845,9 +1133,6 @@
         .nav-link:hover { background: #EEF2F7; color: #1D4ED8; }
         .nav-link:hover .nav-icon { color: #1D4ED8; }
         .nav-link.active { border-left-width: 3px; }
-        .logout-button { border: 1px solid #CBD5E1; border-radius: 7px; color: #334155; }
-        .logout-button:hover { background: #FFFFFF; border-color: #2453A6; color: #1D4ED8; box-shadow: none; }
-
         .topbar { min-height: 72px; padding: 0 28px; box-shadow: none; }
         .topbar-actions { min-height: 40px; padding: 0; gap: 8px; border: 0; border-radius: 0; box-shadow: none; background: transparent; }
         .topbar-actions::before { display: none; }
@@ -1060,7 +1345,7 @@
             .topbar { min-height: 64px; padding: 0 14px; }
             .content { padding: 20px 14px 28px; }
             .page-heading h2 { font-size: 24px; }
-            .profile-chip { display: none; }
+            .profile-chip__text { display: none; }
             .topbar-logout { padding: 0 10px; }
             .template-hero, .student-hero, .coop-hero { padding: 18px !important; }
         }
@@ -1140,7 +1425,7 @@
             .content { padding: 18px 14px 28px; }
             .page-heading { margin-bottom: 18px; }
             .page-heading h2 { font-size: 24px; }
-            .profile-chip,
+            .profile-chip__text,
             .topbar-logout { display: none; }
             .sidebar { width: min(86vw, 320px); }
             .card-grid,
@@ -1340,7 +1625,7 @@
             .topbar { min-height: 64px; padding-inline: 14px; gap: 8px; }
             .topbar-actions { gap: 2px; }
             .icon-button { width: 40px; height: 40px; }
-            .profile-chip,
+            .profile-chip__text,
             .topbar-logout { display: none; }
             .page-heading { margin-bottom: 18px; }
             .page-heading h2 { font-size: 24px; line-height: 1.25; }
@@ -2069,12 +2354,6 @@
                     @endforeach
                 </nav>
 
-                <div class="sidebar-footer">
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button class="logout-button" type="submit">Logout</button>
-                    </form>
-                </div>
             </aside>
             <label class="sidebar-backdrop" for="sidebar-toggle" aria-label="Close menu"></label>
         @endif
@@ -2094,13 +2373,86 @@
                         <button class="icon-button" type="button" aria-label="Toggle theme" title="Toggle theme">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.9 15.1A8 8 0 1 1 8.9 3.1a6 6 0 0 0 12 12Z"/></svg>
                         </button>
-                        <button class="icon-button" type="button" aria-label="Notifications" title="Notifications">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 6.5-3 7-3 9h18c0-2-3-2.5-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
-                        </button>
-                        <div class="profile-chip">
-                            <span class="avatar" aria-hidden="true">{{ $initials }}</span>
-                            <span>{{ $displayName }}<small>{{ $roleLabel }}</small></span>
-                        </div>
+                        <details class="notification-menu">
+                            <summary class="icon-button notification-trigger" aria-label="Notifikasi" title="Notifikasi">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 6.5-3 7-3 9h18c0-2-3-2.5-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+                                @if ($unreadNotificationCount > 0)
+                                    <span class="notification-badge" aria-hidden="true">{{ $unreadNotificationCount > 9 ? '9+' : $unreadNotificationCount }}</span>
+                                    <span class="sr-only">{{ $unreadNotificationCount }} notifikasi belum dibaca</span>
+                                @endif
+                            </summary>
+                            <section class="notification-dropdown" aria-label="Senarai notifikasi">
+                                <header class="notification-dropdown__head">
+                                    <div>
+                                        <strong>Notifikasi</strong>
+                                        <span>{{ $unreadNotificationCount > 0 ? $unreadNotificationCount.' belum dibaca' : 'Semua telah dibaca' }}</span>
+                                    </div>
+                                    @if ($unreadNotificationCount > 0)
+                                        <form method="POST" action="{{ route('notifications.read') }}">
+                                            @csrf
+                                            <button class="notification-dropdown__mark-all" type="submit">Tandakan semua dibaca</button>
+                                        </form>
+                                    @endif
+                                </header>
+                                <div class="notification-dropdown__list">
+                                    @forelse ($headerNotifications as $notification)
+                                        <article class="notification-dropdown__item {{ $notification->read_at ? '' : 'notification-dropdown__item--unread' }}">
+                                            @if ($notification->link)
+                                                <a class="notification-dropdown__link" href="{{ $notification->link }}">
+                                                    <span class="notification-dropdown__title">{{ $notification->title }}</span>
+                                                    <p class="notification-dropdown__message">{{ $notification->message ?? 'Tiada makluman tambahan.' }}</p>
+                                                </a>
+                                            @else
+                                                <span class="notification-dropdown__title">{{ $notification->title }}</span>
+                                                <p class="notification-dropdown__message">{{ $notification->message ?? 'Tiada makluman tambahan.' }}</p>
+                                            @endif
+                                            <div class="notification-dropdown__meta">
+                                                <span class="notification-dropdown__date">{{ $notification->created_at?->format('d/m/Y') }}</span>
+                                                @if (! $notification->read_at)
+                                                    <form method="POST" action="{{ route('notifications.read') }}">
+                                                        @csrf
+                                                        <input type="hidden" name="notification_id" value="{{ $notification->getKey() }}">
+                                                        <button class="notification-dropdown__read" type="submit">Tandakan dibaca</button>
+                                                    </form>
+                                                @endif
+                                            </div>
+                                        </article>
+                                    @empty
+                                        <p class="notification-dropdown__empty">Tiada notifikasi buat masa ini.</p>
+                                    @endforelse
+                                </div>
+                                <footer class="notification-dropdown__foot">
+                                    <a href="{{ route('notifications.index') }}">Lihat semua notifikasi</a>
+                                </footer>
+                            </section>
+                        </details>
+                        <details class="profile-menu">
+                            <summary class="profile-chip" aria-label="Menu profil" title="Menu profil">
+                                <span class="avatar" aria-hidden="true">{{ $initials }}</span>
+                                <span class="profile-chip__text"><span class="profile-chip__name">{{ $displayName }}</span><small>{{ $roleLabel }}</small></span>
+                            </summary>
+                            <section class="profile-dropdown" aria-label="Menu profil">
+                                <header class="profile-dropdown__head">
+                                    <strong>{{ $displayName }}</strong>
+                                    <span>{{ $roleLabel }}</span>
+                                </header>
+                                <a class="profile-dropdown__item" href="{{ $profileUrl }}">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="3.5"/><path d="M21 21v-2a3.5 3.5 0 0 0-3-3.46"/><path d="M16.5 3.4a3.5 3.5 0 0 1 0 6.8"/></svg>
+                                    Profil Saya
+                                </a>
+                                <a class="profile-dropdown__item" href="{{ $profileUrl }}#kata-laluan">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/><path d="M12 15v2"/></svg>
+                                    Tukar Kata Laluan
+                                </a>
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button class="profile-dropdown__item" type="submit">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+                                        Log Keluar
+                                    </button>
+                                </form>
+                            </section>
+                        </details>
                     @endif
                 </div>
             </header>
@@ -2113,6 +2465,36 @@
     @stack('scripts')
     @if ($showSidebar)
         <script>
+            document.querySelectorAll('.notification-menu, .profile-menu').forEach(function (menu) {
+                menu.addEventListener('toggle', function () {
+                    if (!menu.open) {
+                        return;
+                    }
+
+                    document.querySelectorAll('.notification-menu[open], .profile-menu[open]').forEach(function (otherMenu) {
+                        if (otherMenu !== menu) {
+                            otherMenu.open = false;
+                        }
+                    });
+                });
+            });
+
+            document.addEventListener('click', function (event) {
+                document.querySelectorAll('.notification-menu[open], .profile-menu[open]').forEach(function (menu) {
+                    if (!menu.contains(event.target)) {
+                        menu.open = false;
+                    }
+                });
+            });
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') {
+                    document.querySelectorAll('.notification-menu[open], .profile-menu[open]').forEach(function (menu) {
+                        menu.open = false;
+                    });
+                }
+            });
+
             document.querySelectorAll('.nav-link').forEach(function (link) {
                 link.addEventListener('click', function () {
                     const sidebarToggle = document.getElementById('sidebar-toggle');

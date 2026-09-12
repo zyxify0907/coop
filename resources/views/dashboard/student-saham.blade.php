@@ -18,9 +18,8 @@
             ['label' => 'Syer Semasa', 'value' => $currentShare],
             ['label' => 'Tambahan Saham', 'value' => $additionalShare],
         ];
-        $chartMax = max(1, collect($chartItems)->max('value') ?? 1);
-        $chartAxisMax = max(10, (int) ceil($chartMax / 5) * 5);
-        $chartAxisMid = $chartAxisMax / 2;
+        $chartAxisMax = 10;
+        $chartAxisMid = 5;
         $typeLabels = [
             'OPENING_BALANCE' => 'Baki Awal',
             'SHARE_ADDITION' => 'Tambah Saham',
@@ -111,12 +110,12 @@
                         @foreach ($chartItems as $item)
                             @php
                                 $value = (float) ($item['value'] ?? 0);
-                                $height = max(8, ($value / $chartAxisMax) * 190);
+                                $height = $value > 0 ? min(176, max(10, ($value / $chartAxisMax) * 176)) : 0;
                             @endphp
                             <div class="student-vertical-chart__bar">
-                                <strong>RM {{ number_format($value, 2) }}</strong>
-                                <div class="student-vertical-chart__track">
-                                    <span style="height: {{ $height }}px"></span>
+                                <div class="student-vertical-chart__track" style="--bar-height: {{ $height }}px">
+                                    <strong>RM {{ number_format($value, 2) }}</strong>
+                                    <span @class(['is-empty' => $value <= 0])></span>
                                 </div>
                                 <p>{{ $item['label'] }}</p>
                             </div>
@@ -201,21 +200,23 @@
     .student-share-dashboard .module-panel h2{margin:4px 0 0;color:#071A34;font-size:20px;line-height:1.2;font-weight:900;letter-spacing:0}
     .student-share-dashboard .module-panel header a{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:0 14px;border:1px solid #BFD7FF;border-radius:8px;background:#fff;color:#1D5FD1;text-decoration:none;font-size:13px;font-weight:900}
     .student-share-dashboard .module-panel header a:hover{border-color:#082F59;background:#F7FAFF;color:#082F59}
-    .student-vertical-chart{display:grid;grid-template-columns:58px minmax(0,1fr);gap:10px;flex:1;min-height:275px;padding:8px 0 0}
-    .student-vertical-chart__axis{display:grid;grid-template-rows:1fr 1fr 1fr;align-items:start;padding-top:22px;color:#5F7189;font-size:12px;font-weight:800;text-align:right}
+    .student-vertical-chart{display:grid;grid-template-columns:58px minmax(0,1fr);gap:10px;flex:1;min-height:260px;padding:8px 0 0}
+    .student-vertical-chart__axis{display:grid;grid-template-rows:1fr 1fr 1fr;align-items:start;padding-top:30px;color:#5F7189;font-size:12px;font-weight:800;text-align:right}
     .student-vertical-chart__axis span:nth-child(2){align-self:center}
-    .student-vertical-chart__axis span:nth-child(3){align-self:end;padding-bottom:28px}
-    .student-vertical-chart__plot{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:end;padding:0 6px 0;border-bottom:1px solid #BFCFE3;background:repeating-linear-gradient(to bottom,transparent 0,transparent calc(50% - 1px),#D8E2EF calc(50% - 1px),#D8E2EF 50%,transparent calc(50% + 1px),transparent 100%)}
+    .student-vertical-chart__axis span:nth-child(3){align-self:end;padding-bottom:58px}
+    .student-vertical-chart__plot{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:end;padding:28px 6px 0;background:linear-gradient(to bottom,transparent 0,transparent 27px,#D8E2EF 27px,#D8E2EF 28px,transparent 28px,transparent calc(50% + 13px),#D8E2EF calc(50% + 13px),#D8E2EF calc(50% + 14px),transparent calc(50% + 14px),transparent 203px,#BFCFE3 203px,#BFCFE3 204px,transparent 204px)}
     .student-vertical-chart__plot::before,.student-vertical-chart__plot::after{content:"";position:absolute;left:0;right:0;border-top:1px dashed #D8E2EF;pointer-events:none}
-    .student-vertical-chart__plot::before{top:22px}
-    .student-vertical-chart__plot::after{top:calc(50% + 9px)}
-    .student-vertical-chart__bar{position:relative;z-index:1;display:grid;grid-template-rows:auto 190px auto;gap:9px;align-items:end;justify-items:center;height:100%;text-align:center}
-    .student-vertical-chart__bar strong{color:#071A34;font-size:13px;font-weight:900}
-    .student-vertical-chart__track{display:flex;align-items:flex-end;justify-content:center;width:100%;height:190px}
-    .student-vertical-chart__track span{display:block;width:58px;min-height:8px;border-radius:7px 7px 0 0;background:#082F59}
-    .student-vertical-chart__bar:nth-child(2) .student-vertical-chart__track span{background:#ED1C2E}
-    .student-vertical-chart__bar:nth-child(3) .student-vertical-chart__track span{background:#E89A00}
-    .student-vertical-chart__bar p{margin:0;color:#253B57;font-size:12px;font-weight:900}
+    .student-vertical-chart__plot::before{top:28px}
+    .student-vertical-chart__plot::after{top:calc(50% + 14px)}
+    .student-vertical-chart__bar{position:relative;z-index:1;display:grid;grid-template-rows:176px auto;gap:8px;align-items:end;justify-items:center;height:100%;text-align:center}
+    .student-vertical-chart__bar strong{position:absolute;left:50%;bottom:calc(var(--bar-height) + 8px);transform:translateX(-50%);color:#071A34;font-size:13px;font-weight:900;white-space:nowrap}
+    .student-vertical-chart__track{position:relative;display:flex;align-items:flex-end;justify-content:center;width:100%;height:176px}
+    .student-vertical-chart__track span{display:block;width:58px;height:var(--bar-height);min-height:10px;border-radius:7px 7px 0 0;background:#082F59;color:#082F59}
+    .student-vertical-chart__track span.is-empty{height:0;min-height:0;border-radius:999px;border-top:8px solid currentColor;background:transparent}
+    .student-vertical-chart__bar:nth-child(2) .student-vertical-chart__track span{background:#ED1C2E;color:#ED1C2E}
+    .student-vertical-chart__bar:nth-child(3) .student-vertical-chart__track span{background:#E89A00;color:#E89A00}
+    .student-vertical-chart__bar .student-vertical-chart__track span.is-empty{background:transparent}
+    .student-vertical-chart__bar p{align-self:start;min-height:30px;margin:0;color:#253B57;font-size:12px;font-weight:900;line-height:1.25}
     .student-share-dashboard .module-list{display:grid;gap:8px;flex:1}
     .student-share-dashboard .module-row{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:58px;padding:13px 14px;border:1px solid #D8E2EF;border-radius:10px;background:#F8FBFF;color:#082F59;text-decoration:none}
     .student-share-dashboard .module-row:hover{border-color:#BFD7FF;background:#fff}
@@ -234,6 +235,6 @@
     @media (max-width:1100px){.content > .student-share-dashboard{width:100%}.student-share-main{grid-template-columns:1fr}.student-share-dashboard .module-panel{min-height:auto}}
     @media (max-width:900px){.student-share-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.student-share-actions{grid-template-columns:1fr}.student-share-actions a{min-height:78px}.student-vertical-chart{grid-template-columns:48px minmax(0,1fr)}}
     @media (max-width:768px){.student-share-metrics{grid-template-columns:1fr}.student-share-dashboard .module-hero{padding:22px}.student-share-actions a,.student-share-dashboard .module-row{align-items:flex-start}.student-share-dashboard .module-row{flex-direction:column}.share-status-label{min-width:0}.student-vertical-chart__track span{width:42px}}
-    @media (max-width:520px){.content > .student-share-dashboard{width:100%}.student-vertical-chart{grid-template-columns:1fr}.student-vertical-chart__axis{display:none}.student-vertical-chart__plot{gap:10px}.student-vertical-chart__bar p{font-size:11px}}
+    @media (max-width:520px){.content > .student-share-dashboard{width:100%}.student-vertical-chart{grid-template-columns:42px minmax(0,1fr);gap:8px}.student-vertical-chart__plot{gap:8px;padding-inline:2px}.student-vertical-chart__axis{font-size:11px}.student-vertical-chart__bar p{font-size:11px;line-height:1.2}.student-vertical-chart__bar strong{font-size:11px}.student-vertical-chart__track span{width:34px}}
 </style>
 @endpush

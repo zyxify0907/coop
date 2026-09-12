@@ -14,26 +14,23 @@
         $cartTotalItems = $cartItems->count();
     @endphp
 
-    <section class="student-hero">
-        <div>
-            <h2>Tempahan Baju</h2>
-            <p>Pilih baju dan size yang tersedia, kemudian semak status ambil tempahan anda di sini.</p>
-        </div>
-    </section>
+    <div class="student-order-page">
+        <section class="student-hero">
+            <div>
+                <h2>Tempahan Baju</h2>
+                <p>Pilih baju dan size yang tersedia, kemudian semak status ambil tempahan anda di sini.</p>
+            </div>
+        </section>
 
-    @if ($errors->any())
-        <div class="alert" style="border-color:var(--danger-soft);background:var(--primary-soft);color:var(--primary-dark)">{{ $errors->first() }}</div>
-    @endif
+        @if ($errors->any())
+            <div class="alert" style="border-color:var(--danger-soft);background:var(--primary-soft);color:var(--primary-dark)">{{ $errors->first() }}</div>
+        @endif
 
-    @if (session('status'))
-        <div class="alert success">{{ session('status') }}</div>
-    @endif
-
-    <div class="student-layout">
-        <section class="panel panel-pad">
+        <div class="student-layout">
+            <section class="panel panel-pad order-panel">
             <div class="booking-head">
                 <div>
-                    <h2 style="margin:0">Tempahan Baru</h2>
+                    <h2>Tempahan Baru</h2>
                     <p>Pilih baju dan size, masukkan dalam troli, kemudian hantar tempahan.</p>
                 </div>
                 <button class="cart-top-button booking-cart-button" type="button" data-cart-dialog-open aria-label="Buka troli tempahan">
@@ -46,16 +43,9 @@
                         <strong>{{ $cartTotalQuantity }}</strong>
                     </span>
                     <span>
-                        <b>Troli tempahan</b>
+                        <b>Troli Saya ({{ $cartTotalQuantity }})</b>
                     </span>
                 </button>
-            </div>
-
-            <div class="booking-steps">
-                <span class="step-chip is-active">1. Pilih Baju</span>
-                <span class="step-chip">2. Pilih Size</span>
-                <span class="step-chip">3. Masuk Troli</span>
-                <span class="step-chip">4. Hantar Troli</span>
             </div>
 
             <div class="baju-catalog">
@@ -63,8 +53,9 @@
                     @php
                         $preview = $variants->first();
                         $activeVariant = $variants->firstWhere('item_id', (int) old('item_id')) ?? $preview;
+                        $itemCategory = (string) ($preview->nama_kategori ?? '');
                     @endphp
-                    <article class="baju-card {{ (int) old('item_id') && $variants->contains('item_id', (int) old('item_id')) ? 'is-active' : '' }}" data-group-card="{{ $itemName }}">
+                    <article class="baju-card {{ (int) old('item_id') && $variants->contains('item_id', (int) old('item_id')) ? 'is-active' : '' }}" data-group-card="{{ $itemName }}" data-category="{{ $itemCategory }}">
                         <div class="baju-card__image">
                             @if (!empty($preview->image_path))
                                 <img src="{{ asset($preview->image_path) }}" alt="{{ $preview->nama_item }}" loading="lazy" onerror="this.classList.add('is-hidden'); this.nextElementSibling.classList.remove('is-hidden');">
@@ -97,8 +88,8 @@
                                 <input name="item_id" type="hidden" value="{{ (int) old('item_id') && $variants->contains('item_id', (int) old('item_id')) ? old('item_id') : '' }}" required>
                                 <div class="card-cart-form__row">
                                     <label>
-                                        <span>Kuantiti</span>
-                                        <input name="quantity" type="number" min="1" value="{{ old('quantity', 1) }}" required>
+                                        <span>KUANTITI</span>
+                                        <input name="quantity" type="number" inputmode="numeric" min="1" value="{{ old('quantity', 1) }}" required>
                                     </label>
                                     <button class="button card-cart-form__button" type="submit">Tambah ke Troli</button>
                                 </div>
@@ -112,7 +103,7 @@
 
         </section>
 
-        <dialog class="cart-dialog" data-cart-dialog aria-labelledby="cartDialogTitle">
+            <dialog class="cart-dialog" data-cart-dialog aria-labelledby="cartDialogTitle">
         <section class="panel cart-panel">
             <div class="cart-shell-head">
                 <div class="cart-title">
@@ -145,25 +136,39 @@
                             </div>
                             <div>
                                 <strong>{{ $cartItem->nama_item }}</strong>
+                                <em class="cart-stock-badge">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                                    Stok tersedia
+                                </em>
                                 <span>Size {{ $cartItem->saiz ?? '-' }} · Stok {{ $cartItem->stok_tertinggal }}</span>
                             </div>
                         </div>
 
-                        <form method="POST" action="{{ route('student.tempahan.cart.update', $cartItem->id_item) }}" class="cart-quantity-form">
-                            @csrf
-                            @method('PATCH')
-                            <label for="cart_quantity_{{ $cartItem->id_item }}">Kuantiti</label>
-                            <div class="cart-quantity-control">
-                                <input id="cart_quantity_{{ $cartItem->id_item }}" name="quantity" type="number" min="1" max="{{ $cartItem->stok_tertinggal }}" value="{{ $cartItem->quantity_ordered }}" required>
-                                <button class="cart-update-button" type="submit">Update</button>
-                            </div>
-                        </form>
+                        <div class="cart-actions">
+                            <form method="POST" action="{{ route('student.tempahan.cart.update', $cartItem->id_item) }}" class="cart-quantity-form">
+                                @csrf
+                                @method('PATCH')
+                                <label for="cart_quantity_{{ $cartItem->id_item }}">Kuantiti</label>
+                                <div class="cart-quantity-control">
+                                    <button class="cart-stepper-button" type="button" data-cart-step="-1" aria-label="Kurangkan kuantiti {{ $cartItem->nama_item }}">-</button>
+                                    <input id="cart_quantity_{{ $cartItem->id_item }}" name="quantity" type="number" min="1" max="{{ $cartItem->stok_tertinggal }}" value="{{ $cartItem->quantity_ordered }}" required>
+                                    <button class="cart-stepper-button" type="button" data-cart-step="1" aria-label="Tambah kuantiti {{ $cartItem->nama_item }}">+</button>
+                                    <button class="cart-update-button" type="submit">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 1-15.4 6.36L3 16"/><path d="M3 21v-5h5"/><path d="M3 12a9 9 0 0 1 15.4-6.36L21 8"/><path d="M21 3v5h-5"/></svg>
+                                        Kemaskini
+                                    </button>
+                                </div>
+                            </form>
 
-                        <form method="POST" action="{{ route('student.tempahan.cart.remove', $cartItem->id_item) }}" class="cart-remove-form">
-                            @csrf
-                            @method('DELETE')
-                            <button class="cart-remove-button" type="submit" aria-label="Buang {{ $cartItem->nama_item }} dari troli">Buang</button>
-                        </form>
+                            <form method="POST" action="{{ route('student.tempahan.cart.remove', $cartItem->id_item) }}" class="cart-remove-form">
+                                @csrf
+                                @method('DELETE')
+                                <button class="cart-remove-button" type="submit" aria-label="Buang {{ $cartItem->nama_item }} dari troli">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5"/><path d="M14 11v5"/></svg>
+                                    Buang
+                                </button>
+                            </form>
+                        </div>
                     </article>
                 @empty
                     <div class="cart-empty">
@@ -182,26 +187,33 @@
 
             @if ($cartItems->isNotEmpty())
                 <div class="cart-footer">
+                    <div class="cart-footer-count">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>
+                        <strong>{{ $cartTotalItems }} jenis item</strong>
+                    </div>
                     <div class="cart-footer-total">
                         <span>Jumlah Kuantiti</span>
                         <strong>{{ $cartTotalQuantity }}</strong>
                     </div>
                     <form method="POST" action="{{ route('student.tempahan.cart.checkout') }}">
                         @csrf
-                        <button class="button cart-checkout-button" type="submit">Hantar Troli</button>
+                        <button class="button cart-checkout-button" type="submit">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7Z"/></svg>
+                            Hantar Troli
+                        </button>
                     </form>
                 </div>
             @endif
         </section>
-        </dialog>
+            </dialog>
 
-        <section class="panel" style="overflow:hidden">
+            <section class="panel order-panel order-list-panel">
             <div class="panel-pad">
-                <h2 style="margin:0">Senarai Tempahan</h2>
+                <h2>Senarai Tempahan</h2>
             </div>
             <div class="table-wrap student-orders-table-wrap">
                 <table class="student-orders-table">
-                    <thead><tr><th>ID</th><th>Item</th><th>Size</th><th>Kuantiti</th><th>Status</th><th>Ambil</th><th>Tarikh</th></tr></thead>
+                    <thead><tr><th>ID</th><th>Item</th><th>Size</th><th>Kuantiti</th><th>Ambil</th><th>Tarikh</th></tr></thead>
                     <tbody>
                         @forelse ($orders as $order)
                             @php
@@ -213,25 +225,25 @@
                                         'sudah_ambil', 'sudah ambil', 'diambil', 'siap diambil', 'selesai' => 'sudah_ambil',
                                         default => strtolower((string) $order->status),
                                     };
-                                $statusLabel = ['baru' => 'Baru', 'belum_ambil' => 'Belum Ambil', 'sudah_ambil' => 'Sudah Ambil'][$statusKey] ?? ucfirst($statusKey);
+                                $pickupKey = filled($order->tarikh_ambil) ? 'sudah_ambil' : 'belum_ambil';
                             @endphp
                             <tr>
                                 <td>#{{ $order->tempahan_id }}</td>
                                 <td>{{ $order->item }}</td>
                                 <td>{{ $order->saiz ?? '-' }}</td>
                                 <td>{{ $order->quantity }}</td>
-                                <td><span class="badge {{ $statusKey === 'sudah_ambil' ? 'success' : '' }}">{{ $statusLabel }}</span></td>
-                                <td><span class="badge {{ $statusKey === 'sudah_ambil' ? 'success' : '' }}">{{ $statusKey === 'sudah_ambil' ? 'Sudah Ambil' : 'Belum Ambil' }}</span></td>
+                                <td><span class="order-status order-status--{{ $pickupKey }}">{{ $pickupKey === 'sudah_ambil' ? 'Sudah Ambil' : 'Belum Ambil' }}</span></td>
                                 <td>{{ $order->created_at ? \Illuminate\Support\Carbon::parse($order->created_at)->format('d/m/Y') : '-' }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="7"><div class="empty-state">Tiada tempahan lagi. Pilih baju dan hantar tempahan pertama anda.</div></td></tr>
+                            <tr><td colspan="6"><div class="empty-state">Tiada rekod tempahan buat masa ini.</div></td></tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
             <div class="panel-pad">{{ $orders->links() }}</div>
-        </section>
+            </section>
+        </div>
     </div>
 @endsection
 
@@ -266,6 +278,23 @@
                 }
             }
 
+            function clearCardSelection(card, button) {
+                const input = card.querySelector('[name="item_id"]');
+                const quantityInput = card.querySelector('[name="quantity"]');
+                const pick = card.querySelector('.card-cart-form__pick');
+
+                input.value = '';
+                quantityInput.removeAttribute('max');
+                button.classList.remove('is-active');
+                card.classList.remove('is-active');
+
+                if (pick) {
+                    pick.textContent = 'Sila pilih size baju dahulu';
+                    pick.classList.remove('is-selected');
+                    pick.classList.remove('has-error');
+                }
+            }
+
             itemCards.forEach(function (card) {
                 const activeButton = card.querySelector('.size-chip.is-active');
                 const form = card.querySelector('.card-cart-form');
@@ -288,13 +317,28 @@
 
                         pick.textContent = 'Sila pilih size baju dahulu';
                         pick.classList.add('has-error');
+                        return;
+                    }
+
+                    const submitButton = form.querySelector('[type="submit"]');
+                    if (submitButton) {
+                        submitButton.disabled = true;
+                        submitButton.dataset.originalText = submitButton.textContent;
+                        submitButton.textContent = 'Memproses...';
                     }
                 });
             });
 
             sizeButtons.forEach(function (button) {
                 button.addEventListener('click', function () {
-                    updateCardSelection(this.closest('[data-group-card]'), this);
+                    const card = this.closest('[data-group-card]');
+
+                    if (this.classList.contains('is-active')) {
+                        clearCardSelection(card, this);
+                        return;
+                    }
+
+                    updateCardSelection(card, this);
                 });
             });
 
@@ -316,6 +360,88 @@
                 if (event.target === cartDialog) {
                     cartDialog.close();
                 }
+            });
+
+            function syncStepper(input) {
+                const min = Number(input.min || 1);
+                const max = Number(input.max || 100);
+                let value = Number(input.value || min);
+
+                if (value < min) {
+                    value = min;
+                }
+
+                if (value > max) {
+                    value = max;
+                }
+
+                input.value = value;
+
+                const control = input.closest('.cart-quantity-control');
+                const minus = control?.querySelector('[data-cart-step="-1"]');
+                const plus = control?.querySelector('[data-cart-step="1"]');
+
+                if (minus) {
+                    minus.disabled = value <= min;
+                }
+
+                if (plus) {
+                    plus.disabled = value >= max;
+                }
+            }
+
+            document.querySelectorAll('.cart-quantity-control input[name="quantity"]').forEach(function (input) {
+                syncStepper(input);
+                input.addEventListener('input', function () {
+                    syncStepper(input);
+                });
+            });
+
+            document.querySelectorAll('[data-cart-step]').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    const control = button.closest('.cart-quantity-control');
+                    const input = control?.querySelector('input[name="quantity"]');
+
+                    if (!input) {
+                        return;
+                    }
+
+                    const step = Number(button.dataset.cartStep || 0);
+                    input.value = Number(input.value || input.min || 1) + step;
+                    syncStepper(input);
+                });
+            });
+
+            document.querySelectorAll('.cart-quantity-form').forEach(function (form) {
+                form.addEventListener('submit', function () {
+                    const button = form.querySelector('.cart-update-button');
+
+                    if (button) {
+                        button.disabled = true;
+                        button.dataset.originalText = button.textContent.trim();
+                        button.innerHTML = 'Mengemaskini...';
+                    }
+                });
+            });
+
+            document.querySelectorAll('.cart-remove-form').forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!confirm('Buang item ini dari troli?')) {
+                        event.preventDefault();
+                    }
+                });
+            });
+
+            document.querySelectorAll('.cart-footer form').forEach(function (form) {
+                form.addEventListener('submit', function () {
+                    const button = form.querySelector('.cart-checkout-button');
+
+                    if (button) {
+                        button.disabled = true;
+                        button.dataset.originalText = button.textContent.trim();
+                        button.innerHTML = 'Menghantar...';
+                    }
+                });
             });
         });
     </script>
@@ -1124,5 +1250,846 @@
         th,td{padding:14px 16px;border-bottom:1px solid var(--line);text-align:left}
         .student-orders-table-wrap{border:0;border-radius:0}
         .student-orders-table{min-width:720px}
+
+        .content:has(.student-order-page){background:#F5F8FC}
+        .student-order-page{
+            --order-navy:#082F59;
+            --order-red:#ED1C2E;
+            --order-bg:#F5F8FC;
+            --order-border:#D8E2EF;
+            --order-muted:#5F7189;
+            --order-blue:#1D5FD1;
+            --order-green:#14875A;
+            --order-amber:#D88400;
+            width:min(100% - 48px,1660px);
+            margin-inline:auto;
+            display:grid;
+            gap:18px;
+            color:var(--order-navy);
+        }
+        .student-order-page .alert{margin:0}
+        .student-order-page .student-hero{
+            position:relative;
+            min-height:104px;
+            display:flex;
+            align-items:center;
+            margin:0!important;
+            padding:22px 28px!important;
+            border:1px solid var(--order-border)!important;
+            border-left:16px solid var(--order-navy)!important;
+            border-radius:10px!important;
+            background:#fff!important;
+            box-shadow:0 8px 22px rgba(8,47,89,.035)!important;
+        }
+        .student-order-page .student-hero::before{
+            content:"";
+            width:4px;
+            height:30px;
+            margin-right:18px;
+            background:var(--order-red);
+            flex:0 0 auto;
+        }
+        .student-order-page .student-hero h2{
+            margin:0!important;
+            color:#071A34!important;
+            font-size:30px!important;
+            line-height:1.1!important;
+            font-weight:900!important;
+            letter-spacing:0!important;
+        }
+        .student-order-page .student-hero p{
+            margin:6px 0 0!important;
+            color:#253B57!important;
+            font-size:15px!important;
+            font-weight:750!important;
+        }
+        .student-order-page .student-layout{display:grid;gap:18px!important}
+        .student-order-page .student-layout > .panel,
+        .student-order-page .order-panel{
+            overflow:hidden;
+            padding:20px!important;
+            border:1px solid var(--order-border)!important;
+            border-radius:10px!important;
+            background:#fff!important;
+            box-shadow:0 8px 22px rgba(8,47,89,.035)!important;
+        }
+        .student-order-page .booking-head{
+            display:flex;
+            align-items:flex-start;
+            justify-content:space-between;
+            gap:18px;
+            margin:0 0 16px!important;
+            padding:0!important;
+            border-bottom:0!important;
+        }
+        .student-order-page .booking-head h2,
+        .student-order-page .order-list-panel h2{
+            position:relative;
+            margin:0!important;
+            padding-left:34px;
+            color:#071A34;
+            font-size:22px;
+            line-height:1.2;
+            font-weight:900;
+            letter-spacing:0;
+        }
+        .student-order-page .booking-head h2::before,
+        .student-order-page .order-list-panel h2::before{
+            content:"";
+            position:absolute;
+            left:0;
+            top:.55em;
+            width:26px;
+            height:4px;
+            background:var(--order-red);
+        }
+        .student-order-page .booking-head p{
+            margin:6px 0 0;
+            color:#253B57;
+            font-size:13px;
+            font-weight:750;
+        }
+        .student-order-page .cart-top-button{
+            min-height:46px;
+            padding:7px 16px 7px 12px;
+            border:1px solid #8DB6F7;
+            border-radius:8px;
+            background:#fff;
+            color:var(--order-navy);
+            box-shadow:none;
+            transform:none;
+        }
+        .student-order-page .cart-top-button:hover{
+            border-color:var(--order-navy);
+            background:#F7FAFF;
+            transform:none;
+        }
+        .student-order-page .cart-top-button__icon{
+            width:30px;
+            height:30px;
+            flex-basis:30px;
+            border-radius:0;
+            background:transparent;
+            color:var(--order-navy);
+        }
+        .student-order-page .cart-top-button__icon svg{width:28px;height:28px}
+        .student-order-page .cart-top-button__icon strong{
+            top:-8px;
+            right:-7px;
+            min-width:18px;
+            height:18px;
+            border:2px solid #fff;
+            background:var(--order-red);
+            font-size:10px;
+        }
+        .student-order-page .cart-top-button b{
+            margin:0;
+            color:var(--order-navy);
+            font-size:15px;
+            font-weight:900;
+        }
+        .student-order-page .baju-catalog{
+            display:grid;
+            grid-template-columns:repeat(4,minmax(0,1fr));
+            gap:18px;
+            align-items:stretch;
+            margin-top:6px;
+        }
+        .student-order-page .baju-card{
+            display:flex;
+            flex-direction:column;
+            min-width:0;
+            height:100%;
+            overflow:hidden;
+            border:1px solid var(--order-border);
+            border-radius:10px!important;
+            background:#fff;
+            box-shadow:none!important;
+            transition:border-color .16s ease, background .16s ease;
+        }
+        .student-order-page .baju-card:hover,
+        .student-order-page .baju-card.is-active{
+            border-color:#BFD7FF;
+            background:#FCFDFF;
+            box-shadow:none!important;
+        }
+        .student-order-page .baju-card__image{
+            width:100%;
+            aspect-ratio:4/3;
+            max-height:none;
+            background:#F3F6FA;
+            border-bottom:1px solid var(--order-border);
+        }
+        .student-order-page .baju-card__image img{
+            width:100%;
+            height:100%;
+            object-fit:contain;
+            display:block;
+        }
+        .student-order-page .baju-card__body{
+            display:flex;
+            flex:1;
+            flex-direction:column;
+            gap:10px;
+            padding:12px 14px 14px;
+        }
+        .student-order-page .baju-card__title{min-height:38px}
+        .student-order-page .baju-card__title strong,
+        .student-order-page .baju-card__body strong{
+            color:var(--order-navy);
+            font-size:15px;
+            line-height:1.25;
+            font-weight:900;
+        }
+        .student-order-page .baju-card__sizes{
+            display:flex;
+            flex-wrap:wrap;
+            gap:8px;
+            margin:0;
+            padding:0 0 10px;
+            overflow:visible;
+            border-bottom:1px solid var(--order-border);
+        }
+        .student-order-page .size-chip{
+            min-width:48px;
+            min-height:34px;
+            padding:0 12px;
+            border:1px solid #BFD0E6;
+            border-radius:6px;
+            background:#fff;
+            color:var(--order-navy);
+        }
+        .student-order-page .size-chip:hover,
+        .student-order-page .size-chip:focus-visible{
+            border-color:var(--order-red);
+            background:#fff;
+            outline:none;
+        }
+        .student-order-page .size-chip span{font-size:13px;font-weight:900}
+        .student-order-page .size-chip.is-active{
+            border-color:var(--order-navy)!important;
+            background:var(--order-navy)!important;
+            color:#fff!important;
+        }
+        .student-order-page .size-chip.is-disabled,
+        .student-order-page .size-chip:disabled{opacity:.45;background:#F8FAFC;cursor:not-allowed}
+        .student-order-page .card-cart-form{
+            display:grid;
+            gap:8px;
+            margin-top:auto;
+            padding-top:0;
+            border-top:0;
+        }
+        .student-order-page .card-cart-form__pick{
+            min-height:34px;
+            padding:8px 10px;
+            border-radius:6px;
+            font-size:12px;
+        }
+        .student-order-page .card-cart-form__row{
+            display:grid;
+            grid-template-columns:82px minmax(0,1fr);
+            gap:10px;
+            align-items:end;
+        }
+        .student-order-page .card-cart-form label span{
+            color:#344D6D;
+            font-size:11px;
+            font-weight:900;
+            text-transform:uppercase;
+            letter-spacing:0;
+        }
+        .student-order-page .card-cart-form input{
+            min-height:42px;
+            border:1px solid #BFD0E6;
+            border-radius:6px;
+            color:#071A34;
+            font-size:15px;
+            font-weight:900;
+            text-align:center;
+        }
+        .student-order-page .card-cart-form input:focus{
+            border-color:var(--order-navy);
+            outline:2px solid rgba(29,95,209,.14);
+            outline-offset:1px;
+        }
+        .student-order-page .button,
+        .student-order-page .card-cart-form__button{
+            min-height:42px!important;
+            border:1px solid var(--order-red)!important;
+            border-radius:6px!important;
+            background:var(--order-red)!important;
+            color:#fff!important;
+            font-size:14px!important;
+            font-weight:900!important;
+            box-shadow:none!important;
+        }
+        .student-order-page .button:hover,
+        .student-order-page .card-cart-form__button:hover{
+            border-color:#C91525!important;
+            background:#C91525!important;
+        }
+        .student-order-page .button:disabled,
+        .student-order-page .card-cart-form__button:disabled{
+            opacity:.72;
+            cursor:wait;
+        }
+        .student-order-page .order-list-panel{padding:0!important}
+        .student-order-page .order-list-panel .panel-pad{
+            padding:18px 20px 10px!important;
+        }
+        .student-order-page .student-orders-table-wrap{
+            margin:0 20px 20px;
+            overflow-x:auto;
+            border:1px solid var(--order-border);
+            border-radius:8px;
+        }
+        .student-order-page .student-orders-table{
+            width:100%;
+            min-width:900px;
+            border-collapse:collapse;
+        }
+        .student-order-page .student-orders-table th,
+        .student-order-page .student-orders-table td{
+            padding:12px 16px;
+            border-bottom:1px solid var(--order-border);
+            color:#253B57;
+            font-size:13px;
+            text-align:left;
+            vertical-align:middle;
+        }
+        .student-order-page .student-orders-table thead th{
+            background:#F0F6FF;
+            color:var(--order-navy);
+            font-size:12px;
+            font-weight:900;
+            text-transform:none;
+            letter-spacing:0;
+        }
+        .student-order-page .student-orders-table tbody tr:last-child td{border-bottom:0}
+        .student-order-page .student-orders-table td:first-child,
+        .student-order-page .student-orders-table td:nth-child(3),
+        .student-order-page .student-orders-table td:nth-child(4){
+            color:#31527B;
+            font-weight:800;
+            white-space:nowrap;
+        }
+        .student-order-page .student-orders-table td:nth-child(2){min-width:260px}
+        .student-order-page .student-orders-table td:last-child{white-space:nowrap}
+        .student-order-page .order-status{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            min-height:26px;
+            min-width:74px;
+            padding:0 11px;
+            border-radius:999px;
+            font-size:12px;
+            font-weight:900;
+            white-space:nowrap;
+        }
+        .student-order-page .order-status--sudah_ambil{background:#E7F6EF;color:var(--order-green)}
+        .student-order-page .order-status--belum_ambil{background:#FFF4DB;color:var(--order-amber)}
+        .student-order-page .empty-state{
+            padding:24px;
+            border:1px dashed var(--order-border);
+            border-radius:8px;
+            background:#fff;
+            color:var(--order-muted);
+            font-weight:800;
+            text-align:center;
+        }
+        .student-order-page .cart-dialog .cart-panel{border-radius:12px!important}
+        .student-order-page .cart-dialog .cart-logo{background:var(--order-navy)}
+        .student-order-page .cart-dialog .cart-update-button{color:var(--order-navy)}
+
+        @media (max-width:1400px){
+            .student-order-page .baju-catalog{grid-template-columns:repeat(3,minmax(0,1fr))}
+        }
+        @media (max-width:1000px){
+            .student-order-page{width:min(100% - 32px,1660px)}
+            .student-order-page .baju-catalog{grid-template-columns:repeat(2,minmax(0,1fr))}
+            .student-order-page .booking-head{align-items:stretch}
+            .student-order-page .cart-top-button{align-self:flex-start}
+        }
+        @media (max-width:640px){
+            .student-order-page{width:100%;gap:14px}
+            .student-order-page .student-hero{
+                min-height:0;
+                padding:20px!important;
+                border-left-width:10px!important;
+                border-radius:8px!important;
+            }
+            .student-order-page .student-hero h2{font-size:26px!important}
+            .student-order-page .student-layout > .panel,
+            .student-order-page .order-panel{padding:16px!important;border-radius:8px!important}
+            .student-order-page .booking-head{flex-direction:column;gap:12px}
+            .student-order-page .cart-top-button{width:100%;justify-content:center}
+            .student-order-page .baju-catalog{grid-template-columns:1fr;gap:14px}
+            .student-order-page .baju-card__image{aspect-ratio:4/3}
+            .student-order-page .card-cart-form__row{grid-template-columns:82px minmax(0,1fr)}
+            .student-order-page .order-list-panel{padding:0!important}
+            .student-order-page .student-orders-table-wrap{margin:0 16px 16px}
+            .student-order-page .order-list-panel .panel-pad{padding:16px!important}
+        }
+
+        .student-order-page .cart-dialog{
+            width:min(1120px,calc(100vw - 32px));
+            max-width:1120px;
+            max-height:min(88dvh,860px);
+            padding:0;
+            border:1px solid #D7E2EF;
+            border-radius:14px;
+            background:#fff;
+            overflow:hidden;
+            box-shadow:0 24px 58px rgba(8,47,89,.18);
+        }
+        .student-order-page .cart-dialog::backdrop{
+            background:rgba(8,47,89,.18);
+        }
+        .student-order-page .cart-dialog .cart-panel{
+            display:grid;
+            grid-template-rows:auto minmax(0,1fr) auto;
+            width:100%;
+            max-height:min(88dvh,860px);
+            padding:0!important;
+            border:0!important;
+            border-radius:14px!important;
+            background:#fff;
+            overflow:hidden;
+            overflow-y:hidden!important;
+            scrollbar-gutter:auto!important;
+            box-shadow:none!important;
+        }
+        .student-order-page .cart-shell-head{
+            position:relative;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:18px;
+            padding:24px 28px 26px;
+            border-bottom:6px solid var(--order-red);
+            border-radius:14px 14px 0 0;
+            background:var(--order-navy);
+        }
+        .student-order-page .cart-title{
+            display:flex;
+            align-items:center;
+            gap:18px;
+            min-width:0;
+        }
+        .student-order-page .cart-title h2{
+            margin:0;
+            color:#fff;
+            font-size:30px;
+            line-height:1.12;
+            font-weight:900;
+            letter-spacing:0;
+        }
+        .student-order-page .cart-title p{
+            margin:5px 0 0;
+            color:rgba(255,255,255,.78);
+            font-size:16px;
+            font-weight:800;
+        }
+        .student-order-page .cart-logo{
+            display:grid;
+            place-items:center;
+            width:58px;
+            height:58px;
+            flex:0 0 58px;
+            border:1px solid rgba(255,255,255,.28);
+            border-radius:12px;
+            background:rgba(255,255,255,.08);
+            color:#fff;
+            box-shadow:none;
+        }
+        .student-order-page .cart-logo svg{
+            width:31px;
+            height:31px;
+        }
+        .student-order-page .cart-dialog-close{
+            display:grid;
+            place-items:center;
+            width:52px;
+            height:52px;
+            flex:0 0 52px;
+            border:1px solid rgba(255,255,255,.32);
+            border-radius:10px;
+            background:rgba(255,255,255,.06);
+            color:#fff;
+            font-size:38px;
+            font-weight:700;
+            line-height:1;
+            cursor:pointer;
+        }
+        .student-order-page .cart-dialog-close:hover,
+        .student-order-page .cart-dialog-close:focus-visible{
+            background:#fff;
+            color:var(--order-navy);
+            outline:none;
+        }
+        .student-order-page .cart-list{
+            display:grid;
+            min-height:0;
+            overflow-y:auto;
+            background:#fff;
+        }
+        .student-order-page .cart-item{
+            display:grid;
+            grid-template-columns:minmax(280px,1fr) minmax(360px,auto);
+            gap:24px;
+            align-items:center;
+            padding:22px 28px;
+            border-bottom:1px solid #D7E2EF;
+            background:#fff;
+        }
+        .student-order-page .cart-product{
+            display:grid;
+            grid-template-columns:84px minmax(0,1fr);
+            gap:20px;
+            align-items:center;
+            min-width:0;
+        }
+        .student-order-page .cart-product__thumb{
+            width:84px;
+            height:84px;
+            border:1px solid #D7E2EF;
+            border-radius:10px;
+            background:#F4F7FB;
+            overflow:hidden;
+            color:var(--order-navy);
+        }
+        .student-order-page .cart-product__thumb img{
+            width:100%;
+            height:100%;
+            object-fit:contain;
+            display:block;
+        }
+        .student-order-page .cart-product strong{
+            display:block;
+            color:var(--order-navy);
+            font-size:19px;
+            line-height:1.25;
+            font-weight:900;
+        }
+        .student-order-page .cart-product span{
+            display:block;
+            margin-top:4px;
+            color:#3B5374;
+            font-size:15px;
+            font-weight:750;
+        }
+        .student-order-page .cart-stock-badge{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            min-height:30px;
+            margin-top:10px;
+            padding:0 12px;
+            border-radius:8px;
+            background:#DDF7E8;
+            color:#0D8A4B;
+            font-style:normal;
+            font-size:13px;
+            font-weight:900;
+        }
+        .student-order-page .cart-stock-badge svg{
+            width:16px;
+            height:16px;
+            flex:0 0 auto;
+        }
+        .student-order-page .cart-quantity-form{
+            display:grid;
+            gap:8px;
+            margin:0;
+        }
+        .student-order-page .cart-actions{
+            display:grid;
+            grid-template-columns:minmax(0,1fr) 116px;
+            gap:12px;
+            align-items:end;
+            justify-self:end;
+        }
+        .student-order-page .cart-quantity-form label{
+            color:#3B5374;
+            font-size:13px;
+            font-weight:900;
+            letter-spacing:.02em;
+            text-transform:uppercase;
+        }
+        .student-order-page .cart-quantity-control{
+            display:grid;
+            grid-template-columns:40px 52px 40px 122px;
+            gap:0;
+            align-items:center;
+        }
+        .student-order-page .cart-stepper-button,
+        .student-order-page .cart-quantity-control input{
+            width:40px;
+            height:44px;
+            border:1px solid #BFD0E6;
+            background:#fff;
+            color:var(--order-navy);
+            font:inherit;
+            font-size:22px;
+            font-weight:900;
+            text-align:center;
+        }
+        .student-order-page .cart-stepper-button:first-child{
+            border-radius:8px 0 0 8px;
+        }
+        .student-order-page .cart-quantity-control input{
+            width:52px;
+            border-inline:0;
+            border-radius:0;
+            font-size:17px;
+            -moz-appearance:textfield;
+        }
+        .student-order-page .cart-quantity-control input::-webkit-outer-spin-button,
+        .student-order-page .cart-quantity-control input::-webkit-inner-spin-button{
+            margin:0;
+            -webkit-appearance:none;
+        }
+        .student-order-page .cart-stepper-button:nth-of-type(2){
+            border-radius:0 8px 8px 0;
+        }
+        .student-order-page .cart-stepper-button:hover:not(:disabled),
+        .student-order-page .cart-stepper-button:focus-visible{
+            background:#EAF2FF;
+            color:#0B5ED7;
+            outline:none;
+        }
+        .student-order-page .cart-stepper-button:disabled{
+            background:#F4F7FB;
+            color:#8BA1BC;
+            cursor:not-allowed;
+        }
+        .student-order-page .cart-update-button,
+        .student-order-page .cart-remove-button{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap:10px;
+            width:100%;
+            min-height:44px;
+            padding:0 14px;
+            border-radius:8px;
+            font:inherit;
+            font-size:14px;
+            font-weight:900;
+            cursor:pointer;
+            white-space:nowrap;
+        }
+        .student-order-page .cart-update-button{
+            border:1px solid #C7D5E7;
+            background:#F8FBFF;
+            color:var(--order-navy);
+            width:auto;
+            margin-left:12px;
+        }
+        .student-order-page .cart-update-button:hover,
+        .student-order-page .cart-update-button:focus-visible{
+            border-color:#9DB2CC;
+            background:#EEF4FB;
+            outline:none;
+        }
+        .student-order-page .cart-remove-form{
+            margin:0;
+        }
+        .student-order-page .cart-remove-button{
+            border:1px solid #F5B9B9;
+            background:#FDE8E8;
+            color:#E00012;
+        }
+        .student-order-page .cart-remove-button:hover,
+        .student-order-page .cart-remove-button:focus-visible{
+            border-color:#ED1C2E;
+            background:#FDE8E8;
+            outline:none;
+        }
+        .student-order-page .cart-update-button svg,
+        .student-order-page .cart-remove-button svg,
+        .student-order-page .cart-checkout-button svg,
+        .student-order-page .cart-footer-count svg{
+            width:20px;
+            height:20px;
+            flex:0 0 auto;
+        }
+        .student-order-page .cart-footer{
+            display:grid;
+            grid-template-columns:minmax(0,1fr) auto auto;
+            align-items:center;
+            gap:14px;
+            padding:18px 28px;
+            border-top:1px solid #D7E2EF;
+            background:#fff;
+        }
+        .student-order-page .cart-footer-count{
+            display:inline-flex;
+            align-items:center;
+            gap:12px;
+            color:var(--order-navy);
+            font-size:16px;
+            font-weight:900;
+        }
+        .student-order-page .cart-footer-count svg{
+            width:27px;
+            height:27px;
+        }
+        .student-order-page .cart-footer-total{
+            display:grid;
+            gap:4px;
+            min-width:178px;
+            min-height:58px;
+            align-content:center;
+            padding:10px 18px;
+            border:1px solid #D7E2EF;
+            border-radius:10px;
+            background:#F8FBFF;
+        }
+        .student-order-page .cart-footer-total span{
+            color:#3B5374;
+            font-size:12px;
+            font-weight:900;
+            text-transform:uppercase;
+        }
+        .student-order-page .cart-footer-total strong{
+            color:var(--order-navy);
+            font-size:24px;
+            line-height:1;
+            font-weight:900;
+        }
+        .student-order-page .cart-footer form{
+            margin:0;
+        }
+        .student-order-page .cart-checkout-button{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap:12px;
+            min-height:58px!important;
+            padding:0 24px!important;
+            border-color:var(--order-red)!important;
+            border-radius:10px!important;
+            background:var(--order-red)!important;
+            color:#fff!important;
+            font-size:17px!important;
+            font-weight:900!important;
+            white-space:nowrap;
+        }
+        .student-order-page .cart-checkout-button:hover,
+        .student-order-page .cart-checkout-button:focus-visible{
+            border-color:#C91525!important;
+            background:#C91525!important;
+            outline:none;
+        }
+        .student-order-page .cart-checkout-button:disabled,
+        .student-order-page .cart-update-button:disabled{
+            opacity:.68;
+            cursor:wait;
+        }
+        .student-order-page .cart-empty{
+            padding:44px 24px;
+        }
+
+        @media (max-width:980px){
+            .student-order-page .cart-item{
+                grid-template-columns:1fr;
+                gap:16px;
+            }
+            .student-order-page .cart-actions{
+                justify-self:stretch;
+            }
+            .student-order-page .cart-quantity-control{
+                grid-template-columns:40px 52px 40px minmax(116px,1fr);
+            }
+            .student-order-page .cart-remove-form{
+                justify-self:stretch;
+            }
+            .student-order-page .cart-footer{
+                grid-template-columns:1fr auto;
+            }
+            .student-order-page .cart-footer-count{
+                grid-column:1 / -1;
+            }
+        }
+        @media (max-width:620px){
+            .student-order-page .cart-dialog{
+                width:calc(100vw - 18px);
+                max-width:calc(100vw - 18px);
+                max-height:calc(100dvh - 18px);
+                border-radius:12px;
+            }
+            .student-order-page .cart-dialog .cart-panel{
+                max-height:calc(100dvh - 18px);
+            }
+            .student-order-page .cart-shell-head{
+                padding:18px 18px 20px;
+            }
+            .student-order-page .cart-title{
+                align-items:flex-start;
+                padding-right:50px;
+            }
+            .student-order-page .cart-title h2{
+                font-size:24px;
+            }
+            .student-order-page .cart-title p{
+                font-size:13px;
+            }
+            .student-order-page .cart-logo{
+                width:46px;
+                height:46px;
+                flex-basis:46px;
+            }
+            .student-order-page .cart-dialog-close{
+                position:absolute;
+                top:16px;
+                right:16px;
+                width:42px;
+                height:42px;
+                font-size:30px;
+            }
+            .student-order-page .cart-item{
+                padding:18px;
+            }
+            .student-order-page .cart-product{
+                grid-template-columns:76px minmax(0,1fr);
+                gap:14px;
+            }
+            .student-order-page .cart-product__thumb{
+                width:76px;
+                height:76px;
+            }
+            .student-order-page .cart-product strong{
+                font-size:17px;
+            }
+            .student-order-page .cart-quantity-control{
+                grid-template-columns:42px minmax(0,1fr) 42px;
+                gap:0;
+            }
+            .student-order-page .cart-actions{
+                grid-template-columns:1fr 1fr;
+                gap:10px;
+            }
+            .student-order-page .cart-update-button{
+                grid-column:1 / -1;
+                margin-left:0;
+                width:100%;
+            }
+            .student-order-page .cart-remove-form,
+            .student-order-page .cart-remove-button{
+                width:100%;
+            }
+            .student-order-page .cart-footer{
+                grid-template-columns:1fr;
+                padding:16px 18px;
+            }
+            .student-order-page .cart-footer-total,
+            .student-order-page .cart-footer form,
+            .student-order-page .cart-checkout-button{
+                width:100%;
+            }
+        }
     </style>
 @endpush

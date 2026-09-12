@@ -16,7 +16,8 @@
             ['label' => 'Syer Semasa', 'value' => $currentShare],
             ['label' => 'Tambahan Saham', 'value' => $additionalShare],
         ];
-        $chartMax = max(1, collect($chartItems)->max('value') ?? 1);
+        $chartAxisMax = 10;
+        $chartAxisMid = 5;
         $typeLabels = [
             'OPENING_BALANCE' => 'Baki Awal',
             'SHARE_ADDITION' => 'Tambah Saham',
@@ -65,19 +66,26 @@
                     <div><span>CARTA</span><h2>Ringkasan Saham</h2></div>
                 </header>
                 <div class="staff-vertical-chart">
-                    @foreach ($chartItems as $item)
-                        @php
-                            $value = (float) ($item['value'] ?? 0);
-                            $height = max(8, ($value / $chartMax) * 180);
-                        @endphp
-                        <div class="staff-vertical-chart__bar">
-                            <strong>RM {{ number_format($value, 2) }}</strong>
-                            <div class="staff-vertical-chart__track">
-                                <span style="height: {{ $height }}px"></span>
+                    <div class="staff-vertical-chart__axis" aria-hidden="true">
+                        <span>RM {{ number_format($chartAxisMax, 0) }}</span>
+                        <span>RM {{ number_format($chartAxisMid, 0) }}</span>
+                        <span>RM 0</span>
+                    </div>
+                    <div class="staff-vertical-chart__plot">
+                        @foreach ($chartItems as $item)
+                            @php
+                                $value = (float) ($item['value'] ?? 0);
+                                $height = $value > 0 ? min(176, max(10, ($value / $chartAxisMax) * 176)) : 0;
+                            @endphp
+                            <div class="staff-vertical-chart__bar">
+                                <div class="staff-vertical-chart__track" style="--bar-height: {{ $height }}px">
+                                    <strong>RM {{ number_format($value, 2) }}</strong>
+                                    <span @class(['is-empty' => $value <= 0])></span>
+                                </div>
+                                <p>{{ $item['label'] }}</p>
                             </div>
-                            <p>{{ $item['label'] }}</p>
-                        </div>
-                    @endforeach
+                        @endforeach
+                    </div>
                 </div>
             </article>
 
@@ -131,16 +139,25 @@
     .staff-share-actions a:hover{border-color:#AFC7EA;background:#F8FBFF}
     .staff-share-actions strong{color:#0F172A;font-size:16px;font-weight:900}
     .staff-share-actions span{color:#64748B;font-size:13px;font-weight:750;line-height:1.45}
-    .staff-vertical-chart{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:end;min-height:270px;padding:12px 6px 0;border-bottom:1px solid #D7E3F5}
-    .staff-vertical-chart__bar{display:grid;grid-template-rows:auto 190px auto;gap:10px;align-items:end;justify-items:center;height:100%;text-align:center}
-    .staff-vertical-chart__bar strong{color:#0F172A;font-size:14px;font-weight:900}
-    .staff-vertical-chart__track{display:flex;align-items:flex-end;justify-content:center;width:100%;height:190px;border-bottom:1px solid #CBD5E1}
-    .staff-vertical-chart__track span{display:block;width:min(84px,70%);min-height:8px;border-radius:10px 10px 0 0;background:#2453A6;box-shadow:0 10px 22px rgba(36,83,166,.16)}
-    .staff-vertical-chart__bar:nth-child(2) .staff-vertical-chart__track span{background:#10B981;box-shadow:0 10px 22px rgba(16,185,129,.16)}
-    .staff-vertical-chart__bar:nth-child(3) .staff-vertical-chart__track span{background:#F59E0B;box-shadow:0 10px 22px rgba(245,158,11,.18)}
-    .staff-vertical-chart__bar p{margin:0;color:#334155;font-size:13px;font-weight:900}
+    .staff-vertical-chart{display:grid;grid-template-columns:58px minmax(0,1fr);gap:10px;flex:1;min-height:260px;padding:8px 0 0}
+    .staff-vertical-chart__axis{display:grid;grid-template-rows:1fr 1fr 1fr;align-items:start;padding-top:30px;color:#64748B;font-size:12px;font-weight:800;text-align:right}
+    .staff-vertical-chart__axis span:nth-child(2){align-self:center}
+    .staff-vertical-chart__axis span:nth-child(3){align-self:end;padding-bottom:58px}
+    .staff-vertical-chart__plot{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:end;padding:28px 6px 0;background:linear-gradient(to bottom,transparent 0,transparent 27px,#D7E3F5 27px,#D7E3F5 28px,transparent 28px,transparent calc(50% + 13px),#D7E3F5 calc(50% + 13px),#D7E3F5 calc(50% + 14px),transparent calc(50% + 14px),transparent 203px,#CBD5E1 203px,#CBD5E1 204px,transparent 204px)}
+    .staff-vertical-chart__plot::before,.staff-vertical-chart__plot::after{content:"";position:absolute;left:0;right:0;border-top:1px dashed #D7E3F5;pointer-events:none}
+    .staff-vertical-chart__plot::before{top:28px}
+    .staff-vertical-chart__plot::after{top:calc(50% + 14px)}
+    .staff-vertical-chart__bar{position:relative;z-index:1;display:grid;grid-template-rows:176px auto;gap:8px;align-items:end;justify-items:center;height:100%;text-align:center}
+    .staff-vertical-chart__bar strong{position:absolute;left:50%;bottom:calc(var(--bar-height) + 8px);transform:translateX(-50%);color:#0F172A;font-size:14px;font-weight:900;white-space:nowrap}
+    .staff-vertical-chart__track{position:relative;display:flex;align-items:flex-end;justify-content:center;width:100%;height:176px}
+    .staff-vertical-chart__track span{display:block;width:58px;height:var(--bar-height);min-height:10px;border-radius:7px 7px 0 0;background:#082F59;color:#082F59;box-shadow:0 10px 22px rgba(8,47,89,.16)}
+    .staff-vertical-chart__track span.is-empty{height:0;min-height:0;border-radius:999px;border-top:8px solid currentColor;background:transparent;box-shadow:none}
+    .staff-vertical-chart__bar:nth-child(2) .staff-vertical-chart__track span{background:#ED1C2E;color:#ED1C2E;box-shadow:0 10px 22px rgba(237,28,46,.16)}
+    .staff-vertical-chart__bar:nth-child(3) .staff-vertical-chart__track span{background:#E89A00;color:#E89A00;box-shadow:0 10px 22px rgba(232,154,0,.18)}
+    .staff-vertical-chart__bar .staff-vertical-chart__track span.is-empty{background:transparent;box-shadow:none}
+    .staff-vertical-chart__bar p{align-self:start;min-height:30px;margin:0;color:#334155;font-size:13px;font-weight:900;line-height:1.25}
     @media (max-width:1280px){.staff-share-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
-    @media (max-width:900px){.staff-share-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.staff-share-actions{grid-template-columns:1fr}}
-    @media (max-width:640px){.staff-share-metrics{grid-template-columns:1fr}.staff-vertical-chart{gap:10px}.staff-vertical-chart__track span{width:min(58px,76%)}}
+    @media (max-width:900px){.staff-share-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.staff-share-actions{grid-template-columns:1fr}.staff-vertical-chart{grid-template-columns:48px minmax(0,1fr)}}
+    @media (max-width:640px){.staff-share-metrics{grid-template-columns:1fr}.staff-vertical-chart{grid-template-columns:42px minmax(0,1fr);gap:8px}.staff-vertical-chart__plot{gap:8px;padding-inline:2px}.staff-vertical-chart__axis{font-size:11px}.staff-vertical-chart__bar p{font-size:11px;line-height:1.2}.staff-vertical-chart__bar strong{font-size:11px}.staff-vertical-chart__track span{width:34px}}
 </style>
 @endpush

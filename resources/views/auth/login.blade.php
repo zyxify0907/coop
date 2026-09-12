@@ -4,602 +4,225 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="description" content="Login CoopBest untuk ahli, staff dan admin koperasi dalam satu borang.">
-    <meta name="theme-color" content="#2453A6">
-    <title>Login - CoopBest Koperasi Politeknik</title>
-    
-    <!-- Google Fonts -->
+    <meta name="description" content="Log masuk CoopBest untuk pelajar, staf dan pentadbir koperasi.">
+    <meta name="theme-color" content="#062B53">
+    <title>Log Masuk CoopBest</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <style>
-        :root {
-            /* Warna Koperasi Politeknik (Diselaraskan dengan Homepage) */
-            --primary: #C62828;          /* Merah CoopBest */
-            --primary-dark: #991B1B;     /* Merah Gelap */
-            --primary-soft: #FEF2F2;
-            --secondary: #2453A6;        /* Biru CoopBest */
-            --secondary-hover: #1D4ED8;
-            --secondary-soft: #EFF6FF;
-            --success: #16A34A;
-            --success-soft: #DCFCE7;
-            --danger: #B91C1C;
-            --danger-soft: #FEE2E2;
-            --warning: #D97706;
-            --warning-soft: #FEF3C7;
-            --dark: #0F172A;             
-            --body: #475569;             
-            --line: #E2E8F0;             
-            --light: #F8FAFC;            
-            --white: #FFFFFF;
-            --radius: 10px;
-            --shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
-            --container: 1180px;
-        }
-
-        * { box-sizing: border-box; }
-        html, body { height: 100%; }
-        body {
-            margin: 0;
-            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            color: var(--dark);
-            background: #FAFAFA;
-            line-height: 1.7;
-            font-size: 16px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        a { color: var(--secondary); text-decoration: underline; text-underline-offset: 4px; font-weight: 700; }
-        a:hover { color: var(--primary); }
-
-        /* Site Header */
-        .site-header {
-            position: fixed;
-            inset: 0 0 auto;
-            z-index: 100;
-            background: rgba(255, 255, 255, 0.96);
-            backdrop-filter: blur(10px);
-            border-bottom: 4px solid var(--primary);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-        }
-        .nav {
-            width: min(var(--container), calc(100% - 32px));
-            height: 88px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 24px;
-        }
-        .brand {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-weight: 800;
-            text-decoration: none;
-            color: var(--dark);
-        }
-        .brand-mark {
-            width: 58px;
-            height: 58px;
-            border-radius: 0;
-            display: grid;
-            place-items: center;
-            background: transparent;
-            box-shadow: none;
-        }
-        .brand-mark img { width: 58px; height: 58px; object-fit: contain; display: block; }
-        .brand-title { 
-            display: block; 
-            font-size: 26px; 
-            line-height: 1; 
-            letter-spacing: -0.5px;
-            color: var(--primary);
-        }
-        .brand-title::after {
-            content: 'Best';
-            color: var(--secondary);
-            margin-left: 2px;
-        }
-        .brand-subtitle { display: block; margin-top: 4px; color: var(--body); font-size: 13px; font-weight: 700; }
-
-        /* Interactive Button */
-        .button {
-            min-height: 48px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            padding: 0 24px;
-            border: 2px solid transparent;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 15px;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all 0.25s ease;
-        }
-        .button.primary { 
-            background: var(--primary); 
-            color: var(--white); 
-            box-shadow: 0 4px 14px rgba(185, 28, 28, 0.25);
-            width: 100%;
-        }
-        .button.primary:hover { 
-            background: var(--primary-dark); 
-            color: var(--white);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(185, 28, 28, 0.35);
-        }
-        .button.soft { 
-            background: var(--white); 
-            color: var(--secondary); 
-            border: 2px solid var(--secondary); 
-        }
-        .button.soft:hover { 
-            background: var(--secondary-soft); 
-            color: var(--secondary-hover);
-            transform: translateY(-2px);
-            text-decoration: none;
-        }
-
-        /* Login Main Section */
-        .login-section {
-            padding: 140px 0 60px;
-            background: #F7F8FA;
-            flex-grow: 1;
-            display: flex;
-            align-items: center;
-        }
-        .login-container {
-            width: min(var(--container), calc(100% - 32px));
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: minmax(0, 1.1fr) minmax(380px, 0.9fr);
-            gap: 50px;
-            align-items: center;
-        }
-
-        /* Left Side: Info & Visual Feature */
-        .eyebrow {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 16px;
-            border-radius: 100px;
-            background: #DBEAFE;
-            color: var(--secondary);
-            font-size: 13px;
-            font-weight: 800;
-            border: 1px solid #93C5FD;
-            margin-bottom: 12px;
-        }
-        .login-info h1 {
-            margin: 12px 0 16px;
-            font-size: clamp(32px, 3.8vw, 44px);
-            line-height: 1.2;
-            letter-spacing: -0.02em;
-            color: var(--dark);
-            font-weight: 800;
-        }
-        .login-info p {
-            color: var(--body);
-            font-size: 18px;
-            margin-bottom: 28px;
-        }
-
-        .cooperative-features {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 12px;
-            margin: 0 0 26px;
-        }
-        .cooperative-feature {
-            min-width: 0;
-            min-height: 108px;
-            padding: 15px 16px;
-            border: 1px solid #D7DEE8;
-            border-radius: 8px;
-            background: #F1F4F8;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            justify-content: center;
-        }
-        .cooperative-feature span {
-            display: block;
-            margin-bottom: 4px;
-            color: var(--secondary);
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-        .cooperative-feature strong {
-            display: block;
-            color: var(--dark);
-            font-size: 15px;
-            line-height: 1.35;
-        }
-        .cooperative-feature small {
-            display: none;
-        }
-
-        /* Feature Card Checklist */
-        .feature-box {
-            background: transparent;
-            border: 0;
-            border-top: 1px solid var(--line);
-            border-radius: 0;
-            padding: 22px 0 0;
-            box-shadow: none;
-        }
-        .feature-box h3 { margin: 0 0 12px; font-size: 18px; color: var(--dark); font-weight: 700; }
-        .feature-list { list-style: none; padding: 0; margin: 0; }
-        .feature-list li { 
-            padding-left: 28px; 
-            position: relative; 
-            margin-bottom: 10px; 
-            font-weight: 600; 
-            color: var(--body);
-            font-size: 15px;
-        }
-        .feature-list li:last-child { margin-bottom: 0; }
-        .feature-list li::before { 
-            content: '✓'; 
-            position: absolute; 
-            left: 0; 
-            color: var(--primary); 
-            font-weight: 800; 
-        }
-
-        /* Right Side: Login Card */
-        .login-card {
-            background: var(--white);
-            border: 2px solid var(--line);
-            border-radius: var(--radius);
-            padding: 40px;
-            box-shadow: var(--shadow);
-        }
-        .login-card-head { margin-bottom: 24px; }
-        .login-card-head h2 { margin: 0 0 6px; font-size: 26px; font-weight: 800; color: var(--dark); }
-        .login-card-head p { margin: 0; color: var(--body); font-size: 14px; }
-
-        /* Alerts */
-        .alert {
-            margin-bottom: 20px;
-            padding: 12px 16px;
-            border-radius: 8px;
-            border: 1px solid #FECACA;
-            background: var(--primary-soft);
-            color: #DC2626;
-            font-weight: 700;
-            font-size: 14px;
-        }
-        .alert.success {
-            border-color: #A7F3D0;
-            background: var(--success-soft);
-            color: #047857;
-        }
-
-        /* Form Controls */
-        .form-group { margin-bottom: 20px; }
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 13px;
-            font-weight: 800;
-            color: var(--dark);
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-        .form-group input[type="text"],
-        .form-group input[type="password"] {
-            width: 100%;
-            height: 48px;
-            border: 2px solid var(--line);
-            border-radius: 8px;
-            background: #F8FAFC;
-            color: var(--dark);
-            padding: 0 16px;
-            outline: none;
-            font-weight: 600;
-            font-size: 15px;
-            transition: all 0.2s ease;
-        }
-        .form-group input:focus {
-            background: var(--white);
-            border-color: var(--secondary);
-            box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.1);
-        }
-
-        .form-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 24px;
-            font-size: 14px;
-        }
-        .checkbox-label {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--body);
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .checkbox-label input {
-            width: 18px;
-            height: 18px;
-            accent-color: var(--primary);
-            cursor: pointer;
-        }
-
-        /* Quick Help Section */
-        .role-guide {
-            margin-top: 24px;
-            padding-top: 20px;
-            border-top: 1px solid var(--line);
-            display: grid;
-            gap: 8px;
-            font-size: 13px;
-            color: var(--body);
-        }
-        .role-row { display: flex; align-items: center; gap: 10px; }
-        .badge {
-            min-width: 60px;
-            padding: 2px 8px;
-            text-align: center;
-            border-radius: 100px;
-            background: #DBEAFE;
-            color: var(--secondary);
-            font-size: 11px;
-            font-weight: 800;
-        }
-        .badge.staff { background: var(--danger-soft); color: var(--primary-dark); }
-        .badge.admin { background: var(--warning-soft); color: #92400E; }
-
-        /* Site Footer */
-        .site-footer {
-            background: #111827;
-            border-top: 1px solid #111827;
-            padding: 24px 0;
-            text-align: center;
-            color: #F8FAFC;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        /* Responsive Layout */
-        @media (max-width: 900px) {
-            .login-container { grid-template-columns: 1fr; gap: 32px; }
-            .login-section { padding: 120px 0 40px; }
-        }
-        @media (max-width: 560px) {
-            .nav { height: 72px; }
-            .brand-subtitle { display: none; }
-            .login-card { padding: 24px; }
-            .form-row { flex-direction: column; align-items: flex-start; gap: 12px; }
-        }
-        /* Calm institutional login layout */
-        body { background: #F7F8FA; font-size: 15px; line-height: 1.55; }
-        .site-header { background: #fff; backdrop-filter: none; border-bottom: 1px solid var(--line); box-shadow: none; }
-        .nav { height: 78px; }
-        .brand-mark { width: 52px; height: 52px; border-radius: 0; background: transparent; box-shadow: none; }
-        .brand-mark img { width: 52px; height: 52px; }
-        .brand-title { font-size: 24px; letter-spacing: -.04em; }
-        .brand-subtitle { font-size: 11px; font-weight: 600; }
-        .button { min-height: 42px; padding: 0 16px; border-radius: 7px; font-size: 14px; box-shadow: none; }
-        .button.primary { box-shadow: none; }
-        .button.primary:hover { transform: none; box-shadow: none; }
-        .button.soft { border: 1px solid #CBD5E1; }
-        .button.soft:hover { transform: none; }
-        .login-section { padding: 112px 0 48px; background: #F7F8FA; align-items: center; }
-        .login-container { grid-template-columns: minmax(0, 1.25fr) minmax(390px, .8fr); gap: 28px; max-width: 1280px; align-items: center; }
-        .login-info {
-            min-height: 0;
-            padding: 0;
-            border: 0;
-            border-radius: 0;
-            background: transparent;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        .eyebrow { margin-bottom: 10px; padding: 4px 8px; border: 0; border-radius: 4px; background: #FEF2F2; color: var(--primary); font-size: 11px; letter-spacing: .06em; }
-        .login-info h1 { margin: 8px 0 12px; max-width: 520px; font-size: clamp(29px, 3.7vw, 38px); line-height: 1.2; font-weight: 700; }
-        .login-info p { max-width: 540px; margin: 0 0 24px; color: var(--body); font-size: 15px; }
-        .feature-box { padding: 20px 0 0; border: 0; border-top: 1px solid var(--line); border-radius: 0; background: transparent; box-shadow: none; }
-        .feature-box h3 { font-size: 15px; }
-        .feature-list li { margin-bottom: 8px; padding-left: 20px; font-size: 13px; font-weight: 500; }
-        .feature-list li::before { content: '\2022'; color: var(--secondary); }
-        .login-card {
-            height: auto;
-            min-height: 0;
-            padding: 30px;
-            border: 1px solid #D7E3F5;
-            border-radius: 14px;
-            background: linear-gradient(180deg, #FFFFFF 0%, #FBFDFF 100%);
-            box-shadow: 0 18px 45px rgba(15, 23, 42, .07);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        .login-card-head { margin-bottom: 24px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
-        .login-card-head h2 { margin: 0; font-size: 28px; line-height: 1.1; font-weight: 900; letter-spacing: 0; }
-        .login-card-head h2::after { content: ''; display: block; width: 46px; height: 4px; margin-top: 10px; border-radius: 999px; background: var(--primary); }
-        .login-card-head p { margin-top: 10px; font-size: 14px; line-height: 1.5; }
-        .form-group { margin-bottom: 18px; }
-        .form-group label { margin-bottom: 7px; color: #334155; font-size: 12px; font-weight: 900; letter-spacing: .04em; }
-        .form-group input[type="text"], .form-group input[type="password"] { height: 48px; border: 1px solid #CBD5E1; border-radius: 9px; background: #fff; font-weight: 700; }
-        .form-group input:focus { border-color: var(--secondary); box-shadow: 0 0 0 3px rgba(36,83,166,.14); }
-        .form-row { margin-bottom: 22px; }
-        .login-links-row { display:flex; align-items:center; justify-content:space-between; gap:14px; margin: 4px 0 14px; }
-        .login-links-row a { color: var(--secondary); font-weight: 900; font-size: 13px; }
-        .checkbox-label { display:inline-flex; align-items:center; gap:10px; color: #334155; font-weight: 800; line-height:1; }
-        .checkbox-label input { width:18px; height:18px; margin:0; accent-color: var(--secondary); }
-        .register-link-row { display:flex; justify-content:center; margin-top:16px; padding-top:16px; border-top:1px solid var(--line); }
-        .register-link-row a { color: var(--secondary); font-weight: 900; font-size: 13px; text-align:center; }
-        .login-card .button.primary { min-height: 48px; border-radius: 9px; background: #CF232B; font-weight: 900; }
-        .login-card .button.primary:hover { background: #B91C1C; }
-        .role-guide { display: none; }
-        .badge { min-width: 64px; border-radius: 7px; font-weight: 900; padding: 4px 9px; }
-        .badge.staff { background: #F1F5F9; color: #334155; }
-        .badge.admin { background: #FEF2F2; color: var(--primary); }
-        .site-footer { padding: 20px 0; background: #111827; border-color: #111827; color: #F8FAFC; font-size: 12px; }
-        html, body { max-width: 100%; overflow-x: hidden; }
-        img, svg { max-width: 100%; }
-        @media (max-width: 900px) { .login-section { padding: 104px 0 36px; } .login-container { grid-template-columns: 1fr; gap: 28px; max-width: 620px; } .login-info { display: none; } }
-        @media (max-width: 560px) {
-            .nav { width: min(var(--container), calc(100% - 24px)); }
-            .nav > .button { width: auto; min-height: 38px; padding: 0 12px; white-space: nowrap; }
-            .login-section { padding: 92px 0 28px; }
-            .login-card { padding: 20px; }
-        }
-
-        /* Responsive safety net: the form always follows the available viewport,
-           including smaller laptop panels and browser zoom. */
-        html, body { width: 100%; max-width: 100%; overflow-x: hidden; }
-        .nav, .login-section, .login-container, .login-info, .login-card,
-        .form-group, .form-row { min-width: 0; }
-        .login-card, .login-container { max-width: 100%; }
-        .form-group input[type="text"], .form-group input[type="password"], .button { max-width: 100%; }
-
-        @media (min-width: 901px) and (max-width: 1100px) {
-            .login-container { width: min(100% - 40px, 1020px); grid-template-columns: minmax(0, 1.15fr) minmax(340px, .85fr); gap: 20px; }
-            .login-info { min-height: 0; padding: 0; }
-            .login-card { min-height: 0; padding: 24px; }
-            .cooperative-features { gap: 10px; }
-            .cooperative-feature { min-height: 100px; padding: 13px; }
-        }
-
-        @media (max-width: 420px) {
-            .nav { width: calc(100% - 20px); }
-            .brand-mark { width: 44px; height: 44px; }
-            .brand-mark img { width: 44px; height: 44px; }
-            .brand-title { font-size: 20px; }
-            .nav > .button { padding-inline: 10px; }
-            .login-card { padding: 18px; }
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    @include('components.coopbest-public-style')
 </head>
-<body>
+<body class="login-page">
     @include('components.flash-notification')
 
-    <!-- Site Header -->
-    <header class="site-header">
-        <nav class="nav">
-            <a class="brand" href="{{ url('/') }}">
-                <span class="brand-mark" aria-hidden="true">
-                    <img src="{{ asset('images/koperasi-logo.svg?v=2') }}" alt="">
-                </span>
-                <span>
-                    <span class="brand-title">Coop</span>
-                    <span class="brand-subtitle">Koperasi Politeknik</span>
+    <header class="public-header">
+        <nav class="public-nav" aria-label="Navigasi utama">
+            <a class="public-brand" href="{{ url('/') }}" aria-label="CoopBest utama">
+                <img class="public-brand__logo" src="{{ asset('images/koperasi-logo.svg?v=3') }}" alt="Logo CoopBest">
+                <span class="public-brand__divider" aria-hidden="true"></span>
+                <span class="public-brand__copy">
+                    <span class="public-brand__name"><span>Coop</span>Best</span>
+                    <span class="public-brand__sub">Koperasi Politeknik Besut</span>
                 </span>
             </a>
-            <a class="button soft" href="{{ url('/') }}">Kembali ke Utama</a>
+
+            <button class="public-menu-button" type="button" aria-controls="login-main-menu" aria-expanded="false" data-menu-toggle>
+                <span class="public-menu-button__bar"></span>
+                <span class="public-menu-button__bar"></span>
+                <span class="public-menu-button__bar"></span>
+                <span class="sr-only">Buka menu navigasi</span>
+            </button>
+
+            <div class="public-menu" id="login-main-menu" data-public-menu>
+                <a href="{{ url('/') }}">Utama</a>
+                <a href="{{ url('/#perkhidmatan') }}">Perkhidmatan</a>
+                <a href="{{ url('/#tentang') }}">Tentang Kami</a>
+                <a href="{{ url('/#bantuan') }}">Bantuan</a>
+                <a class="public-login-link is-login-active" href="{{ route('login') }}">Log Masuk</a>
+            </div>
         </nav>
     </header>
 
-    <!-- Main Content -->
-    <main class="login-section">
-        <div class="login-container">
-            
-            <!-- Left Info Panel -->
-            <div class="login-info">
-                <span class="eyebrow">Akses Portal CoopBest</span>
-                <h1>CoopBest Sistem Pengurusan Koperasi </h1>
-                <p>Portal digital CoopBest Politeknik Besut untuk mengurus keanggotaan, saham koperasi, tempahan baju dan rekod kehadiran pekerja dalam satu sistem bersepadu.</p>
-
-                <div class="cooperative-features" aria-label="Ciri utama koperasi">
-                    <div class="cooperative-feature">
-                        <span>👥 Keanggotaan</span>
-                        <strong>Pengurusan permohonan dan rekod ahli koperasi</strong>
-                    </div>
-                    <div class="cooperative-feature">
-                        <span>💰 Saham Koperasi</span>
-                        <strong>Semakan saham, transaksi dan permohonan anggota</strong>
-                    </div>
-                    <div class="cooperative-feature">
-                        <span>👕 Tempahan Baju</span>
-                        <strong>Tempahan, pembayaran dan status pesanan</strong>
-                    </div>
-                    <div class="cooperative-feature">
-                        <span>⏰ Smart Attendance</span>
-                        <strong>Rekod kehadiran pekerja secara digital</strong>
-                    </div>
-                </div>
-
+    <main class="login-shell">
+        <section class="login-intro" aria-labelledby="login-welcome">
+            <div class="login-intro__content">
+                <span class="public-red-line" aria-hidden="true"></span>
+                <p class="login-kicker">Portal Ahli &amp; Staf</p>
+                <h1 id="login-welcome">Selamat Datang ke CoopBest</h1>
+                <p class="login-intro__subtitle">Portal Pengguna Koperasi Politeknik Besut</p>
+                <p class="login-intro__text">Urus keahlian, saham dan tempahan melalui satu portal rasmi yang mudah dan selamat.</p>
             </div>
+            <img class="public-wing public-wing--login" src="{{ asset('images/koperasi-logo.svg?v=3') }}" alt="" aria-hidden="true">
+        </section>
 
-            <!-- Right Login Form -->
-            <div class="login-card">
-                <div class="login-card-head">
-                    <h2>Log Masuk</h2>
-                    <p>Sila masukkan maklumat anda untuk meneruskan.</p>
+        <section class="login-panel" aria-labelledby="login-title">
+            <div class="login-form-wrap">
+                <div class="login-form-head">
+                    <p class="login-kicker">Akses Portal</p>
+                    <h2 id="login-title">Log Masuk CoopBest</h2>
+                    <span class="public-red-line public-red-line--small" aria-hidden="true"></span>
+                    <p>Masukkan maklumat akaun anda untuk meneruskan.</p>
                 </div>
 
                 @if ($errors->any())
-                    <div class="alert" role="alert">{{ $errors->first() }}</div>
+                    <div class="form-alert" role="alert">
+                        {{ str_contains($errors->first(), 'Login tidak sah') ? $errors->first() : 'Maklumat login tidak lengkap. Sila semak medan yang diperlukan.' }}
+                    </div>
                 @endif
 
-                @if (session('status'))
-                    <div class="alert success" role="status">{{ session('status') }}</div>
-                @endif
-
-                <form method="POST" action="{{ route('login.submit') }}" id="login-form" autocomplete="off">
+                <form class="login-form" method="POST" action="{{ route('login.submit') }}" id="login-form" autocomplete="off" novalidate>
                     @csrf
 
-                    <div class="form-group">
-                        <label for="identifier">No Matrik / No. KP</label>
-                        <input id="identifier" name="identifier" type="text" value="{{ old('identifier') }}" required autofocus placeholder="Cth: 13DDT22F1001 atau No. KP" autocomplete="username">
+                    <div class="login-field" data-field>
+                        <label for="identifier">No. Matrik / No. Kad Pengenalan</label>
+                        <div class="login-input-wrap">
+                            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            <input id="identifier" name="identifier" type="text" value="" placeholder="Masukkan ID pengguna" autocomplete="off" aria-describedby="identifier-error">
+                        </div>
+                        <p class="field-error" id="identifier-error" aria-live="polite"></p>
                     </div>
 
-                    <div class="form-group">
+                    <div class="login-field" data-field>
                         <label for="password">Kata Laluan</label>
-                        <input id="password" name="password" type="password" required placeholder="Masukkan kata laluan" autocomplete="current-password">
+                        <div class="login-input-wrap">
+                            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="4" y="11" width="16" height="10" rx="2"/>
+                                <path d="M8 11V8a4 4 0 0 1 8 0v3"/>
+                            </svg>
+                            <input id="password" name="password" type="password" placeholder="Masukkan kata laluan" autocomplete="off" aria-describedby="password-error">
+                            <button class="password-toggle" type="button" aria-label="Tunjuk kata laluan" aria-pressed="false" data-password-toggle>
+                                <svg class="eye-show" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                                <svg class="eye-hide" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="m3 3 18 18"/>
+                                    <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/>
+                                    <path d="M9.9 5.2A9.5 9.5 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-2.7 3.7"/>
+                                    <path d="M6.6 6.6C3.7 8.5 2 12 2 12s3.5 7 10 7a9.8 9.8 0 0 0 4.4-1"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <p class="field-error" id="password-error" aria-live="polite"></p>
                     </div>
 
-                    <div class="login-links-row">
-                        <label class="checkbox-label" for="remember">
+                    <div class="login-options">
+                        <label class="remember-check" for="remember">
                             <input id="remember" name="remember" type="checkbox" @checked(old('remember'))>
-                            Ingat Saya
+                            <span>Ingat Saya</span>
                         </label>
                         <a href="{{ route('password.forgot') }}">Lupa Kata Laluan?</a>
                     </div>
 
-                    <button class="button primary" type="submit" id="login-btn">Log Masuk</button>
+                    <button class="public-button public-button--danger login-submit" type="submit" id="login-submit">
+                        Log Masuk
+                    </button>
                 </form>
 
-                <div class="register-link-row">
-                    <a href="{{ route('register') }}">Daftar akaun baru</a>
+                <div class="register-row">
+                    <span>Belum mempunyai akaun?</span>
+                    <a href="{{ route('register') }}">Daftar Akaun Baharu</a>
                 </div>
 
-                <div class="role-guide" aria-hidden="true"></div>
+                <div class="secure-row" aria-label="Maklumat keselamatan">
+                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M17 9V7A5 5 0 0 0 7 7v2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1Zm-8 0V7a3 3 0 0 1 6 0v2H9Zm4 6.73V17a1 1 0 1 1-2 0v-1.27a2 2 0 1 1 2 0Z"/>
+                    </svg>
+                    <span>Akses anda dilindungi dan sulit.</span>
+                </div>
             </div>
 
-        </div>
+        </section>
     </main>
 
-    <!-- Site Footer -->
-    <footer class="site-footer">
-        &copy; {{ date('Y') }} CoopBest. Hak Cipta Terpelihara. Koperasi Politeknik Malaysia.
+    <footer class="public-footer">
+        <p>&copy; 2026 Koperasi Politeknik Besut. Hak Cipta Terpelihara.</p>
     </footer>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            const menuButton = document.querySelector('[data-menu-toggle]');
+            const menu = document.querySelector('[data-public-menu]');
             const form = document.getElementById('login-form');
-            const submitBtn = document.getElementById('login-btn');
-            if (form && submitBtn) {
-                form.addEventListener('submit', function () {
-                    if (form.checkValidity()) {
-                        submitBtn.disabled = true;
-                        submitBtn.textContent = 'Memproses...';
+            const submitButton = document.getElementById('login-submit');
+            const identifier = document.getElementById('identifier');
+            const password = document.getElementById('password');
+            const toggle = document.querySelector('[data-password-toggle]');
+
+            if (menuButton && menu) {
+                menuButton.addEventListener('click', function () {
+                    const isOpen = menuButton.getAttribute('aria-expanded') === 'true';
+                    menuButton.setAttribute('aria-expanded', String(! isOpen));
+                    menu.classList.toggle('is-open', ! isOpen);
+                });
+
+                menu.querySelectorAll('a').forEach(function (link) {
+                    link.addEventListener('click', function () {
+                        menuButton.setAttribute('aria-expanded', 'false');
+                        menu.classList.remove('is-open');
+                    });
+                });
+            }
+
+            function setError(input, message) {
+                const field = input.closest('[data-field]');
+                const error = field ? field.querySelector('.field-error') : null;
+                input.setAttribute('aria-invalid', message ? 'true' : 'false');
+                if (field) {
+                    field.classList.toggle('has-error', Boolean(message));
+                }
+                if (error) {
+                    error.textContent = message;
+                }
+            }
+
+            if (toggle && password) {
+                toggle.addEventListener('click', function () {
+                    const isVisible = password.type === 'text';
+                    password.type = isVisible ? 'password' : 'text';
+                    toggle.setAttribute('aria-pressed', String(! isVisible));
+                    toggle.setAttribute('aria-label', isVisible ? 'Tunjuk kata laluan' : 'Sembunyikan kata laluan');
+                    toggle.classList.toggle('is-visible', ! isVisible);
+                    password.focus();
+                });
+            }
+
+            [identifier, password].forEach(function (input) {
+                if (! input) {
+                    return;
+                }
+                input.addEventListener('input', function () {
+                    if (input.value.trim() !== '') {
+                        setError(input, '');
                     }
+                });
+            });
+
+            if (form && submitButton && identifier && password) {
+                form.addEventListener('submit', function (event) {
+                    let valid = true;
+
+                    if (identifier.value.trim() === '') {
+                        setError(identifier, 'Sila masukkan ID pengguna.');
+                        valid = false;
+                    }
+
+                    if (password.value.trim() === '') {
+                        setError(password, 'Sila masukkan kata laluan.');
+                        valid = false;
+                    }
+
+                    if (! valid) {
+                        event.preventDefault();
+                        (identifier.value.trim() === '' ? identifier : password).focus();
+                        return;
+                    }
+
+                    submitButton.disabled = true;
+                    submitButton.textContent = 'Sedang diproses...';
                 });
             }
         });

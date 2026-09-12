@@ -2,7 +2,11 @@
     $role = $role ?? session('auth_role');
     $staffType = $staffType ?? ($user->staff_type ?? session('staff_type'));
     $isDialogMode = request()->boolean('dialog');
-    $showSidebar = ! $isDialogMode && in_array($role, ['admin', 'staff', 'ahli'], true);
+    $showAccountTools = ! $isDialogMode && in_array($role, ['admin', 'staff', 'ahli'], true);
+    $showStudentNav = $showAccountTools && $role === 'ahli';
+    $showStaffNav = $showAccountTools && $role === 'staff';
+    $showPortalNav = $showStudentNav || $showStaffNav;
+    $showSidebar = $showAccountTools && $role === 'admin';
     $displayName = $user->nama ?? 'CoopBest';
     $initials = collect(explode(' ', $displayName))->filter()->take(2)->map(fn ($part) => strtoupper(substr($part, 0, 1)))->implode('') ?: 'CB';
     $roleLabel = $role === 'admin'
@@ -17,7 +21,7 @@
     $headerNotifications = collect();
     $unreadNotificationCount = 0;
 
-    if ($showSidebar && \Illuminate\Support\Facades\Schema::hasTable('notifications')) {
+    if ($showAccountTools && \Illuminate\Support\Facades\Schema::hasTable('notifications')) {
         $headerNotifications = \App\Models\CooperativeNotification::query()
             ->where('recipient_role', $role)
             ->where('recipient_id', $user->getKey())
@@ -80,12 +84,11 @@
 
     $studentLinks = [
         ['section' => 'Home', 'label' => 'Home', 'route' => 'auth.dashboard', 'active' => 'auth.dashboard', 'icon' => 'grid'],
-        ['section' => 'Dashboard', 'label' => 'Dashboard Saham', 'route' => 'student.dashboard.saham', 'active' => 'student.dashboard.saham', 'icon' => 'chart'],
-        ['section' => 'SAHAM', 'label' => 'Urus Saham', 'route' => 'student.permohonan.index', 'active' => 'student.permohonan.index', 'icon' => 'clipboard'],
-        ['section' => 'SAHAM', 'label' => 'Semak Permohonan', 'route' => 'student.permohonan.status', 'active' => 'student.permohonan.status', 'icon' => 'book'],
-        ['section' => 'SAHAM', 'label' => 'Transaksi Saham', 'route' => 'koperasi.transactions.index', 'active' => 'koperasi.transactions.*', 'icon' => 'chart'],
-        ['section' => 'Tempahan Baju', 'label' => 'Senarai Tempahan', 'route' => 'student.tempahan.index', 'active' => 'student.tempahan.*', 'icon' => 'box'],
+        ['section' => 'Saham', 'label' => 'Saham', 'route' => 'student.dashboard.saham', 'active' => ['student.dashboard.saham', 'student.permohonan.*', 'koperasi.transactions.*'], 'icon' => 'chart'],
+        ['section' => 'Tempahan', 'label' => 'Tempahan', 'route' => 'student.tempahan.index', 'active' => 'student.tempahan.*', 'icon' => 'box'],
     ];
+
+    $portalNavLabel = $role === 'staff' ? 'Portal Staf' : 'Portal Pelajar';
 
     $links = match ($role) {
         'admin' => $adminLinks,
@@ -97,6 +100,27 @@
         'ahli' => $studentLinks,
         default => [],
     };
+
+    $staffTopLinks = match ($staffType) {
+        'lecturer_member' => [
+            $lecturerLinks[0],
+            ['section' => 'Saham', 'label' => 'Saham', 'route' => 'lecturer-member.dashboard.saham', 'active' => ['lecturer-member.dashboard.saham', 'lecturer-member.permohonan.*', 'student.permohonan.status', 'koperasi.transactions.*'], 'icon' => 'chart'],
+        ],
+        'clothing_staff' => [
+            $clothingStaffLinks[0],
+            ['section' => 'Saham', 'label' => 'Saham', 'route' => 'clothing-staff.dashboard.saham', 'active' => ['clothing-staff.dashboard.saham', 'clothing-staff.permohonan.*', 'student.permohonan.status', 'koperasi.transactions.*'], 'icon' => 'chart'],
+            ['section' => 'Tempahan', 'label' => 'Tempahan', 'route' => 'clothing-staff.dashboard.baju', 'active' => ['clothing-staff.dashboard.baju', 'clothing-staff.baju.*', 'clothing-staff.orders.*'], 'icon' => 'box'],
+        ],
+        default => [
+            $coopStaffLinks[0],
+            ['section' => 'Kehadiran', 'label' => 'Kehadiran', 'route' => 'coop-staff.attendance.index', 'active' => 'coop-staff.attendance.index', 'icon' => 'clipboard'],
+            ['section' => 'Sejarah', 'label' => 'Sejarah', 'route' => 'coop-staff.attendance.history', 'active' => 'coop-staff.attendance.history', 'icon' => 'book'],
+        ],
+    };
+    $portalLinks = $role === 'staff' ? $staffTopLinks : $studentLinks;
+    $portalHomeUrl = isset($portalLinks[0]['route'])
+        ? route($portalLinks[0]['route'], $portalLinks[0]['params'] ?? [])
+        : route('auth.dashboard');
     $profileRoute = match (true) {
         $role === 'admin' => 'admin.profile',
         $role === 'staff' && $staffType === 'lecturer_member' => 'lecturer-member.profile',
@@ -2002,6 +2026,130 @@
             max-width: none;
         }
 
+        body.student-navbar-page .topbar {
+            min-height: 78px;
+            padding-inline: clamp(18px, 3vw, 42px);
+        }
+
+        body.student-navbar-page .topbar-left {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        body.student-navbar-page .student-topnav {
+            width: 100%;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: clamp(22px, 3vw, 42px);
+        }
+
+        .student-topnav__brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text);
+            text-decoration: none;
+            flex: 0 0 auto;
+        }
+
+        .student-topnav__brand img {
+            width: 42px;
+            height: 42px;
+            object-fit: contain;
+            flex: 0 0 auto;
+        }
+
+        .student-topnav__brand > span {
+            display: grid;
+            gap: 1px;
+        }
+
+        .student-topnav__brand strong {
+            font-size: 20px;
+            line-height: 1;
+            font-weight: 900;
+            letter-spacing: 0;
+        }
+
+        .student-topnav__brand small {
+            color: var(--muted-2);
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+        }
+
+        .student-topnav__links {
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: auto;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .student-topnav__links::-webkit-scrollbar {
+            display: none;
+        }
+
+        .student-topnav__links a {
+            min-height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 16px;
+            border-bottom: 3px solid transparent;
+            color: #334155;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .student-topnav__links a:hover,
+        .student-topnav__links a:focus-visible,
+        .student-topnav__links a.active {
+            color: var(--secondary);
+            border-bottom-color: var(--primary);
+        }
+
+        body.student-navbar-page .topbar-actions {
+            flex: 0 0 auto;
+        }
+
+        @media (max-width: 760px) {
+            body.student-navbar-page .topbar {
+                min-height: 112px;
+                align-items: stretch;
+                flex-direction: column;
+                justify-content: center;
+                gap: 8px;
+                padding-block: 10px;
+            }
+
+            body.student-navbar-page .student-topnav {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .student-topnav__links {
+                width: 100%;
+            }
+
+            .student-topnav__links a {
+                min-height: 34px;
+                padding-inline: 12px;
+            }
+
+            body.student-navbar-page .topbar-actions {
+                align-self: flex-end;
+            }
+        }
+
         .view-dialog {
             position: fixed !important;
             inset: 0 !important;
@@ -2244,7 +2392,7 @@
         }
     </style>
 </head>
-<body class="{{ $isDialogMode ? 'dialog-mode embedded-frame' : '' }}">
+<body class="{{ trim(($isDialogMode ? 'dialog-mode embedded-frame' : '').' '.($showPortalNav ? 'student-navbar-page' : '')) }}">
     @include('components.flash-notification')
     <script>
         if (window.self !== window.top) {
@@ -2286,7 +2434,8 @@
                     @foreach ($links as $link)
                         @php
                             $href = $link['route'] ? route($link['route'], $link['params'] ?? []) : '#';
-                            $active = request()->routeIs($link['active']);
+                            $activePatterns = (array) ($link['active'] ?? []);
+                            $active = request()->routeIs(...$activePatterns);
                             if (($link['route'] ?? null) === 'admin.permohonan.index' && isset($link['audience'])) {
                                 $active = $active && request('pemohon', 'pelajar') === $link['audience'];
                             }
@@ -2366,10 +2515,31 @@
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
                         </label>
                     @endif
+                    @if ($showPortalNav)
+                        <div class="student-topnav" aria-label="Navigasi portal">
+                            <a class="student-topnav__brand" href="{{ $portalHomeUrl }}">
+                                <img src="{{ asset('images/koperasi-logo.svg?v=2') }}" alt="Logo Koperasi">
+                                <span>
+                                    <strong><span class="brand-title__coop">Coop</span><span class="brand-title__best">Best</span></strong>
+                                    <small>{{ $portalNavLabel }}</small>
+                                </span>
+                            </a>
+                            <nav class="student-topnav__links" aria-label="Menu utama">
+                                @foreach ($portalLinks as $link)
+                                    @php
+                                        $href = $link['route'] ? route($link['route'], $link['params'] ?? []) : '#';
+                                        $activePatterns = (array) ($link['active'] ?? []);
+                                        $active = request()->routeIs(...$activePatterns);
+                                    @endphp
+                                    <a class="{{ $active ? 'active' : '' }}" href="{{ $href }}" @if($active) aria-current="page" @endif>{{ $link['label'] }}</a>
+                                @endforeach
+                            </nav>
+                        </div>
+                    @endif
                 </div>
                 <div class="topbar-actions">
                     @yield('page-actions')
-                    @if ($showSidebar)
+                    @if ($showAccountTools)
                         <button class="icon-button" type="button" aria-label="Toggle theme" title="Toggle theme">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.9 15.1A8 8 0 1 1 8.9 3.1a6 6 0 0 0 12 12Z"/></svg>
                         </button>
@@ -2463,7 +2633,7 @@
         </div>
     </div>
     @stack('scripts')
-    @if ($showSidebar)
+    @if ($showAccountTools)
         <script>
             document.querySelectorAll('.notification-menu, .profile-menu').forEach(function (menu) {
                 menu.addEventListener('toggle', function () {
@@ -2495,15 +2665,17 @@
                 }
             });
 
-            document.querySelectorAll('.nav-link').forEach(function (link) {
-                link.addEventListener('click', function () {
-                    const sidebarToggle = document.getElementById('sidebar-toggle');
+            @if ($showSidebar)
+                document.querySelectorAll('.nav-link').forEach(function (link) {
+                    link.addEventListener('click', function () {
+                        const sidebarToggle = document.getElementById('sidebar-toggle');
 
-                    if (sidebarToggle && window.matchMedia('(max-width: 1024px)').matches) {
-                        sidebarToggle.checked = false;
-                    }
+                        if (sidebarToggle && window.matchMedia('(max-width: 1024px)').matches) {
+                            sidebarToggle.checked = false;
+                        }
+                    });
                 });
-            });
+            @endif
         </script>
     @endif
 </body>

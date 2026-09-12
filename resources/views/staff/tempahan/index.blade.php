@@ -55,8 +55,7 @@
         <p>Semak tempahan pelajar, kemaskini status, dan tetapkan tarikh ambil dalam satu paparan rasmi.</p>
     </div>
     <div class="staff-hero__meta">
-        <span class="badge success">Live</span>
-        <strong>{{ now()->format('d M Y') }}</strong>
+        <a class="staff-dashboard-backlink" href="{{ route('clothing-staff.dashboard.baju') }}">Dashboard Tempahan</a>
     </div>
 </section>
 
@@ -223,6 +222,9 @@
     .staff-hero p{margin:6px 0 0;color:#475569;font-size:14px;font-weight:600;max-width:760px}
     .staff-hero__meta{display:grid;gap:6px;justify-items:end}
     .staff-hero__meta strong{font-size:14px;color:#475569}
+    .staff-dashboard-backlink{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 20px;border:1px solid #D7E3F5;border-radius:10px;background:#fff;color:var(--secondary);font-size:15px;font-weight:900;text-decoration:none;white-space:nowrap}
+    .staff-dashboard-backlink::before{content:'\2190';margin-right:8px;color:var(--primary);font-weight:900}
+    .staff-dashboard-backlink:hover{border-color:#AFC7EA;background:#F8FBFF}
     .stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
     .stat-card{position:relative;border:1px solid rgba(226,232,240,.95);border-radius:14px;background:#fff;padding:14px 18px;box-shadow:0 8px 18px rgba(15,23,42,.04);overflow:hidden}
     .stat-card::before{content:'';position:absolute;inset:auto 20px 0 20px;height:3px;border-radius:999px;background:var(--secondary-soft)}

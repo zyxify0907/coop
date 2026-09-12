@@ -2,16 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CooperativeNotification;
 use App\Models\Announcement;
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSetting;
+use App\Models\CooperativeNotification;
 use App\Models\Pekerja;
 use App\Models\Permohonan;
 use App\Models\ShareTransaction;
+use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class StaffPortalController extends Controller
@@ -32,7 +37,7 @@ class StaffPortalController extends Controller
         $orders = Schema::hasTable('tempahan') ? DB::table('tempahan') : collect();
 
         $countStatus = function (array $statuses) use ($orders): int {
-            if ($orders instanceof \Illuminate\Support\Collection) {
+            if ($orders instanceof Collection) {
                 return 0;
             }
 
@@ -42,7 +47,7 @@ class StaffPortalController extends Controller
         };
 
         $countNotPickedUp = function () use ($orders): int {
-            if ($orders instanceof \Illuminate\Support\Collection) {
+            if ($orders instanceof Collection) {
                 return 0;
             }
 
@@ -60,12 +65,12 @@ class StaffPortalController extends Controller
             'share' => $user->sahamStaff,
             'home' => $this->staffHomeData($request, $user, 'clothing_staff'),
             'stats' => [
-                'jumlah_tempahan' => $orders instanceof \Illuminate\Support\Collection ? 0 : (clone $orders)->count(),
+                'jumlah_tempahan' => $orders instanceof Collection ? 0 : (clone $orders)->count(),
                 'baru' => $countStatus(['baru', 'pending']),
                 'diambil' => $countStatus(['diambil', 'siap diambil']),
                 'belum_ambil' => $countNotPickedUp(),
-                'produk' => $products instanceof \Illuminate\Support\Collection ? 0 : (clone $products)->distinct('nama_item')->count('nama_item'),
-                'stok_rendah' => $products instanceof \Illuminate\Support\Collection ? 0 : (clone $products)->where('stok_tertinggal', '<=', 5)->count(),
+                'produk' => $products instanceof Collection ? 0 : (clone $products)->distinct('nama_item')->count('nama_item'),
+                'stok_rendah' => $products instanceof Collection ? 0 : (clone $products)->where('stok_tertinggal', '<=', 5)->count(),
             ],
             'recentOrders' => $this->recentClothingOrders(),
         ]);
@@ -122,6 +127,7 @@ class StaffPortalController extends Controller
     {
         $user = $this->staff($request, ['sahamStaff']);
         abort_if($user->staff_type === 'coop_staff', 404);
+        $memberNumber = $this->ensureStaffMemberNumber($user);
 
         $share = $user->sahamStaff;
 
@@ -130,6 +136,7 @@ class StaffPortalController extends Controller
             'staffType' => $user->staff_type,
             'user' => $user,
             'share' => $share,
+            'staffMemberNumber' => $memberNumber,
             'totalShare' => (float) optional($share)->syer + (float) optional($share)->tambahan_saham,
             'portalPrefix' => $this->portalPrefix($user->staff_type),
         ]);
@@ -139,6 +146,7 @@ class StaffPortalController extends Controller
     {
         $user = $this->staff($request, ['sahamStaff']);
         abort_if($user->staff_type === 'coop_staff', 404);
+        $memberNumber = $this->ensureStaffMemberNumber($user);
 
         $recentTransactions = Schema::hasTable('share_transactions')
             ? ShareTransaction::query()
@@ -163,6 +171,7 @@ class StaffPortalController extends Controller
             'staffType' => $user->staff_type,
             'user' => $user,
             'share' => $user->sahamStaff,
+            'staffMemberNumber' => $memberNumber,
             'portalPrefix' => $this->portalPrefix($user->staff_type),
             'recentTransactions' => $recentTransactions,
             'latestApplications' => $latestApplications,
@@ -172,19 +181,95 @@ class StaffPortalController extends Controller
     public function profile(Request $request): View
     {
         $user = $this->staff($request, ['sahamStaff']);
+        $memberNumber = $this->ensureStaffMemberNumber($user);
+        $latestApplications = Permohonan::query()
+            ->whereNull('id_ahli')
+            ->where('no_matrik', $user->no_pekerja)
+            ->latest('tarikh_permohonan')
+            ->latest('id_permohonan')
+            ->limit(5)
+            ->get();
+
+        $recentTransactions = Schema::hasTable('share_transactions')
+            ? ShareTransaction::query()
+                ->where('member_type', 'staff')
+                ->where('member_id', $user->id_pekerja)
+                ->latest('transacted_at')
+                ->latest()
+                ->limit(5)
+                ->get()
+            : collect();
+
+        $attendanceRecords = Schema::hasTable('attendance_records') && $user->staff_type === 'coop_staff'
+            ? AttendanceRecord::query()
+                ->where('staff_id', $user->id_pekerja)
+                ->latest('attendance_date')
+                ->limit(5)
+                ->get()
+            : collect();
 
         return view('staff.member.profile', [
             'role' => 'staff',
             'staffType' => $user->staff_type,
             'user' => $user,
             'share' => $user->sahamStaff,
+            'staffMemberNumber' => $memberNumber,
             'portalPrefix' => $this->portalPrefix($user->staff_type),
+            'latestApplications' => $latestApplications,
+            'recentTransactions' => $recentTransactions,
+            'attendanceRecords' => $attendanceRecords,
         ]);
+    }
+
+    public function updateProfile(Request $request): RedirectResponse
+    {
+        $user = $this->staff($request);
+
+        $validated = $request->validate([
+            'no_tel' => ['nullable', 'string', 'max:20'],
+            'email' => ['nullable', 'email', 'max:100', Rule::unique('pekerja', 'email')->ignore($user->id_pekerja, 'id_pekerja')],
+        ], [
+            'email.email' => 'Format email tidak sah.',
+            'email.unique' => 'Email ini sudah digunakan oleh akaun lain.',
+            'no_tel.max' => 'No telefon terlalu panjang.',
+        ]);
+
+        $user->update([
+            'no_tel' => $validated['no_tel'] ?? null,
+            'email' => $validated['email'] ?? null,
+        ]);
+
+        return back()->with('success', 'Profil berjaya dikemaskini.');
+    }
+
+    public function updatePassword(Request $request): RedirectResponse
+    {
+        $user = $this->staff($request);
+
+        $validated = $request->validate([
+            'current_password' => ['required', 'string'],
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
+        ], [
+            'current_password.required' => 'Sila masukkan kata laluan semasa.',
+            'password.required' => 'Sila masukkan kata laluan baharu.',
+            'password.min' => 'Kata laluan baharu mesti sekurang-kurangnya 6 aksara.',
+            'password.confirmed' => 'Pengesahan kata laluan baharu tidak sepadan.',
+        ]);
+
+        if (! $this->passwordMatches($user, $validated['current_password'])) {
+            return back()->withErrors(['current_password' => 'Kata laluan semasa tidak sah.']);
+        }
+
+        $user->password_hash = Hash::make($validated['password']);
+        $user->save();
+
+        return back()->with('success', 'Kata laluan berjaya dikemaskini.');
     }
 
     private function memberDashboard(Request $request, string $type): View
     {
         $user = $this->staff($request, ['sahamStaff']);
+        $memberNumber = $this->ensureStaffMemberNumber($user);
         $share = $user->sahamStaff;
         $applications = Permohonan::query()
             ->whereNull('id_ahli')
@@ -207,6 +292,7 @@ class StaffPortalController extends Controller
             'staffType' => $type,
             'user' => $user,
             'share' => $share,
+            'staffMemberNumber' => $memberNumber,
             'applications' => $applications,
             'notifications' => $notifications,
             'home' => $this->staffHomeData($request, $user, $type, $applications, $notifications, $attendanceRecord),
@@ -227,7 +313,110 @@ class StaffPortalController extends Controller
         return Pekerja::query()->with($with)->findOrFail($request->session()->get('auth_id'));
     }
 
-    private function staffHomeData(Request $request, Pekerja $staff, string $type, ?\Illuminate\Support\Collection $applications = null, ?\Illuminate\Support\Collection $notifications = null, ?AttendanceRecord $attendanceRecord = null): array
+    private function ensureStaffMemberNumber(Pekerja $staff): ?string
+    {
+        if (! $staff->isEligibleForShares()) {
+            return null;
+        }
+
+        if (Schema::hasColumn('pekerja', 'no_anggota') && filled($staff->no_anggota)) {
+            return $staff->no_anggota;
+        }
+
+        return DB::transaction(function () use ($staff): ?string {
+            $staff->refresh();
+
+            if (Schema::hasColumn('pekerja', 'no_anggota') && filled($staff->no_anggota)) {
+                return $staff->no_anggota;
+            }
+
+            $approvedApplication = Permohonan::query()
+                ->where('jenis', 'anggota')
+                ->where('status', 'diluluskan')
+                ->where('data_permohonan->pemohon_role', 'staff')
+                ->where('no_matrik', $staff->no_pekerja)
+                ->latest('tarikh_keputusan')
+                ->latest('id_permohonan')
+                ->first();
+
+            $memberNumber = $approvedApplication->data_permohonan['no_anggota'] ?? null;
+
+            if (! $memberNumber && ($approvedApplication || $staff->sahamStaff)) {
+                $memberNumber = $this->nextStaffMemberNumber();
+            }
+
+            if (! $memberNumber) {
+                return null;
+            }
+
+            if (Schema::hasColumn('pekerja', 'no_anggota')) {
+                $staff->update(['no_anggota' => $memberNumber]);
+            }
+
+            if ($approvedApplication) {
+                $data = $approvedApplication->data_permohonan ?? [];
+                $data['no_anggota'] = $memberNumber;
+                $approvedApplication->update(['data_permohonan' => $data]);
+            }
+
+            return $memberNumber;
+        });
+    }
+
+    private function nextStaffMemberNumber(): string
+    {
+        $memberNumbers = collect();
+
+        if (Schema::hasColumn('pekerja', 'no_anggota')) {
+            $memberNumbers = $memberNumbers->merge(
+                Pekerja::query()
+                    ->whereNotNull('no_anggota')
+                    ->lockForUpdate()
+                    ->pluck('no_anggota')
+            );
+        }
+
+        $memberNumbers = $memberNumbers->merge(
+            Permohonan::query()
+                ->where('jenis', 'anggota')
+                ->where('status', 'diluluskan')
+                ->where('data_permohonan->pemohon_role', 'staff')
+                ->get()
+                ->pluck('data_permohonan.no_anggota')
+                ->filter()
+        );
+
+        $highestNumber = $memberNumbers
+            ->map(fn (string $number): int => $this->memberNumberValue($number))
+            ->filter(fn (int $number): bool => $number >= 1001)
+            ->max() ?? 1000;
+
+        return 'PBT'.($highestNumber + 1);
+    }
+
+    private function memberNumberValue(?string $number): int
+    {
+        return preg_match('/^PBT(\d+)$/i', trim((string) $number), $matches)
+            ? (int) $matches[1]
+            : 0;
+    }
+
+    private function passwordMatches(Pekerja $user, string $password): bool
+    {
+        $storedHash = (string) $user->password_hash;
+
+        if ($storedHash === '') {
+            return false;
+        }
+
+        if (str_starts_with($storedHash, '$2a$')) {
+            $storedHash = '$2y$'.substr($storedHash, 4);
+        }
+
+        return password_verify($password, $storedHash) || Hash::check($password, (string) $user->password_hash);
+    }
+
+    private function staffHomeData(Request $request, Pekerja $staff, string $type, ?Collection $applications = null, ?Collection $notifications = null, ?AttendanceRecord $attendanceRecord = null): array
     {
         $applications ??= Permohonan::query()
             ->whereNull('id_ahli')
@@ -244,14 +433,6 @@ class StaffPortalController extends Controller
                 ->limit(5)
                 ->get()
             : collect();
-
-        $share = $type === 'coop_staff' ? null : $staff->sahamStaff;
-        $totalShare = (float) optional($share)->syer + (float) optional($share)->tambahan_saham;
-        $pendingApplications = $applications->whereIn('status', ['baru', 'semak', 'pending', 'dalam_semakan'])->count();
-        $unreadNotifications = $notifications->whereNull('read_at')->count();
-        $clothingOrders = $type === 'clothing_staff' && Schema::hasTable('tempahan')
-            ? DB::table('tempahan')->whereIn(DB::raw('LOWER(status)'), ['baru', 'pending', 'belum_ambil', 'belum ambil'])->count()
-            : 0;
 
         $activities = collect();
         if ($type !== 'coop_staff') {
@@ -271,8 +452,23 @@ class StaffPortalController extends Controller
             $this->recentClothingOrders()->take(3)->each(fn ($order) => $activities->push([
                 'name' => 'Tempahan baju '.($order->nama ?? $order->no_matrik ?? 'pelajar'),
                 'user' => ucfirst(str_replace('_', ' ', (string) ($order->status ?? 'baru'))),
-                'time' => isset($order->tarikh_tempahan) ? \Carbon\Carbon::parse($order->tarikh_tempahan)->diffForHumans() : '-',
+                'time' => isset($order->tarikh_tempahan) ? Carbon::parse($order->tarikh_tempahan)->diffForHumans() : '-',
             ]));
+        }
+
+        if ($type === 'coop_staff' && Schema::hasTable('attendance_records')) {
+            AttendanceRecord::query()
+                ->where('staff_id', $staff->id_pekerja)
+                ->when($attendanceRecord, fn ($query) => $query->whereDate('attendance_date', '!=', today()))
+                ->latest('attendance_date')
+                ->latest()
+                ->limit(5)
+                ->get()
+                ->each(fn (AttendanceRecord $record) => $activities->push([
+                    'name' => $record->check_out_time ? 'Check out direkodkan' : 'Check in direkodkan',
+                    'user' => $record->attendance_date?->format('d/m/Y') ?? 'Kehadiran',
+                    'time' => $record->updated_at?->diffForHumans() ?? '-',
+                ]));
         }
 
         if ($attendanceRecord) {
@@ -286,18 +482,6 @@ class StaffPortalController extends Controller
         return [
             'last_login_at' => $request->session()->get('last_login_at'),
             'announcements' => Announcement::query()->visibleTo('staff')->orderByDesc('is_pinned')->latest()->limit(4)->get(),
-            'notifications' => $type === 'coop_staff'
-                ? [
-                    ['tone' => 'blue', 'count' => $attendanceRecord ? 1 : 0, 'label' => $attendanceRecord ? 'rekod kehadiran hari ini telah direkodkan' : 'belum check in hari ini', 'route' => route('coop-staff.attendance.index')],
-                    ['tone' => 'yellow', 'count' => $unreadNotifications, 'label' => 'notifikasi belum dibaca', 'route' => route('koperasi.notifications.index')],
-                    ['tone' => 'green', 'count' => $attendanceRecord?->check_out_time ? 1 : 0, 'label' => $attendanceRecord?->check_out_time ? 'check out hari ini selesai' : 'check out belum direkodkan', 'route' => route('coop-staff.attendance.index')],
-                ]
-                : [
-                    ['tone' => 'blue', 'count' => $pendingApplications, 'label' => 'permohonan anda masih menunggu semakan', 'route' => route($this->portalPrefix($type).'.permohonan.index')],
-                    ['tone' => 'green', 'count' => $share ? 1 : 0, 'label' => $share ? 'jumlah saham semasa RM '.number_format($totalShare, 2) : 'rekod saham belum diwujudkan', 'route' => route($this->portalPrefix($type).'.shares')],
-                    ['tone' => 'yellow', 'count' => $unreadNotifications, 'label' => 'notifikasi belum dibaca', 'route' => route($type === 'clothing_staff' ? 'clothing-staff.notifications.index' : 'koperasi.notifications.index')],
-                    ['tone' => 'blue', 'count' => $clothingOrders, 'label' => $type === 'clothing_staff' ? 'tempahan baju perlu tindakan' : 'akses perkhidmatan koperasi tersedia', 'route' => $type === 'clothing_staff' ? route('clothing-staff.orders.index') : route($this->portalPrefix($type).'.profile')],
-                ],
             'messages' => $notifications,
             'recent_activities' => $activities->take(6)->values(),
         ];
@@ -312,7 +496,7 @@ class StaffPortalController extends Controller
         };
     }
 
-    private function recentClothingOrders(): \Illuminate\Support\Collection
+    private function recentClothingOrders(): Collection
     {
         if (! Schema::hasTable('tempahan')) {
             return collect();

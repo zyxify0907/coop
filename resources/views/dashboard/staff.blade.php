@@ -2,7 +2,7 @@
 
 @section('title', 'Staff Dashboard')
 @section('page-title', 'Staff Dashboard')
-@section('page-subtitle', 'Operasi tempahan, stok dan jualan koperasi.')
+@section('page-subtitle', 'Kehadiran dan operasi harian pekerja koperasi.')
 
 @section('content')
     <section class="template-hero staff-template-hero">
@@ -62,30 +62,30 @@
             <div class="panel-section-head">
                 <div>
                     <h2>Kerja Harian</h2>
-                    <p>Akses rekod koperasi yang perlu disemak dan dikemas kini.</p>
+                    <p>Akses kehadiran pekerja koperasi dan rekod berkaitan.</p>
                 </div>
             </div>
 
             <nav class="staff-work-list" aria-label="Kerja harian staff">
-                <a class="staff-work-item" href="{{ route('student.permohonan.status') }}">
-                    <span>Permohonan</span>
-                    <strong>Semak status & slip</strong>
-                    <small>Lihat status permohonan dan slip bayaran akaun staff.</small>
+                <a class="staff-work-item" href="{{ route('coop-staff.attendance.index') }}">
+                    <span>Kehadiran</span>
+                    <strong>Check In / Check Out</strong>
+                    <small>Rekod kehadiran harian mengikut tetapan lokasi koperasi.</small>
                 </a>
-                <a class="staff-work-item" href="{{ route('koperasi.transactions.index') }}">
-                    <span>Transaksi</span>
-                    <strong>Rekod transaksi saham</strong>
-                    <small>Lihat rekod kredit dan debit anggota koperasi.</small>
+                <a class="staff-work-item" href="{{ route('coop-staff.attendance.history') }}">
+                    <span>Sejarah</span>
+                    <strong>Sejarah Kehadiran</strong>
+                    <small>Semak rekod hadir, lewat, pulang awal dan status harian.</small>
                 </a>
-                <a class="staff-work-item" href="{{ route('koperasi.documents.index') }}">
-                    <span>Dokumen</span>
-                    <strong>Semak dokumen sokongan</strong>
-                    <small>Lihat slip bayaran dan dokumen milik akaun staff.</small>
+                <a class="staff-work-item" href="{{ route('coop-staff.attendance.corrections') }}">
+                    <span>Pembetulan</span>
+                    <strong>Mohon Pembetulan</strong>
+                    <small>Hantar permohonan pembetulan jika rekod kehadiran tidak tepat.</small>
                 </a>
                 <a class="staff-work-item" href="{{ route('koperasi.notifications.index') }}">
                     <span>Notifikasi</span>
                     <strong>Makluman terkini</strong>
-                    <small>Semak keputusan dan perubahan rekod koperasi.</small>
+                    <small>Semak makluman berkaitan kehadiran dan akaun pekerja.</small>
                 </a>
             </nav>
         </section>

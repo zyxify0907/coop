@@ -6,6 +6,7 @@
 
 @section('content')
     @php
+        $memberNumber = $staffMemberNumber ?? $user->no_anggota;
         $memberFee = (float) optional($share)->yuran;
         $currentShare = (float) optional($share)->syer;
         $additionalShare = (float) optional($share)->tambahan_saham;
@@ -33,11 +34,25 @@
                 <h1>Saham Staff</h1>
                 <p>Pantau nombor anggota, jumlah saham, permohonan saham dan transaksi terkini.</p>
             </div>
-            <a href="{{ route($portalPrefix.'.permohonan.index', ['jenis' => 'saham']) }}">Tambah Saham</a>
+        </section>
+
+        <section class="staff-share-actions" aria-label="Tindakan saham">
+            <a href="{{ route($portalPrefix.'.permohonan.index', ['jenis' => 'saham']) }}">
+                <strong>Permohonan Saham</strong>
+                <span>Mohon tambah atau urus saham koperasi.</span>
+            </a>
+            <a href="{{ route('student.permohonan.status') }}">
+                <strong>Semak Permohonan</strong>
+                <span>Lihat status permohonan yang telah dihantar.</span>
+            </a>
+            <a href="{{ route('koperasi.transactions.index') }}">
+                <strong>Transaksi Saham</strong>
+                <span>Semak sejarah transaksi saham anda.</span>
+            </a>
         </section>
 
         <section class="module-metrics staff-share-metrics">
-            <div><span>No Anggota</span><strong>{{ $user->no_anggota ?? 'Belum dijana' }}</strong><small>{{ $user->staff_type_label }}</small></div>
+            <div><span>No Anggota Staff</span><strong>{{ $memberNumber ?? 'Belum menjadi anggota' }}</strong><small>{{ $user->staff_type_label }}</small></div>
             <div><span>Yuran Ahli</span><strong>RM {{ number_format($memberFee, 2) }}</strong><small>Yuran menjadi anggota</small></div>
             <div><span>Syer Semasa</span><strong>RM {{ number_format($currentShare, 2) }}</strong><small>Modal saham asas</small></div>
             <div><span>Tambahan Saham</span><strong>RM {{ number_format($additionalShare, 2) }}</strong><small>Jumlah tambahan diluluskan</small></div>
@@ -111,6 +126,11 @@
 <style>
     .staff-share-metrics{grid-template-columns:repeat(5,minmax(0,1fr))}
     .staff-share-metrics strong{font-size:24px}
+    .staff-share-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+    .staff-share-actions a{display:grid;gap:6px;min-height:94px;padding:18px;border:1px solid #D7E3F5;border-radius:12px;background:#fff;color:inherit;text-decoration:none}
+    .staff-share-actions a:hover{border-color:#AFC7EA;background:#F8FBFF}
+    .staff-share-actions strong{color:#0F172A;font-size:16px;font-weight:900}
+    .staff-share-actions span{color:#64748B;font-size:13px;font-weight:750;line-height:1.45}
     .staff-vertical-chart{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:end;min-height:270px;padding:12px 6px 0;border-bottom:1px solid #D7E3F5}
     .staff-vertical-chart__bar{display:grid;grid-template-rows:auto 190px auto;gap:10px;align-items:end;justify-items:center;height:100%;text-align:center}
     .staff-vertical-chart__bar strong{color:#0F172A;font-size:14px;font-weight:900}
@@ -120,7 +140,7 @@
     .staff-vertical-chart__bar:nth-child(3) .staff-vertical-chart__track span{background:#F59E0B;box-shadow:0 10px 22px rgba(245,158,11,.18)}
     .staff-vertical-chart__bar p{margin:0;color:#334155;font-size:13px;font-weight:900}
     @media (max-width:1280px){.staff-share-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
-    @media (max-width:900px){.staff-share-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media (max-width:900px){.staff-share-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.staff-share-actions{grid-template-columns:1fr}}
     @media (max-width:640px){.staff-share-metrics{grid-template-columns:1fr}.staff-vertical-chart{gap:10px}.staff-vertical-chart__track span{width:min(58px,76%)}}
 </style>
 @endpush

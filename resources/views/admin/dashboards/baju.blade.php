@@ -8,6 +8,7 @@
     @php
         $ordersRoute = $ordersRoute ?? route('admin.tempahan.index');
         $stockRoute = $stockRoute ?? route('admin.baju.index');
+        $isClothingStaff = ($role ?? null) === 'staff' && ($staffType ?? null) === 'clothing_staff';
         $orderStatusLabel = fn ($status, $pickupDate = null) => filled($pickupDate)
             ? 'Sudah Ambil'
             : match (strtolower((string) $status)) {
@@ -24,8 +25,23 @@
                 <h1>Clothing Order Dashboard</h1>
                 <p>Pantau tempahan baju, stok rendah dan status pembayaran/tempahan.</p>
             </div>
-            <a href="{{ $ordersRoute }}">Buka Senarai Tempahan</a>
+            @unless ($isClothingStaff)
+                <a href="{{ $ordersRoute }}">Buka Senarai Tempahan</a>
+            @endunless
         </section>
+
+        @if ($isClothingStaff)
+            <section class="clothing-order-actions" aria-label="Tindakan tempahan">
+                <a href="{{ $stockRoute }}">
+                    <strong>Stok Baju</strong>
+                    <span>Semak, tambah dan kemas kini stok baju.</span>
+                </a>
+                <a href="{{ $ordersRoute }}">
+                    <strong>Senarai Tempahan</strong>
+                    <span>Urus pesanan dan status pengambilan.</span>
+                </a>
+            </section>
+        @endif
 
         <section class="module-metrics">
             <div><span>Jumlah Tempahan</span><strong>{{ number_format($summary['total_orders']) }}</strong><small>Semua rekod</small></div>
@@ -78,3 +94,14 @@
 @endsection
 
 @include('admin.dashboards.styles')
+
+@push('styles')
+<style>
+    .clothing-order-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .clothing-order-actions a{display:grid;gap:6px;min-height:94px;padding:18px;border:1px solid #D7E3F5;border-radius:12px;background:#fff;color:inherit;text-decoration:none}
+    .clothing-order-actions a:hover{border-color:#AFC7EA;background:#F8FBFF}
+    .clothing-order-actions strong{color:#0F172A;font-size:16px;font-weight:900}
+    .clothing-order-actions span{color:#64748B;font-size:13px;font-weight:750;line-height:1.45}
+    @media (max-width:720px){.clothing-order-actions{grid-template-columns:1fr}}
+</style>
+@endpush

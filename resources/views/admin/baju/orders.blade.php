@@ -8,6 +8,7 @@
 @php
     $money = fn ($value) => 'RM '.number_format((float) $value, 2);
     $isAdminBaju = ($role ?? null) === 'admin';
+    $isClothingStaff = request()->routeIs('clothing-staff.orders.*');
     $orderRoutes = [
         'update' => $isAdminBaju ? 'admin.baju.orders.update' : 'clothing-staff.orders.update',
         'destroy' => $isAdminBaju ? 'admin.baju.orders.destroy' : 'clothing-staff.orders.destroy',
@@ -28,6 +29,16 @@
 
 @if ($errors->any())
     <div class="alert danger">{{ $errors->first() }}</div>
+@endif
+
+@if ($isClothingStaff)
+    <section class="baju-orders-hero">
+        <div>
+            <h1>Senarai Tempahan Baju</h1>
+            <p>Urus status pesanan, tarikh siap dan pengambilan.</p>
+        </div>
+        <a class="clothing-dashboard-backlink" href="{{ route('clothing-staff.dashboard.baju') }}">Dashboard Tempahan</a>
+    </section>
 @endif
 
 <section class="panel order-panel">
@@ -119,6 +130,12 @@
     .alert{padding:14px 16px;border-radius:10px;margin-bottom:16px}
     .alert.success{background:#ecfdf5;color:#166534;border:1px solid #bbf7d0}
     .alert.danger{background:var(--danger-soft);color:var(--primary-dark);border:1px solid var(--danger-soft)}
+    .baju-orders-hero{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;margin-bottom:24px;padding:34px 36px;border:1px solid var(--line);border-left:5px solid var(--secondary);border-radius:22px;background:#fff;box-shadow:0 14px 34px rgba(15,23,42,.055)}
+    .baju-orders-hero h1{margin:0;color:var(--text);font-size:38px;line-height:1.15;font-weight:900;letter-spacing:0}
+    .baju-orders-hero p{margin:14px 0 0;color:var(--muted-2);font-size:16px;font-weight:800}
+    .clothing-dashboard-backlink{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 20px;border:1px solid #D7E3F5;border-radius:10px;background:#fff;color:var(--secondary);font-size:15px;font-weight:900;text-decoration:none;white-space:nowrap}
+    .clothing-dashboard-backlink::before{content:'\2190';margin-right:8px;color:var(--primary);font-weight:900}
+    .clothing-dashboard-backlink:hover{border-color:#AFC7EA;background:#F8FBFF}
     .order-panel{overflow:hidden;border-radius:24px;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow-sm)}
     .panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:18px 20px;border-bottom:1px solid var(--line);background:#fff}
     .panel-head h2{margin:0;font-size:18px}
@@ -132,5 +149,6 @@
     .order-actions select,.order-actions input{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
     .pagination-wrap{padding:0 18px 18px}
     .empty-state{padding:28px;text-align:center;color:#64748b;font-weight:700}
+    @media (max-width:640px){.baju-orders-hero{align-items:flex-start;flex-direction:column;padding:24px}.baju-orders-hero h1{font-size:30px}}
 </style>
 @endpush

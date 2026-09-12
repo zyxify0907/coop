@@ -20,6 +20,7 @@
         };
         $lastLogin = $home['last_login_at'] ? \Carbon\Carbon::parse($home['last_login_at'])->format('d/m/Y h:i A') : now()->format('d/m/Y h:i A');
         $isCoopStaff = $staffType === 'coop_staff';
+        $memberNumber = $staffMemberNumber ?? $user->no_anggota;
     @endphp
 
     <div class="portal-home">
@@ -27,7 +28,7 @@
             <div>
                 <span class="portal-home__kicker">{{ $isCoopStaff ? 'PORTAL PEKERJA KOPERASI' : 'PORTAL STAFF COOPBEST' }}</span>
                 <h1>Selamat Datang, {{ $user->nama }}</h1>
-                <p>{{ $user->staff_type_label }} - {{ $user->no_pekerja }}</p>
+                <p>{{ $user->staff_type_label }} - {{ $isCoopStaff ? $user->no_pekerja : ($memberNumber ?? 'Belum menjadi anggota') }}</p>
             </div>
             <div class="portal-home__identity">
                 <span>Peranan</span>
@@ -71,27 +72,35 @@
                 <header>
                     <div>
                         <span>NOTIFIKASI</span>
-                        <h2>Pusat Notifikasi</h2>
+                        <h2>Senarai Notifikasi</h2>
                     </div>
+                    <a class="portal-home__primary portal-home__primary--soft" href="{{ route('notifications.index') }}">Lihat Semua</a>
                 </header>
                 <div class="portal-home__notifications">
-                    @foreach ($home['notifications'] as $notification)
-                        <a class="portal-home__notice {{ $notification['tone'] }}" href="{{ $notification['route'] }}">
+                    @forelse ($home['messages'] as $notification)
+                        <a class="portal-home__notice {{ $notification->read_at ? 'is-read' : 'is-unread' }}" href="{{ $notification->link ?: route('notifications.index') }}">
                             <span class="portal-home__dot"></span>
-                            <strong>{{ number_format($notification['count']) }}</strong>
-                            <p>{{ $notification['label'] }}</p>
+                            <div>
+                                <strong>{{ $notification->title }}</strong>
+                                <p>{{ $notification->message ?? 'Tiada makluman tambahan.' }}</p>
+                                <small>{{ $notification->created_at?->format('d/m/Y H:i') }}</small>
+                            </div>
                         </a>
-                    @endforeach
+                    @empty
+                        <div class="portal-home__empty">
+                            <strong>Tiada notifikasi terkini.</strong>
+                            <span>Notifikasi baharu akan dipaparkan di sini.</span>
+                        </div>
+                    @endforelse
                 </div>
             </aside>
         </section>
 
-        <section class="portal-home__grid portal-home__grid--support">
-            <article class="portal-home__panel">
+        <section class="portal-home__panel">
                 <header>
                     <div>
                         <span>AKTIVITI TERKINI</span>
-                        <h2>Aktiviti Staff</h2>
+                        <h2>Aktiviti Terkini</h2>
                     </div>
                 </header>
                 <div class="portal-home__activity">
@@ -110,29 +119,6 @@
                         </div>
                     @endforelse
                 </div>
-            </article>
-
-            <aside class="portal-home__panel">
-                <header>
-                    <div>
-                        <span>AKSES PANTAS</span>
-                        <h2>Tindakan Staff</h2>
-                    </div>
-                </header>
-                <div class="portal-home__actions">
-                    @if ($isCoopStaff)
-                        <a class="portal-home__action" href="{{ route('coop-staff.attendance.index') }}"><strong>Smart Attendance</strong><span>Check in, check out dan status hari ini.</span></a>
-                        <a class="portal-home__action" href="{{ route('coop-staff.attendance.history') }}"><strong>Sejarah Kehadiran</strong><span>Lihat rekod kehadiran terdahulu.</span></a>
-                        <a class="portal-home__action" href="{{ route('coop-staff.attendance.corrections') }}"><strong>Pembetulan</strong><span>Hantar pembetulan kehadiran.</span></a>
-                        <a class="portal-home__action" href="{{ route('coop-staff.profile') }}"><strong>Profil</strong><span>Semak maklumat akaun pekerja.</span></a>
-                    @else
-                        <a class="portal-home__action" href="{{ route($portalPrefix.'.permohonan.index') }}"><strong>Permohonan</strong><span>Mohon tambah saham atau pengeluaran.</span></a>
-                        <a class="portal-home__action" href="{{ route($portalPrefix.'.shares') }}"><strong>Saham Saya</strong><span>Lihat rekod saham staff.</span></a>
-                        <a class="portal-home__action" href="{{ route($portalPrefix.'.profile') }}"><strong>Profil</strong><span>Semak maklumat akaun staff.</span></a>
-                        <a class="portal-home__action" href="{{ route('koperasi.notifications.index') }}"><strong>Notifikasi</strong><span>Lihat semua makluman koperasi.</span></a>
-                    @endif
-                </div>
-            </aside>
         </section>
     </div>
 @endsection

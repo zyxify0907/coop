@@ -8,6 +8,7 @@
 @php
     $money = fn ($value) => 'RM '.number_format((float) $value, 2);
     $isAdminBaju = ($role ?? null) === 'admin';
+    $isClothingStaff = request()->routeIs('clothing-staff.baju.*');
     $bajuRoutes = [
         'store' => $isAdminBaju ? 'admin.baju.store' : 'clothing-staff.baju.store',
         'edit' => $isAdminBaju ? 'admin.baju.edit' : 'clothing-staff.baju.edit',
@@ -29,6 +30,9 @@
         <h1>Tempahan Baju</h1>
         <p>Staff boleh urus senarai baju, stok, harga, gambar dan status tempahan.</p>
     </div>
+    @if ($isClothingStaff)
+        <a class="clothing-dashboard-backlink" href="{{ route('clothing-staff.dashboard.baju') }}">Dashboard Tempahan</a>
+    @endif
 </section>
 
 <section class="panel baju-panel" style="margin-bottom:24px">
@@ -133,6 +137,9 @@
     .baju-hero{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;margin-bottom:24px;padding:34px 36px;border:1px solid var(--line);border-left:5px solid var(--secondary);border-radius:22px;background:#fff;box-shadow:0 14px 34px rgba(15,23,42,.055)}
     .baju-hero h1{margin:0;color:var(--text);font-size:38px;line-height:1.15;font-weight:900;letter-spacing:0}
     .baju-hero p{margin:14px 0 0;color:var(--muted-2);font-size:16px;font-weight:800}
+    .clothing-dashboard-backlink{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 20px;border:1px solid #D7E3F5;border-radius:10px;background:#fff;color:var(--secondary);font-size:15px;font-weight:900;text-decoration:none;white-space:nowrap}
+    .clothing-dashboard-backlink::before{content:'\2190';margin-right:8px;color:var(--primary);font-weight:900}
+    .clothing-dashboard-backlink:hover{border-color:#AFC7EA;background:#F8FBFF}
     .baju-panel{border-radius:10px!important;overflow:hidden}
     .baju-panel:hover,
     .baju-card:hover{border-color:var(--line)!important;box-shadow:var(--shadow-sm)!important;transform:none!important}

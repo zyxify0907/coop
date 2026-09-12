@@ -6,18 +6,16 @@ use App\Models\AdminUser;
 use App\Models\Ahli;
 use App\Models\AhliImport;
 use App\Models\Announcement;
-use App\Models\AttendanceCorrection;
-use App\Models\AuditLog;
 use App\Models\CooperativeNotification;
 use App\Models\DocumentUpload;
 use App\Models\Pekerja;
 use App\Models\Permohonan;
 use App\Models\ShareTransaction;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -211,15 +209,9 @@ class AuthController extends Controller
             ->latest('id_permohonan')
             ->first();
 
-        $latestApplication = Permohonan::query()
-            ->where('id_ahli', $user->id_ahli)
-            ->latest('tarikh_permohonan')
-            ->latest('id_permohonan')
-            ->first();
+        $home = $this->studentHomeData($request, $user);
 
-        $home = $this->studentHomeData($request, $user, $latestApplication);
-
-        return view('dashboard.student', compact('role', 'user', 'memberApplication', 'latestApplication', 'home'));
+        return view('dashboard.student', compact('role', 'user', 'memberApplication', 'home'));
     }
 
     public function adminDashboard(Request $request): View|RedirectResponse
@@ -272,7 +264,93 @@ class AuthController extends Controller
             return redirect()->route('login');
         }
 
-        return view('student.profile', compact('role', 'user'));
+        $latestApplications = Permohonan::query()
+            ->where('id_ahli', $user->id_ahli)
+            ->latest('tarikh_permohonan')
+            ->latest('id_permohonan')
+            ->limit(5)
+            ->get();
+
+        $recentTransactions = Schema::hasTable('share_transactions')
+            ? ShareTransaction::query()
+                ->where('member_type', 'student')
+                ->where('member_id', $user->id_ahli)
+                ->latest('transacted_at')
+                ->latest()
+                ->limit(5)
+                ->get()
+            : collect();
+
+        $recentOrders = Schema::hasTable('tempahan')
+            ? DB::table('tempahan')
+                ->where('id_ahli', $user->id_ahli)
+                ->latest('tarikh_tempahan')
+                ->limit(5)
+                ->get()
+            : collect();
+
+        return view('student.profile', compact('role', 'user', 'latestApplications', 'recentTransactions', 'recentOrders'));
+    }
+
+    public function updateStudentProfile(Request $request): RedirectResponse
+    {
+        if ($request->session()->get('auth_role') !== 'ahli') {
+            return redirect()->route('login');
+        }
+
+        $user = Ahli::query()->find($request->session()->get('auth_id'));
+
+        if (! $user) {
+            return redirect()->route('login');
+        }
+
+        $validated = $request->validate([
+            'no_tel' => ['nullable', 'string', 'max:20'],
+            'email' => ['nullable', 'email', 'max:100', Rule::unique('ahli', 'email')->ignore($user->id_ahli, 'id_ahli')],
+        ], [
+            'email.email' => 'Format email tidak sah.',
+            'email.unique' => 'Email ini sudah digunakan oleh akaun lain.',
+            'no_tel.max' => 'No telefon terlalu panjang.',
+        ]);
+
+        $user->update([
+            'no_tel' => $validated['no_tel'] ?? null,
+            'email' => $validated['email'] ?? null,
+        ]);
+
+        return back()->with('success', 'Profil berjaya dikemaskini.');
+    }
+
+    public function updateStudentPassword(Request $request): RedirectResponse
+    {
+        if ($request->session()->get('auth_role') !== 'ahli') {
+            return redirect()->route('login');
+        }
+
+        $user = Ahli::query()->find($request->session()->get('auth_id'));
+
+        if (! $user) {
+            return redirect()->route('login');
+        }
+
+        $validated = $request->validate([
+            'current_password' => ['required', 'string'],
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
+        ], [
+            'current_password.required' => 'Sila masukkan kata laluan semasa.',
+            'password.required' => 'Sila masukkan kata laluan baharu.',
+            'password.min' => 'Kata laluan baharu mesti sekurang-kurangnya 6 aksara.',
+            'password.confirmed' => 'Pengesahan kata laluan baharu tidak sepadan.',
+        ]);
+
+        if (! $this->passwordMatches($user, $validated['current_password'])) {
+            return back()->withErrors(['current_password' => 'Kata laluan semasa tidak sah.']);
+        }
+
+        $user->password_hash = Hash::make($validated['password']);
+        $user->save();
+
+        return back()->with('success', 'Kata laluan berjaya dikemaskini.');
     }
 
     public function studentShareDashboard(Request $request): View|RedirectResponse
@@ -331,71 +409,24 @@ class AuthController extends Controller
 
     private function adminHomeData(Request $request): array
     {
-        $pendingStatuses = ['baru', 'semak', 'pending', 'dalam_semakan'];
-        $membershipPending = Permohonan::query()->where('jenis', 'anggota')->whereIn('status', $pendingStatuses)->count();
-        $sharePending = Permohonan::query()
-            ->where(function ($query): void {
-                $query->where('jenis', 'saham')
-                    ->orWhereIn('jenis', ['berhenti', 'pengeluaran', 'pindah', 'bersara']);
-            })
-            ->whereIn('status', $pendingStatuses)
-            ->count();
-        $shareAdditionPending = Permohonan::query()->where('jenis', 'saham')->whereIn('status', $pendingStatuses)->count();
-        $shareWithdrawalPending = Permohonan::query()->whereIn('jenis', ['berhenti', 'pengeluaran', 'pindah', 'bersara'])->whereIn('status', $pendingStatuses)->count();
-        $pendingApplicationIds = Permohonan::query()->whereIn('status', $pendingStatuses)->pluck('id_permohonan');
-        $paymentSlipPending = Schema::hasTable('document_uploads')
-            ? DocumentUpload::query()
-                ->where('category', 'slip_bayaran')
-                ->whereIn('documentable_id', $pendingApplicationIds)
-                ->count()
-            : 0;
-        $ordersPending = Schema::hasTable('tempahan')
-            ? DB::table('tempahan')->whereNotIn(DB::raw('LOWER(status)'), ['sudah_ambil', 'sudah ambil', 'diambil', 'siap diambil', 'selesai'])->whereNull('tarikh_ambil')->count()
-            : 0;
-        $ordersNew = Schema::hasTable('tempahan')
-            ? DB::table('tempahan')->whereIn(DB::raw('LOWER(status)'), ['baru', 'pending'])->count()
-            : 0;
-        $attendanceCorrections = Schema::hasTable('attendance_corrections')
-            ? AttendanceCorrection::query()->where('status', 'pending')->count()
-            : 0;
-        $lateToday = Schema::hasTable('attendance_records')
-            ? DB::table('attendance_records')->whereDate('attendance_date', today())->where('late_minutes', '>', 0)->count()
-            : 0;
-        $earlyLeaveToday = Schema::hasTable('attendance_records')
-            ? DB::table('attendance_records')->whereDate('attendance_date', today())->where('early_leave_minutes', '>', 0)->count()
-            : 0;
-        $missingCheckout = Schema::hasTable('attendance_records')
-            ? DB::table('attendance_records')->whereDate('attendance_date', today())->whereNotNull('check_in_time')->whereNull('check_out_time')->count()
-            : 0;
-        $attendanceIssues = $lateToday + $earlyLeaveToday + $missingCheckout;
+        $notifications = Schema::hasTable('notifications')
+            ? CooperativeNotification::query()
+                ->where('recipient_role', 'admin')
+                ->where('recipient_id', $request->session()->get('auth_id'))
+                ->latest()
+                ->limit(5)
+                ->get()
+            : collect();
 
-        $recentActivities = $this->recentAdminActivities();
         return [
             'last_login_at' => $request->session()->get('last_login_at'),
             'announcements' => Announcement::query()->orderByDesc('is_pinned')->latest()->limit(4)->get(),
-            'notifications' => [
-                ['tone' => 'blue', 'count' => $membershipPending, 'label' => 'permohonan anggota baharu menunggu semakan', 'route' => route('admin.permohonan.index', ['jenis' => 'anggota'])],
-                ['tone' => 'yellow', 'count' => $shareAdditionPending, 'label' => 'permohonan tambah saham menunggu kelulusan', 'route' => route('admin.permohonan.index', ['jenis' => 'saham'])],
-                ['tone' => 'red', 'count' => $shareWithdrawalPending, 'label' => 'permohonan pengeluaran / berhenti perlu diproses', 'route' => route('admin.permohonan.index', ['jenis' => 'berhenti'])],
-                ['tone' => 'yellow', 'count' => $paymentSlipPending, 'label' => 'slip bayaran perlu disemak', 'route' => route('admin.permohonan.index')],
-                ['tone' => 'green', 'count' => $ordersNew, 'label' => 'tempahan baju baharu diterima', 'route' => route('admin.tempahan.index')],
-                ['tone' => 'red', 'count' => $attendanceIssues, 'label' => 'rekod kehadiran bermasalah hari ini', 'route' => route('admin.attendance.records')],
-            ],
-            'recent_activities' => $recentActivities,
+            'notifications' => $notifications,
         ];
     }
 
-    private function studentHomeData(Request $request, Ahli $student, ?Permohonan $latestApplication): array
+    private function studentHomeData(Request $request, Ahli $student): array
     {
-        $share = $student->saham;
-        $totalShare = (float) optional($share)->syer + (float) optional($share)->tambahan_saham;
-        $orderCount = Schema::hasTable('tempahan')
-            ? DB::table('tempahan')->where('id_ahli', $student->id_ahli)->count()
-            : 0;
-        $pendingApplications = Permohonan::query()
-            ->where('id_ahli', $student->id_ahli)
-            ->whereIn('status', ['baru', 'semak', 'pending', 'dalam_semakan'])
-            ->count();
         $notifications = Schema::hasTable('notifications')
             ? CooperativeNotification::query()
                 ->where('recipient_role', 'ahli')
@@ -404,8 +435,8 @@ class AuthController extends Controller
                 ->limit(5)
                 ->get()
             : collect();
-
         $activities = collect();
+
         Permohonan::query()
             ->where('id_ahli', $student->id_ahli)
             ->latest('tarikh_permohonan')
@@ -413,74 +444,50 @@ class AuthController extends Controller
             ->limit(4)
             ->get()
             ->each(fn (Permohonan $application) => $activities->push([
-                'name' => 'Permohonan '.ucwords(str_replace('_', ' ', $application->jenis)),
-                'user' => ucfirst(str_replace('_', ' ', $application->status)),
+                'name' => 'Permohonan '.ucwords(str_replace('_', ' ', (string) $application->jenis)),
+                'detail' => ucfirst(str_replace('_', ' ', (string) $application->status)),
                 'time' => $application->tarikh_permohonan?->diffForHumans() ?? '-',
+                'sort_at' => $application->tarikh_permohonan,
+                'route' => route('student.permohonan.status'),
             ]));
 
-        if (Schema::hasTable('tempahan')) {
+        if (Schema::hasTable('tempahan') && Schema::hasColumn('tempahan', 'id_ahli')) {
             DB::table('tempahan')
                 ->where('id_ahli', $student->id_ahli)
                 ->latest('tarikh_tempahan')
-                ->limit(2)
+                ->limit(3)
                 ->get()
                 ->each(fn ($order) => $activities->push([
-                    'name' => 'Tempahan baju dihantar',
-                    'user' => ucfirst(str_replace('_', ' ', (string) ($order->status ?? 'baru'))),
-                    'time' => isset($order->tarikh_tempahan) ? \Carbon\Carbon::parse($order->tarikh_tempahan)->diffForHumans() : '-',
+                    'name' => 'Tempahan Baju',
+                    'detail' => ucfirst(str_replace('_', ' ', (string) ($order->status ?? 'baru'))),
+                    'time' => isset($order->tarikh_tempahan) ? CarbonImmutable::parse($order->tarikh_tempahan)->diffForHumans() : '-',
+                    'sort_at' => isset($order->tarikh_tempahan) ? CarbonImmutable::parse($order->tarikh_tempahan) : null,
+                    'route' => route('student.tempahan.index'),
                 ]));
         }
 
+        $notifications->take(3)->each(fn (CooperativeNotification $notification) => $activities->push([
+            'name' => $notification->title,
+            'detail' => 'Notifikasi',
+            'time' => $notification->created_at?->diffForHumans() ?? '-',
+            'sort_at' => $notification->created_at,
+            'route' => $notification->link ?: route('notifications.index'),
+        ]));
+
         return [
             'last_login_at' => $request->session()->get('last_login_at'),
-            'announcements' => Announcement::query()->visibleTo('ahli')->orderByDesc('is_pinned')->latest()->limit(4)->get(),
-            'notifications' => [
-                ['tone' => 'blue', 'count' => $latestApplication ? 1 : 0, 'label' => $latestApplication ? 'status permohonan terkini: '.ucfirst(str_replace('_', ' ', $latestApplication->status)) : 'tiada permohonan terkini', 'route' => route('student.permohonan.status')],
-                ['tone' => 'green', 'count' => $share ? 1 : 0, 'label' => $share ? 'jumlah saham semasa RM '.number_format($totalShare, 2) : 'rekod saham belum diwujudkan', 'route' => route('student.profile')],
-                ['tone' => 'yellow', 'count' => $pendingApplications, 'label' => 'permohonan masih menunggu semakan', 'route' => route('student.permohonan.status')],
-                ['tone' => 'blue', 'count' => $orderCount, 'label' => 'rekod tempahan baju anda', 'route' => route('student.tempahan.index')],
-            ],
+            'announcements' => Announcement::query()->visibleTo('ahli')->orderByDesc('is_pinned')->latest()->limit(2)->get(),
             'messages' => $notifications,
-            'recent_activities' => $activities->sortByDesc('time')->take(6)->values(),
+            'recent_activities' => $activities
+                ->sortByDesc(fn (array $activity) => optional($activity['sort_at'] ?? null)->getTimestamp() ?? 0)
+                ->take(6)
+                ->map(fn (array $activity) => collect($activity)->except('sort_at')->all())
+                ->values(),
+            'help' => [
+                'email' => 'koperasi@polibesut.edu.my',
+                'route' => 'mailto:koperasi@polibesut.edu.my',
+            ],
         ];
-    }
-
-    private function recentAdminActivities(): \Illuminate\Support\Collection
-    {
-        if (Schema::hasTable('audit_logs')) {
-            return AuditLog::query()
-                ->latest()
-                ->limit(6)
-                ->get()
-                ->map(fn (AuditLog $log): array => [
-                    'name' => $log->description ?: ucfirst($log->action).' '.$log->module,
-                    'user' => ucfirst($log->actor_role ?? 'Sistem').' #'.($log->actor_id ?? '-'),
-                    'time' => $log->created_at?->diffForHumans() ?? '-',
-                ]);
-        }
-
-        $applications = Permohonan::query()
-            ->latest('tarikh_permohonan')
-            ->latest('id_permohonan')
-            ->limit(3)
-            ->get()
-            ->map(fn (Permohonan $application): array => [
-                'name' => 'Permohonan '.$application->jenis.' dihantar',
-                'user' => $application->nama_pemohon,
-                'time' => $application->tarikh_permohonan?->diffForHumans() ?? '-',
-            ]);
-
-        $announcements = Announcement::query()
-            ->latest()
-            ->limit(3)
-            ->get()
-            ->map(fn (Announcement $announcement): array => [
-                'name' => 'Pengumuman baharu dicipta',
-                'user' => 'Admin',
-                'time' => $announcement->created_at?->diffForHumans() ?? '-',
-            ]);
-
-        return $applications->merge($announcements)->take(6)->values();
     }
 
     private function adminStats(): array

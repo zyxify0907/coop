@@ -11,7 +11,7 @@
     $portalLabel = $portalLabel ?? 'Student Portal';
     $identityLabel = $identityLabel ?? 'No Matrik';
     $identityValue = $identityValue ?? $user->no_matrik;
-    $memberNumber = $isStaffApplicant ? ($identityValue !== 'Belum dijana' ? $identityValue : null) : ($user->no_anggota ?? null);
+    $memberNumber = $isStaffApplicant ? (! in_array($identityValue, ['Belum dijana', 'Belum menjadi anggota'], true) ? $identityValue : null) : ($user->no_anggota ?? null);
     $programOptions = ['JTMK', 'JRKV'];
     $kelasOptions = collect(range(1, 6))
         ->flatMap(fn ($semester) => ['DIT'.$semester.'A', 'DIT'.$semester.'B', 'DDC'.$semester.'A', 'DBF'.$semester.'A'])
@@ -25,6 +25,16 @@
         'permohonan_store' => 'student.permohonan.store',
         'profile' => 'student.profile',
     ];
+    $shareDashboardRoute = match (true) {
+        $role === 'ahli' => 'student.dashboard.saham',
+        $role === 'staff' && ($user->staff_type ?? null) === 'lecturer_member' => 'lecturer-member.dashboard.saham',
+        $role === 'staff' && ($user->staff_type ?? null) === 'clothing_staff' => 'clothing-staff.dashboard.saham',
+        default => null,
+    };
+    $shareApplicationTypes = ['anggota', 'saham', 'berhenti', 'pengeluaran', 'pindah', 'bersara'];
+    $showShareDashboardLink = in_array($activeType, $shareApplicationTypes, true) && $shareDashboardRoute !== null;
+    $dashboardRoute = $showShareDashboardLink ? $shareDashboardRoute : $portalRoutes['dashboard'];
+    $dashboardLabel = $showShareDashboardLink ? 'Dashboard Saham' : 'Dashboard';
 @endphp
 
 @section('content')
@@ -34,9 +44,10 @@
             <p>{{ $typeConfig['description'] }}</p>
         </div>
         <div class="student-actions">
-            <a class="link-button secondary" href="{{ route($portalRoutes['dashboard']) }}">Dashboard</a>
-            @if ($role === 'ahli')
-                <a class="link-button secondary" href="{{ route($portalRoutes['profile']) }}">Profil</a>
+            @if ($showShareDashboardLink)
+                <a class="student-share-backlink" href="{{ route($shareDashboardRoute) }}">Dashboard Saham</a>
+            @else
+                <a class="link-button secondary" href="{{ route($dashboardRoute) }}">{{ $dashboardLabel }}</a>
             @endif
         </div>
     </section>
@@ -56,14 +67,34 @@
                     href="{{ route($portalRoutes['permohonan_index'], ['jenis' => $key]) }}"
                     class="application-menu__item {{ $activeType === $key ? 'active' : '' }}"
                 >
-                    <strong>{{ $type['label'] }}</strong>
-                    <span>{{ $type['description'] }}</span>
+                    <span class="application-menu__icon" aria-hidden="true">
+                        @if ($key === 'anggota')
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        @elseif ($key === 'saham')
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.66 3.58 3 8 3s8-1.34 8-3V5"/><path d="M4 11v6c0 1.66 3.58 3 8 3s8-1.34 8-3v-6"/></svg>
+                        @else
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18l4-4-4-4"/><path d="M8 14h8"/></svg>
+                        @endif
+                    </span>
+                    <span class="application-menu__copy">
+                        <strong>{{ $type['label'] }}</strong>
+                        <span>{{ $type['description'] }}</span>
+                    </span>
+                    <span class="application-menu__chevron" aria-hidden="true">›</span>
                 </a>
             @endforeach
         </nav>
     </section>
 
-    <div class="application-shell">
+    <div class="application-shell {{ $activeType === 'anggota' ? 'membership-form-layout' : '' }}">
+        @if ($activeType === 'anggota')
+            <aside class="membership-section-nav" aria-label="Navigasi seksyen permohonan anggota">
+                <a class="active" href="#membership-applicant"><span>1</span>Maklumat Pemohon</a>
+                <a href="#membership-account"><span>2</span>Akaun dan Kadar Permohonan Keanggotaan</a>
+                <a href="#membership-nominee"><span>3</span>Pelantikan Penama / Waris</a>
+            </aside>
+        @endif
+
         <section class="panel panel-pad application-form">
             <div class="application-form__header">
                 <div>
@@ -77,7 +108,7 @@
                 @csrf
 
                 @if ($activeType === 'anggota')
-                    <div class="section-block field-block--full">
+                    <div class="section-block field-block--full" id="membership-applicant">
                         <div class="section-block__head">
                             <span class="section-block__tag">A</span>
                             <div>
@@ -209,7 +240,7 @@
                         </div>
                     </div>
                 @elseif ($activeType === 'saham')
-                    <div class="section-block field-block--full">
+                    <div class="section-block field-block--full" id="membership-account">
                         <div class="section-block__head">
                             <span class="section-block__tag">I</span>
                             <div>
@@ -231,8 +262,8 @@
                             @endunless
 
                             <div class="field-block">
-                                <label>No Anggota</label>
-                                <input type="text" value="{{ $memberNumber ?: 'Belum dijana' }}" disabled>
+                                <label>{{ $isStaffApplicant ? 'No Anggota Staff' : 'No Anggota Pelajar' }}</label>
+                                <input type="text" value="{{ $memberNumber ?: ($isStaffApplicant ? 'Belum menjadi anggota' : 'Belum dijana') }}" disabled>
                             </div>
 
                             <div class="field-block">
@@ -252,7 +283,7 @@
                         </div>
                     </div>
                 @elseif ($activeType === 'berhenti')
-                    <div class="section-block field-block--full">
+                    <div class="section-block field-block--full" id="membership-nominee">
                         <div class="section-block__head">
                             <span class="section-block__tag">I</span>
                             <div>
@@ -274,7 +305,7 @@
                             @endunless
 
                             <div class="field-block">
-                                <label for="no_anggota">No Anggota</label>
+                                <label for="no_anggota">{{ $isStaffApplicant ? 'No Anggota Staff' : 'No Anggota Pelajar' }}</label>
                                 <input id="no_anggota" name="no_anggota" type="text" value="{{ old('no_anggota', $memberNumber) }}" readonly>
                             </div>
 
@@ -638,28 +669,18 @@
                             <span class="section-block__tag">VI</span>
                             <div>
                                 <h3>Penerimaan Anggota</h3>
-                                <p>Pilih kaedah bayaran untuk penerimaan baki saham.</p>
+                                <p>Pilih kaedah penyelesaian yang akan diuruskan oleh pihak koperasi.</p>
                             </div>
                         </div>
                         <div class="section-block__grid">
-                            <div class="field-block">
+                            <div class="field-block field-block--full">
                                 <label for="kaedah_terima_bayaran">Bayaran Diterima Melalui</label>
                                 <select id="kaedah_terima_bayaran" name="kaedah_terima_bayaran" required>
                                     <option value="">Pilih kaedah</option>
-                                    @foreach (['Bayaran Atas Talian', 'Tunai'] as $option)
+                                    @foreach (['Tunai di Kaunter Koperasi', 'Bayaran Manual Koperasi'] as $option)
                                         <option value="{{ $option }}" @selected(old('kaedah_terima_bayaran') === $option)>{{ $option }}</option>
                                     @endforeach
                                 </select>
-                            </div>
-
-                            <div class="field-block">
-                                <label for="nama_bank">Nama Bank</label>
-                                <input id="nama_bank" name="nama_bank" type="text" value="{{ old('nama_bank') }}">
-                            </div>
-
-                            <div class="field-block field-block--full">
-                                <label for="no_akaun_bank">No Akaun Bank</label>
-                                <input id="no_akaun_bank" name="no_akaun_bank" type="text" value="{{ old('no_akaun_bank') }}">
                             </div>
                         </div>
                     </div>
@@ -939,12 +960,18 @@
                 grid-template-columns: 1fr;
             }
         }
-        .student-hero{margin-bottom:32px!important;border:1px solid var(--line)!important;border-left:5px solid var(--secondary)!important;border-radius:18px!important;background:#fff!important;color:var(--text)!important;box-shadow:var(--shadow-sm);padding:28px!important}
+        .student-hero{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:20px!important;margin-bottom:32px!important;border:1px solid var(--line)!important;border-left:5px solid var(--secondary)!important;border-radius:18px!important;background:#fff!important;color:var(--text)!important;box-shadow:var(--shadow-sm);padding:28px!important}
+        .student-hero>div:first-child{min-width:0!important}
+        .student-hero .student-actions{flex:0 0 auto!important;margin-left:auto!important;display:flex!important;align-items:center!important;justify-content:flex-end!important}
         .student-hero h2{color:var(--text)!important;font-size:32px!important;letter-spacing:0!important}
         .student-hero p{color:var(--muted-2)!important;font-weight:800!important}
         .student-hero .link-button{min-height:44px!important;padding:0 18px!important;border-radius:12px!important;background:var(--secondary)!important;border:1px solid var(--secondary)!important;color:#fff!important;box-shadow:none!important;text-decoration:none!important}
         .student-hero .link-button.secondary{background:var(--secondary-soft)!important;color:var(--secondary)!important;border-color:var(--secondary-soft)!important}
         .student-hero .link-button:hover{background:var(--secondary-hover)!important;color:#fff!important;transform:translateY(-1px)}
+        .student-share-backlink{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 20px;border:1px solid #D7E3F5;border-radius:10px;background:#fff;color:var(--secondary);font-size:15px;font-weight:900;text-decoration:none;white-space:nowrap}
+        .student-share-backlink::before{content:'\2190';margin-right:8px;color:var(--primary);font-weight:900}
+        .student-share-backlink:hover{border-color:#AFC7EA;background:#F8FBFF}
+        @media (max-width:720px){.student-hero{align-items:flex-start!important;flex-direction:column!important}.student-hero .student-actions{width:100%!important;margin-left:0!important;justify-content:flex-start!important}}
         .application-type-panel{
             border-radius:0!important;
             overflow:hidden!important;
@@ -1000,12 +1027,468 @@
         .application-menu,
         .application-grid,
         .section-block__grid{min-width:0!important}
+
+        html{scroll-behavior:smooth}
+        .content:has(.application-shell){background:#F5F8FC}
+        .content > .student-hero,
+        .content > .application-type-panel,
+        .content > .application-shell{
+            width:min(100% - 48px,1760px)!important;
+            max-width:1760px!important;
+            margin-inline:auto!important
+        }
+        .student-hero{
+            min-height:112px!important;
+            margin-bottom:18px!important;
+            padding:24px 28px!important;
+            border:1px solid #D8E2EF!important;
+            border-left:5px solid #082F59!important;
+            border-radius:12px!important;
+            box-shadow:0 8px 22px rgba(8,47,89,.035)!important
+        }
+        .student-hero::before{
+            content:"";
+            display:block;
+            width:34px;
+            height:4px;
+            margin-right:-34px;
+            background:#ED1C2E
+        }
+        .student-hero h2{
+            margin:0!important;
+            color:#071A34!important;
+            font-size:clamp(24px,1.8vw,31px)!important;
+            line-height:1.15!important;
+            font-weight:900!important
+        }
+        .student-hero p{
+            margin:8px 0 0!important;
+            color:#31517D!important;
+            font-size:15px!important;
+            font-weight:700!important
+        }
+        .student-share-backlink{
+            min-height:44px!important;
+            padding:0 18px!important;
+            border-color:#BFD7FF!important;
+            border-radius:8px!important;
+            color:#174EA6!important;
+            font-size:15px!important
+        }
+        .application-type-panel{
+            margin-bottom:18px!important;
+            padding:22px 24px!important;
+            border:1px solid #D8E2EF!important;
+            border-radius:12px!important;
+            box-shadow:0 8px 22px rgba(8,47,89,.03)!important
+        }
+        .application-type-head{
+            margin:0 0 16px!important;
+            padding:0!important;
+            border:0!important
+        }
+        .application-type-head h2{
+            color:#071A34!important;
+            font-size:24px!important;
+            line-height:1.2!important;
+            font-weight:900!important
+        }
+        .application-type-head p{
+            color:#31517D!important;
+            font-weight:700!important
+        }
+        .application-menu{
+            grid-template-columns:repeat(3,minmax(0,1fr))!important;
+            gap:16px!important
+        }
+        .application-menu__item{
+            position:relative!important;
+            display:grid!important;
+            grid-template-columns:54px minmax(0,1fr) auto!important;
+            align-items:center!important;
+            gap:16px!important;
+            min-height:104px!important;
+            padding:18px 20px!important;
+            border:1px solid #D8E2EF!important;
+            border-radius:10px!important;
+            background:#fff!important;
+            box-shadow:none!important;
+            overflow:hidden!important;
+            color:#082F59!important
+        }
+        .application-menu__item::before{
+            content:"";
+            position:absolute;
+            top:0;
+            left:0;
+            right:0;
+            height:0;
+            background:#ED1C2E
+        }
+        .application-menu__item.active{
+            border-color:#1D5FD1!important;
+            background:#F2F7FF!important;
+            box-shadow:none!important
+        }
+        .application-menu__item.active::before{height:4px}
+        .application-menu__item:hover{
+            border-color:#082F59!important;
+            background:#F7FAFF!important;
+            transform:none!important
+        }
+        .application-menu__icon{
+            display:grid!important;
+            place-items:center!important;
+            width:44px!important;
+            height:44px!important;
+            color:#082F59!important
+        }
+        .application-menu__icon svg{width:38px;height:38px}
+        .application-menu__copy{display:grid!important;gap:5px!important;min-width:0!important}
+        .application-menu__copy strong{
+            margin:0!important;
+            color:#061E5C!important;
+            font-size:16px!important;
+            font-weight:900!important;
+            line-height:1.25!important
+        }
+        .application-menu__copy span{
+            color:#31517D!important;
+            font-size:13px!important;
+            line-height:1.45!important;
+            font-weight:650!important
+        }
+        .application-menu__chevron{
+            display:inline-flex!important;
+            align-items:center!important;
+            justify-content:center!important;
+            color:#082F59!important;
+            font-size:22px!important;
+            font-weight:800!important
+        }
+        .membership-form-layout{
+            display:grid!important;
+            grid-template-columns:250px minmax(0,1fr)!important;
+            gap:24px!important;
+            align-items:start!important
+        }
+        .membership-section-nav{
+            position:sticky;
+            top:112px;
+            display:grid;
+            gap:10px;
+            padding:12px;
+            border:1px solid #D8E2EF;
+            border-radius:12px;
+            background:#fff;
+            box-shadow:0 8px 22px rgba(8,47,89,.025)
+        }
+        .membership-section-nav a{
+            display:grid;
+            grid-template-columns:36px minmax(0,1fr);
+            align-items:center;
+            gap:12px;
+            min-height:58px;
+            padding:10px 12px;
+            border:1px solid #D8E2EF;
+            border-radius:10px;
+            background:#fff;
+            color:#082F59;
+            font-size:14px;
+            font-weight:850;
+            line-height:1.25;
+            text-decoration:none
+        }
+        .membership-section-nav a.active,
+        .membership-section-nav a:hover{
+            border-color:#BFD7FF;
+            background:#F2F7FF
+        }
+        .membership-section-nav span{
+            display:grid;
+            place-items:center;
+            width:34px;
+            height:34px;
+            border-radius:999px;
+            background:#fff;
+            border:1px solid #BFD7FF;
+            color:#082F59;
+            font-weight:900
+        }
+        .membership-section-nav a.active span{
+            background:#082F59;
+            border-color:#082F59;
+            color:#fff
+        }
+        .application-form{
+            padding:0!important;
+            border:0!important;
+            border-radius:0!important;
+            background:transparent!important;
+            box-shadow:none!important;
+            overflow:visible!important
+        }
+        .membership-form-layout .application-form__header{
+            display:none!important
+        }
+        .application-grid{
+            display:grid!important;
+            grid-template-columns:repeat(2,minmax(0,1fr))!important;
+            gap:18px 20px!important
+        }
+        .section-block{
+            scroll-margin-top:118px;
+            padding:24px!important;
+            border:1px solid #D8E2EF!important;
+            border-radius:12px!important;
+            background:#fff!important;
+            box-shadow:0 8px 22px rgba(8,47,89,.025)!important
+        }
+        .section-block__head{
+            display:flex!important;
+            align-items:flex-start!important;
+            gap:14px!important;
+            margin:0 0 18px!important;
+            padding:0 0 14px!important;
+            border-bottom:1px solid #D8E2EF!important
+        }
+        .section-block__tag{
+            width:36px!important;
+            height:36px!important;
+            border-radius:8px!important;
+            background:#082F59!important;
+            color:#fff!important;
+            font-size:16px!important;
+            font-weight:900!important
+        }
+        .section-block__head h3{
+            margin:0!important;
+            color:#061E5C!important;
+            font-size:20px!important;
+            line-height:1.2!important;
+            font-weight:900!important
+        }
+        .section-block__head p{
+            margin:5px 0 0!important;
+            color:#5F7189!important;
+            font-size:13px!important;
+            font-weight:650!important
+        }
+        .section-block__grid{
+            grid-template-columns:repeat(2,minmax(0,1fr))!important;
+            gap:16px 20px!important
+        }
+        .field-block{gap:7px!important}
+        .field-block label{
+            color:#082F59!important;
+            font-size:12px!important;
+            font-weight:900!important;
+            line-height:1.25!important
+        }
+        .field-block:has(:required) > label::after{
+            content:" *";
+            color:#C62828;
+            font-weight:900
+        }
+        .field-block input,
+        .field-block select,
+        .field-block textarea{
+            min-height:46px!important;
+            border:1px solid #C9D6E6!important;
+            border-radius:8px!important;
+            background:#fff!important;
+            color:#071A34!important;
+            padding:10px 12px!important;
+            font:inherit!important;
+            font-size:14px!important;
+            font-weight:650!important;
+            outline:0!important
+        }
+        .field-block textarea{min-height:82px!important}
+        .field-block input:focus,
+        .field-block select:focus,
+        .field-block textarea:focus{
+            border-color:#1D5FD1!important;
+            box-shadow:0 0 0 3px rgba(29,95,209,.14)!important
+        }
+        .field-block input:disabled,
+        .field-block select:disabled,
+        .field-block input[readonly],
+        .field-block textarea[readonly]{
+            background:#F3F6FA!important;
+            color:#334155!important
+        }
+        .money-input{
+            min-height:46px!important;
+            border:1px solid #C9D6E6!important;
+            border-radius:8px!important;
+            background:#F3F6FA!important
+        }
+        .money-input span{
+            min-width:54px!important;
+            border-right:1px solid #C9D6E6!important;
+            background:#EAF2FF!important;
+            color:#082F59!important
+        }
+        .money-input input{background:#F3F6FA!important}
+        .field-block:has(input[type="file"]){
+            padding:14px!important;
+            border:1px dashed #B8C8DD!important;
+            border-radius:10px!important;
+            background:#FBFDFF!important
+        }
+        .field-block input[type="file"]{
+            border:0!important;
+            min-height:38px!important;
+            padding:0!important;
+            background:transparent!important;
+            font-size:13px!important
+        }
+        .field-block input[type="file"]::file-selector-button{
+            min-height:36px;
+            margin-right:12px;
+            border:1px solid #BFD7FF;
+            border-radius:7px;
+            background:#fff;
+            color:#1D5FD1;
+            font-weight:900;
+            cursor:pointer
+        }
+        .field-hint{
+            color:#5F7189!important;
+            font-size:12px!important;
+            font-weight:700!important
+        }
+        .field-error{
+            color:#C62828!important;
+            font-size:12px!important;
+            font-weight:800!important
+        }
+        .subsection-title{
+            margin:4px 0 0!important;
+            padding:12px 0 0!important;
+            border-top:1px solid #D8E2EF!important;
+            color:#082F59!important;
+            font-size:15px!important;
+            font-weight:900!important
+        }
+        .consent-box{
+            display:flex!important;
+            align-items:flex-start!important;
+            gap:12px!important;
+            padding:14px 16px!important;
+            border:1px solid #D8E2EF!important;
+            border-radius:10px!important;
+            background:#FBFDFF!important;
+            color:#253B57!important;
+            font-size:13px!important;
+            font-weight:650!important;
+            line-height:1.5!important
+        }
+        .consent-box input{
+            width:18px!important;
+            height:18px!important;
+            margin-top:2px!important;
+            accent-color:#082F59
+        }
+        .application-grid > .field-block:last-child{
+            display:flex!important;
+            justify-content:flex-end!important;
+            padding-top:2px!important
+        }
+        .application-grid > .field-block:last-child .button{
+            min-height:48px!important;
+            min-width:210px!important;
+            border:1px solid #ED1C2E!important;
+            border-radius:8px!important;
+            background:#ED1C2E!important;
+            color:#fff!important;
+            font-size:15px!important;
+            font-weight:900!important;
+            box-shadow:none!important
+        }
+        .application-grid > .field-block:last-child .button:hover{
+            background:#C62828!important;
+            border-color:#C62828!important
+        }
+        @media (max-width:1000px){
+            .membership-form-layout{grid-template-columns:1fr!important}
+            .membership-section-nav{
+                position:relative;
+                top:auto;
+                grid-template-columns:repeat(3,minmax(220px,1fr));
+                overflow-x:auto
+            }
+            .application-menu{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+        }
+        @media (max-width:720px){
+            .content > .student-hero,
+            .content > .application-type-panel,
+            .content > .application-shell{width:100%!important}
+            .student-hero{align-items:flex-start!important;min-height:0!important;padding:20px!important}
+            .application-menu,
+            .application-grid,
+            .section-block__grid{grid-template-columns:1fr!important}
+            .application-menu__item{grid-template-columns:44px minmax(0,1fr) auto!important;min-height:86px!important;padding:14px!important}
+            .membership-section-nav{grid-template-columns:repeat(3,220px)}
+            .application-grid > .field-block:last-child,
+            .application-grid > .field-block:last-child .button{width:100%!important}
+        }
     </style>
 @endpush
 
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            const membershipForm = document.querySelector('.membership-form-layout form');
+            const sectionLinks = Array.from(document.querySelectorAll('.membership-section-nav a'));
+            const sections = sectionLinks
+                .map((link) => document.querySelector(link.getAttribute('href')))
+                .filter(Boolean);
+
+            sectionLinks.forEach((link) => {
+                link.addEventListener('click', () => {
+                    sectionLinks.forEach((item) => item.classList.remove('active'));
+                    link.classList.add('active');
+                });
+            });
+
+            if ('IntersectionObserver' in window && sections.length) {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach((entry) => {
+                        if (!entry.isIntersecting) {
+                            return;
+                        }
+
+                        const activeLink = sectionLinks.find((link) => link.getAttribute('href') === `#${entry.target.id}`);
+
+                        if (activeLink) {
+                            sectionLinks.forEach((item) => item.classList.remove('active'));
+                            activeLink.classList.add('active');
+                        }
+                    });
+                }, { rootMargin: '-120px 0px -60% 0px', threshold: 0.01 });
+
+                sections.forEach((section) => observer.observe(section));
+            }
+
+            if (membershipForm) {
+                membershipForm.addEventListener('invalid', (event) => {
+                    event.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    event.target.focus({ preventScroll: true });
+                }, true);
+
+                membershipForm.addEventListener('submit', () => {
+                    const submitButton = membershipForm.querySelector('button[type="submit"]');
+
+                    if (submitButton) {
+                        submitButton.disabled = true;
+                        submitButton.dataset.originalText = submitButton.textContent;
+                        submitButton.textContent = 'Menghantar...';
+                    }
+                });
+            }
+
             const typeInputs = Array.from(document.querySelectorAll('[data-withdrawal-type]'));
             const documentOptions = Array.from(document.querySelectorAll('[data-document-types]'));
 

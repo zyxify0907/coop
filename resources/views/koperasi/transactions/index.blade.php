@@ -21,6 +21,12 @@
             'CREDIT' => 'Masuk',
             'DEBIT' => 'Keluar',
         ];
+        $shareDashboardRoute = match (true) {
+            ($role ?? null) === 'ahli' => 'student.dashboard.saham',
+            ($role ?? null) === 'staff' && ($user->staff_type ?? null) === 'lecturer_member' => 'lecturer-member.dashboard.saham',
+            ($role ?? null) === 'staff' && ($user->staff_type ?? null) === 'clothing_staff' => 'clothing-staff.dashboard.saham',
+            default => null,
+        };
     @endphp
 
     <div class="coop-wrap transaction-page">
@@ -30,9 +36,10 @@
                 <h1>Transaksi Saham</h1>
                 <p>Setiap kali saham bertambah atau berkurang, sistem simpan rekod di sini supaya baki boleh disemak semula.</p>
             </div>
-            <div class="transaction-legend">
-                <span><strong class="dot dot--credit"></strong> Masuk = saham bertambah</span>
-                <span><strong class="dot dot--debit"></strong> Keluar = saham berkurang</span>
+            <div class="transaction-hero__side">
+                @if ($shareDashboardRoute)
+                    <a class="student-share-backlink" href="{{ route($shareDashboardRoute) }}">Dashboard Saham</a>
+                @endif
             </div>
         </section>
 
@@ -40,14 +47,14 @@
             <div class="transaction-panel__head">
                 <div>
                     <h2>Senarai Transaksi</h2>
-                    <p>Cari nama ahli, no matrik, no pekerja atau IC untuk semak senarai transaksi saham.</p>
+                    <p>Cari nama ahli, no matrik, no anggota staff atau IC untuk semak senarai transaksi saham.</p>
                 </div>
             </div>
 
             <form class="transaction-filter" method="GET" action="{{ route('koperasi.transactions.index') }}">
                 <div class="field">
                     <label for="search">Cari Ahli</label>
-                    <input id="search" name="search" type="search" value="{{ $filters['search'] ?? '' }}" placeholder="Nama, no matrik, no pekerja atau IC">
+                    <input id="search" name="search" type="search" value="{{ $filters['search'] ?? '' }}" placeholder="Nama, no matrik, no anggota staff atau IC">
                 </div>
                 <div class="field">
                     <label for="type">Jenis Transaksi</label>
@@ -91,7 +98,7 @@
                                 $member = $transaction->member_type === 'staff' ? $transaction->staff : $transaction->student;
                                 $memberName = $member->nama ?? 'Ahli tidak dijumpai';
                                 $memberNumber = $transaction->member_type === 'staff'
-                                    ? ($member->no_pekerja ?? 'Staff #'.$transaction->member_id)
+                                    ? ($member->no_anggota ?? 'Staff #'.$transaction->member_id)
                                     : ($member->no_matrik ?? 'Pelajar #'.$transaction->member_id);
                                 $memberMeta = $transaction->member_type === 'staff' ? 'Staff' : 'Pelajar';
                                 $isCredit = $transaction->direction === 'CREDIT';
@@ -141,6 +148,34 @@
             gap: 22px;
         }
 
+        .student-share-backlink {
+            min-height: 46px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px;
+            border: 1px solid #D7E3F5;
+            border-radius: 10px;
+            background: #fff;
+            color: var(--secondary);
+            font-size: 15px;
+            font-weight: 900;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .student-share-backlink::before {
+            content: '\2190';
+            margin-right: 8px;
+            color: var(--primary);
+            font-weight: 900;
+        }
+
+        .student-share-backlink:hover {
+            border-color: #AFC7EA;
+            background: #F8FBFF;
+        }
+
         .transaction-hero {
             display: flex;
             align-items: center;
@@ -148,38 +183,10 @@
             gap: 20px;
         }
 
-        .transaction-legend {
+        .transaction-hero__side {
             display: grid;
+            justify-items: end;
             gap: 10px;
-            min-width: 230px;
-            padding: 12px 14px;
-            border: 1px solid var(--line);
-            border-radius: 10px;
-            background: var(--soft);
-            color: var(--muted);
-            font-size: 13px;
-            font-weight: 800;
-        }
-
-        .transaction-legend span {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-        }
-
-        .dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 999px;
-            display: inline-flex;
-        }
-
-        .dot--credit {
-            background: var(--success);
-        }
-
-        .dot--debit {
-            background: var(--danger);
         }
 
         .transaction-panel {
@@ -358,8 +365,9 @@
                 flex-direction: column;
             }
 
-            .transaction-legend {
+            .transaction-hero__side {
                 width: 100%;
+                justify-items: stretch;
             }
 
             .transaction-filter {

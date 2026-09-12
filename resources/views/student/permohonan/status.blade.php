@@ -1,17 +1,37 @@
 @extends('layouts.app')
 
-@section('title', 'Semak Status & Slip')
-@section('page-title', 'Semak Status & Slip')
+@section('title', 'Semak Permohonan')
+@section('page-title', 'Semak Permohonan')
 @section('page-subtitle', 'Semak status permohonan dan dokumen yang telah dihantar.')
 
 @php
     $portalLabel = $portalLabel ?? ($role === 'staff' ? 'STAFF PORTAL' : 'STUDENT PORTAL');
-    $createRoute = $createRoute ?? 'student.permohonan.index';
-    $canCreateApplication = filled($createRoute) && \Illuminate\Support\Facades\Route::has($createRoute);
+    $shareDashboardRoute = match (true) {
+        ($role ?? null) === 'ahli' => 'student.dashboard.saham',
+        ($role ?? null) === 'staff' && ($user->staff_type ?? null) === 'lecturer_member' => 'lecturer-member.dashboard.saham',
+        ($role ?? null) === 'staff' && ($user->staff_type ?? null) === 'clothing_staff' => 'clothing-staff.dashboard.saham',
+        default => null,
+    };
     $applicationLabels = [
         'anggota' => 'Permohonan Anggota',
         'saham' => 'Penambahan Saham',
         'berhenti' => 'Pengeluaran / Berhenti',
+    ];
+    $statusLabels = [
+        'baru' => 'Baharu',
+        'semak' => 'Sedang Disemak',
+        'pending' => 'Sedang Disemak',
+        'dalam_semakan' => 'Sedang Disemak',
+        'diluluskan' => 'Diluluskan',
+        'ditolak' => 'Ditolak',
+    ];
+    $statusDescriptions = [
+        'baru' => 'Permohonan telah dihantar dan menunggu semakan.',
+        'semak' => 'Permohonan sedang disemak oleh pihak koperasi.',
+        'pending' => 'Permohonan sedang disemak oleh pihak koperasi.',
+        'dalam_semakan' => 'Permohonan sedang disemak oleh pihak koperasi.',
+        'diluluskan' => 'Permohonan telah diluluskan.',
+        'ditolak' => 'Permohonan tidak diluluskan. Sila rujuk catatan admin.',
     ];
     $documentLabels = [
         'salinan_ic' => 'Salinan IC',
@@ -27,12 +47,14 @@
         <section class="coop-hero status-hero">
             <div>
                 <span class="coop-kicker">{{ $portalLabel }}</span>
-                <h1>Semak Status & Slip</h1>
+                <h1>Semak Permohonan</h1>
                 <p>Rekod permohonan dan dokumen yang telah anda hantar.</p>
             </div>
-            @if ($canCreateApplication)
-                <a class="link-button secondary" href="{{ route($createRoute) }}">Permohonan Baharu</a>
-            @endif
+            <div class="student-actions">
+                @if ($shareDashboardRoute)
+                    <a class="student-share-backlink" href="{{ route($shareDashboardRoute) }}">Dashboard Saham</a>
+                @endif
+            </div>
         </section>
 
         <section class="status-summary" aria-label="Ringkasan permohonan">
@@ -51,21 +73,24 @@
             <div class="status-panel__head">
                 <div>
                     <span class="status-panel__eyebrow">PERMOHONAN</span>
-                    <h2>Status Permohonan</h2>
-                    <p>Semak keputusan dan catatan daripada admin.</p>
+                    <h2>Status Permohonan Saham</h2>
+                    <p>Semak tahap permohonan, maksud status dan catatan daripada admin.</p>
                 </div>
             </div>
             <div class="status-table-wrap">
                 <table class="status-table">
                     <thead>
-                        <tr><th>Permohonan</th><th>Tarikh</th><th>Status</th><th>Catatan Admin</th></tr>
+                        <tr><th>Permohonan</th><th>Tarikh Hantar</th><th>Status Semasa</th><th>Catatan Admin</th></tr>
                     </thead>
                     <tbody>
                         @forelse ($applications as $application)
                             <tr>
                                 <td><strong>#{{ $application->id_permohonan }}</strong><span>{{ $applicationLabels[$application->jenis] ?? ucfirst($application->jenis) }}</span></td>
                                 <td>{{ optional($application->tarikh_permohonan)->format('d/m/Y') ?? '-' }}</td>
-                                <td><span class="status-pill status-pill--{{ $application->status }}">{{ str_replace('_', ' ', ucfirst($application->status)) }}</span></td>
+                                <td>
+                                    <span class="status-pill status-pill--{{ $application->status }}">{{ $statusLabels[$application->status] ?? ucwords(str_replace('_', ' ', $application->status)) }}</span>
+                                    <small class="status-explain">{{ $statusDescriptions[$application->status] ?? 'Sila semak catatan admin untuk maklumat lanjut.' }}</small>
+                                </td>
                                 <td>{{ $application->catatan_admin ?: 'Belum ada catatan admin.' }}</td>
                             </tr>
                         @empty
@@ -120,6 +145,9 @@
 @push('styles')
 <style>
     .status-page { display: grid; gap: 20px; }
+    .student-share-backlink{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 20px;border:1px solid #D7E3F5;border-radius:10px;background:#fff;color:var(--secondary);font-size:15px;font-weight:900;text-decoration:none;white-space:nowrap}
+    .student-share-backlink::before{content:'\2190';margin-right:8px;color:var(--primary);font-weight:900}
+    .student-share-backlink:hover{border-color:#AFC7EA;background:#F8FBFF}
     .status-hero { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 26px 28px; border-left: 5px solid var(--primary); }
     .status-hero h1 { margin: 5px 0; font-size: 28px; }
     .status-hero p, .status-panel__head p { margin: 5px 0 0; color: var(--muted); }
@@ -139,6 +167,8 @@
     .status-table tbody tr:hover { background: #f8fbff; }
     .status-table td strong, .status-table td span { display: block; }
     .status-table td span { margin-top: 4px; color: var(--muted); font-size: 12px; }
+    .status-table td .status-pill { display: inline-flex; margin-top: 0; color: inherit; }
+    .status-explain { display: block; max-width: 280px; margin-top: 7px; color: var(--muted); font-size: 12px; font-weight: 700; line-height: 1.45; }
     .status-panel__footer { padding: 14px 20px; background: #fff; }
     .status-empty { padding: 28px !important; color: var(--muted); text-align: center; }
     .status-actions { display: flex; gap: 8px; }

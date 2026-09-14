@@ -14,7 +14,19 @@ class EnsureAttendanceAccess
         $role = $request->session()->get('auth_role');
 
         if ($area === 'admin') {
-            abort_unless($role === 'admin', 403, 'Smart Attendance hanya untuk admin.');
+            if ($role === 'admin') {
+                return $next($request);
+            }
+
+            $manager = $role === 'staff'
+                ? Pekerja::query()
+                    ->whereKey($request->session()->get('auth_id'))
+                    ->where('staff_type', Pekerja::COOP_MANAGER_STAFF_TYPE)
+                    ->where('status_aktif', true)
+                    ->first()
+                : null;
+
+            abort_unless($manager, 403, 'Smart Attendance hanya untuk Admin atau Staff Mengurus Pekerja Koperasi.');
 
             return $next($request);
         }

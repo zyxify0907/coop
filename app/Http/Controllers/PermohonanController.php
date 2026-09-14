@@ -32,7 +32,7 @@ class PermohonanController extends Controller
         if ($authRole === 'staff') {
             $user = Pekerja::query()->with('sahamStaff')->find($request->session()->get('auth_id'));
 
-            if (! $user || ! in_array($user->staff_type, ['lecturer_member', 'coop_staff', 'clothing_staff'], true)) {
+            if (! $user || ! in_array($user->staff_type, Pekerja::STAFF_TYPES, true)) {
                 return redirect()->route('login');
             }
 
@@ -59,8 +59,8 @@ class PermohonanController extends Controller
                 'types' => $types,
                 'activeType' => $activeType,
                 'portalLabel' => 'Staff Portal',
-                'identityLabel' => 'No Anggota',
-                'identityValue' => $staffMemberNumber ?? 'Belum dijana',
+                'identityLabel' => 'No Anggota Staff',
+                'identityValue' => $staffMemberNumber ?? 'Belum menjadi anggota',
                 'currentShare' => (float) optional($user->sahamStaff)->syer + (float) optional($user->sahamStaff)->tambahan_saham,
                 'portalRoutes' => $portalRoutes,
                 'applications' => Permohonan::query()
@@ -114,7 +114,7 @@ class PermohonanController extends Controller
         if ($authRole === 'staff') {
             $user = Pekerja::query()->find($request->session()->get('auth_id'));
 
-            if (! $user || ! in_array($user->staff_type, ['lecturer_member', 'coop_staff', 'clothing_staff'], true)) {
+            if (! $user || ! in_array($user->staff_type, Pekerja::STAFF_TYPES, true)) {
                 return redirect()->route('login');
             }
 
@@ -122,7 +122,7 @@ class PermohonanController extends Controller
                 'role' => 'staff',
                 'user' => $user,
                 'portalLabel' => 'Staff Portal',
-                'createRoute' => in_array($user->staff_type, ['lecturer_member', 'clothing_staff'], true)
+                'createRoute' => $user->isEligibleForShares()
                     ? $this->staffPortalRoutes($user->staff_type)['permohonan_index']
                     : null,
                 'applications' => Permohonan::query()
@@ -177,7 +177,7 @@ class PermohonanController extends Controller
             ? Pekerja::query()->with('sahamStaff')->findOrFail($request->session()->get('auth_id'))
             : Ahli::query()->with('saham')->findOrFail($request->session()->get('auth_id'));
 
-        if ($authRole === 'staff' && ! in_array($user->staff_type, ['lecturer_member', 'coop_staff', 'clothing_staff'], true)) {
+        if ($authRole === 'staff' && ! in_array($user->staff_type, Pekerja::STAFF_TYPES, true)) {
             abort(403, 'Kategori staff ini tidak boleh menghantar permohonan koperasi.');
         }
 
@@ -265,9 +265,7 @@ class PermohonanController extends Controller
                 'surat_sokongan' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
                 'tarikh_pengakuan' => ['required', 'date'],
                 'akuan_pengeluaran' => ['accepted'],
-                'kaedah_terima_bayaran' => ['required', 'string', Rule::in(['Bayaran Atas Talian', 'Tunai'])],
-                'nama_bank' => ['nullable', 'string', 'max:100'],
-                'no_akaun_bank' => ['nullable', 'string', 'max:100'],
+                'kaedah_terima_bayaran' => ['required', 'string', Rule::in(['Tunai di Kaunter Koperasi', 'Bayaran Manual Koperasi'])],
             ],
         };
 
@@ -376,14 +374,10 @@ class PermohonanController extends Controller
 
     public function adminIndex(Request $request): View|RedirectResponse
     {
-        if ($request->session()->get('auth_role') !== 'admin') {
-            return redirect()->route('login');
-        }
+        $auth = $this->requireShareManager($request);
 
-        $user = AdminUser::query()->find($request->session()->get('auth_id'));
-
-        if (! $user) {
-            return redirect()->route('login');
+        if ($auth instanceof RedirectResponse) {
+            return $auth;
         }
 
         $types = $this->applicationTypesForRole('ahli');
@@ -422,8 +416,7 @@ class PermohonanController extends Controller
         ];
 
         return view('admin.permohonan.index', [
-            'role' => 'admin',
-            'user' => $user,
+            ...$auth,
             'types' => $types,
             'applications' => $applications,
             'selectedJenis' => $selectedJenis,
@@ -436,11 +429,14 @@ class PermohonanController extends Controller
 
     public function update(Request $request, Permohonan $permohonan): RedirectResponse
     {
-        if ($request->session()->get('auth_role') !== 'admin') {
-            return redirect()->route('login');
+        $auth = $this->requireShareManager($request);
+
+        if ($auth instanceof RedirectResponse) {
+            return $auth;
         }
 
-        $adminId = (int) $request->session()->get('auth_id');
+        $actorRole = $auth['role'];
+        $actorId = (int) $auth['user']->getKey();
         $isDecisionAction = $request->boolean('decision_action');
 
         $validated = $request->validate([
@@ -458,7 +454,7 @@ class PermohonanController extends Controller
 
         $previousStatus = $permohonan->status;
 
-        DB::transaction(function () use ($request, $permohonan, $validated, $adminId, $isDecisionAction, $previousStatus): void {
+        DB::transaction(function () use ($request, $permohonan, $validated, $actorRole, $actorId, $isDecisionAction, $previousStatus): void {
             $decisionDate = $isDecisionAction && in_array($validated['status'], ['diluluskan', 'ditolak'], true)
                 ? now()->toDateString()
                 : $permohonan->tarikh_keputusan;
@@ -504,7 +500,7 @@ class PermohonanController extends Controller
                         $share->tarikh_kemaskini = $decisionDate;
                         $share->save();
 
-                        $this->recordShareTransaction('staff', $staff->id_pekerja, 'OPENING_BALANCE', 'CREDIT', (float) $share->syer, (float) $share->syer + (float) $share->tambahan_saham, $permohonan, 'admin', $adminId, 'Saham permulaan selepas permohonan anggota staff diluluskan.');
+                        $this->recordShareTransaction('staff', $staff->id_pekerja, 'OPENING_BALANCE', 'CREDIT', (float) $share->syer, (float) $share->syer + (float) $share->tambahan_saham, $permohonan, $actorRole, $actorId, 'Saham permulaan selepas permohonan anggota staff diluluskan.');
                     }
                 } elseif ($permohonan->ahli) {
                     $memberUpdates = [];
@@ -527,12 +523,12 @@ class PermohonanController extends Controller
                     $share->tarikh_kemaskini = $decisionDate;
                     $share->save();
 
-                    $this->recordShareTransaction('student', $permohonan->ahli->id_ahli, 'OPENING_BALANCE', 'CREDIT', (float) $share->syer, (float) $share->syer + (float) $share->tambahan_saham, $permohonan, 'admin', $adminId, 'Saham permulaan selepas permohonan anggota diluluskan.');
+                    $this->recordShareTransaction('student', $permohonan->ahli->id_ahli, 'OPENING_BALANCE', 'CREDIT', (float) $share->syer, (float) $share->syer + (float) $share->tambahan_saham, $permohonan, $actorRole, $actorId, 'Saham permulaan selepas permohonan anggota diluluskan.');
                 }
             }
 
-            $this->audit($request, 'admin', $adminId, $validated['status'], 'permohonan', $permohonan, 'Status permohonan dikemaskini kepada '.$validated['status'].'.');
-            $this->notifyApplicant($permohonan, 'Status permohonan dikemaskini', 'Permohonan anda kini berstatus '.str_replace('_', ' ', $validated['status']).'.', route('student.permohonan.index'));
+            $this->audit($request, $actorRole, $actorId, $validated['status'], 'permohonan', $permohonan, 'Status permohonan dikemaskini kepada '.$validated['status'].'.');
+            $this->notifyApplicant($permohonan, 'Status permohonan dikemaskini', 'Permohonan anda kini berstatus '.str_replace('_', ' ', $validated['status']).'.', $this->applicantNotificationLink($permohonan));
         });
 
         return redirect()->route('admin.permohonan.show', $permohonan)->with('status', 'Status permohonan berjaya dikemaskini.');
@@ -540,14 +536,10 @@ class PermohonanController extends Controller
 
     public function show(Request $request, Permohonan $permohonan): View|RedirectResponse
     {
-        if ($request->session()->get('auth_role') !== 'admin') {
-            return redirect()->route('login');
-        }
+        $auth = $this->requireShareManager($request);
 
-        $user = AdminUser::query()->find($request->session()->get('auth_id'));
-
-        if (! $user) {
-            return redirect()->route('login');
+        if ($auth instanceof RedirectResponse) {
+            return $auth;
         }
 
         $application = $permohonan->load('ahli');
@@ -588,8 +580,7 @@ class PermohonanController extends Controller
             ->get();
 
         return view('admin.permohonan.show', [
-            'role' => 'admin',
-            'user' => $user,
+            ...$auth,
             'application' => $application,
             'documents' => $documents,
             'documentCategories' => $this->documentCategoryLabels(),
@@ -600,14 +591,10 @@ class PermohonanController extends Controller
 
     public function createShareAddition(Request $request, Permohonan $permohonan): View|RedirectResponse
     {
-        if ($request->session()->get('auth_role') !== 'admin') {
-            return redirect()->route('login');
-        }
+        $auth = $this->requireShareManager($request);
 
-        $user = AdminUser::query()->find($request->session()->get('auth_id'));
-
-        if (! $user) {
-            return redirect()->route('login');
+        if ($auth instanceof RedirectResponse) {
+            return $auth;
         }
 
         if ($permohonan->jenis !== 'saham') {
@@ -627,8 +614,7 @@ class PermohonanController extends Controller
         $additionalShare = (float) ($data['amaun_tambahan'] ?? 0);
 
         return view('admin.permohonan.tambah-saham', [
-            'role' => 'admin',
-            'user' => $user,
+            ...$auth,
             'application' => $application,
             'data' => $data,
             'currentShare' => $currentShare,
@@ -639,14 +625,10 @@ class PermohonanController extends Controller
 
     public function createWithdrawalProcess(Request $request, Permohonan $permohonan): View|RedirectResponse
     {
-        if ($request->session()->get('auth_role') !== 'admin') {
-            return redirect()->route('login');
-        }
+        $auth = $this->requireShareManager($request);
 
-        $user = AdminUser::query()->find($request->session()->get('auth_id'));
-
-        if (! $user) {
-            return redirect()->route('login');
+        if ($auth instanceof RedirectResponse) {
+            return $auth;
         }
 
         if ($permohonan->jenis !== 'berhenti') {
@@ -671,8 +653,7 @@ class PermohonanController extends Controller
             : ($this->isApplicationApplicantActive($application) ? 'aktif' : 'pindah_berhenti');
 
         return view('admin.permohonan.proses-pengeluaran', [
-            'role' => 'admin',
-            'user' => $user,
+            ...$auth,
             'application' => $application,
             'data' => $data,
             'currentShare' => $currentShare,
@@ -684,8 +665,10 @@ class PermohonanController extends Controller
 
     public function storeShareAddition(Request $request, Permohonan $permohonan): RedirectResponse
     {
-        if ($request->session()->get('auth_role') !== 'admin') {
-            return redirect()->route('login');
+        $auth = $this->requireShareManager($request);
+
+        if ($auth instanceof RedirectResponse) {
+            return $auth;
         }
 
         if ($permohonan->jenis !== 'saham') {
@@ -703,9 +686,10 @@ class PermohonanController extends Controller
             'confirm_share_addition.accepted' => 'Sila tekan Tambah Saham dahulu sebelum simpan.',
         ]);
 
-        $adminId = (int) $request->session()->get('auth_id');
+        $actorRole = $auth['role'];
+        $actorId = (int) $auth['user']->getKey();
 
-        DB::transaction(function () use ($request, $application, $validated, $adminId): void {
+        DB::transaction(function () use ($request, $application, $validated, $actorRole, $actorId): void {
             if ($this->isStaffApplication($application)) {
                 $share = $this->resolveStaffShare($application);
                 $share->tambahan_saham = (float) ($share->tambahan_saham ?? 0) + (float) $validated['amaun_tambahan'];
@@ -733,8 +717,8 @@ class PermohonanController extends Controller
                 (float) $validated['amaun_tambahan'],
                 (float) $share->syer + (float) $share->tambahan_saham,
                 $application,
-                'admin',
-                $adminId,
+                $actorRole,
+                $actorId,
                 'Penambahan saham melalui permohonan diluluskan.'
             );
 
@@ -746,7 +730,7 @@ class PermohonanController extends Controller
                 'tarikh_keputusan' => now()->toDateString(),
             ]);
 
-            $this->audit($request, 'admin', $adminId, 'approve', 'share_addition', $application, 'Permohonan tambah saham diluluskan.');
+            $this->audit($request, $actorRole, $actorId, 'approve', 'share_addition', $application, 'Permohonan tambah saham diluluskan.');
             $this->notifyApplicant($application, 'Tambah saham diluluskan', 'Permohonan tambah saham anda telah diluluskan.', route('student.permohonan.index', ['jenis' => 'saham']));
         });
 
@@ -759,8 +743,10 @@ class PermohonanController extends Controller
 
     public function storeWithdrawalProcess(Request $request, Permohonan $permohonan): RedirectResponse
     {
-        if ($request->session()->get('auth_role') !== 'admin') {
-            return redirect()->route('login');
+        $auth = $this->requireShareManager($request);
+
+        if ($auth instanceof RedirectResponse) {
+            return $auth;
         }
 
         if ($permohonan->jenis !== 'berhenti') {
@@ -788,9 +774,10 @@ class PermohonanController extends Controller
             return back()->withErrors(['saham_dipohon' => 'Amaun saham dipohon melebihi baki saham semasa.'])->withInput();
         }
 
-        $adminId = (int) $request->session()->get('auth_id');
+        $actorRole = $auth['role'];
+        $actorId = (int) $auth['user']->getKey();
 
-        DB::transaction(function () use ($request, $application, $validated, $shareAmount, $share, $currentBaseShare, $currentAdditionalShare, $currentShare, $adminId): void {
+        DB::transaction(function () use ($request, $application, $validated, $shareAmount, $share, $currentBaseShare, $currentAdditionalShare, $actorRole, $actorId): void {
             $deductedFromAdditional = min($currentAdditionalShare, $shareAmount);
             $remainingDeduction = $shareAmount - $deductedFromAdditional;
             $share->tambahan_saham = $currentAdditionalShare - $deductedFromAdditional;
@@ -828,8 +815,8 @@ class PermohonanController extends Controller
                     $shareAmount,
                     (float) $share->syer + (float) $share->tambahan_saham,
                     $application,
-                    'admin',
-                    $adminId,
+                    $actorRole,
+                    $actorId,
                     'Pengeluaran saham diproses.'
                 );
             }
@@ -842,7 +829,7 @@ class PermohonanController extends Controller
                 'tarikh_keputusan' => now()->toDateString(),
             ]);
 
-            $this->audit($request, 'admin', $adminId, 'payment', 'withdrawal', $application, 'Permohonan pengeluaran diproses.');
+            $this->audit($request, $actorRole, $actorId, 'payment', 'withdrawal', $application, 'Permohonan pengeluaran diproses.');
             $this->notifyApplicant($application, 'Pengeluaran diproses', 'Permohonan pengeluaran anda telah diproses.', route('student.permohonan.index', ['jenis' => 'berhenti']));
         });
 
@@ -862,6 +849,34 @@ class PermohonanController extends Controller
         $permohonan->delete();
 
         return redirect()->route('admin.permohonan.index')->with('status', 'Permohonan berjaya dipadam.');
+    }
+
+    /**
+     * @return array{role:string,user:AdminUser|Pekerja}|RedirectResponse
+     */
+    private function requireShareManager(Request $request): array|RedirectResponse
+    {
+        $role = $request->session()->get('auth_role');
+
+        if ($role === 'admin') {
+            $user = AdminUser::query()->find($request->session()->get('auth_id'));
+        } elseif ($role === 'staff') {
+            $user = Pekerja::query()
+                ->whereKey($request->session()->get('auth_id'))
+                ->where('staff_type', Pekerja::SHARE_MANAGER_STAFF_TYPE)
+                ->where('status_aktif', true)
+                ->first();
+        } else {
+            $user = null;
+        }
+
+        if (! $user) {
+            return redirect()
+                ->route('auth.dashboard')
+                ->with('error', 'Akses permohonan saham tidak dibenarkan untuk akaun anda.');
+        }
+
+        return ['role' => $role, 'user' => $user];
     }
 
     private function applicationTypesForRole(string $role, ?string $staffType = null): array
@@ -975,8 +990,6 @@ class PermohonanController extends Controller
                 'tarikh_pengakuan' => $validated['tarikh_pengakuan'],
                 'akuan_pengeluaran' => true,
                 'kaedah_terima_bayaran' => $validated['kaedah_terima_bayaran'],
-                'nama_bank' => $validated['nama_bank'] ?? null,
-                'no_akaun_bank' => $validated['no_akaun_bank'] ?? null,
                 'syer_semasa' => (float) ($authRole === 'ahli'
                     ? (($user->saham->syer ?? 0) + ($user->saham->tambahan_saham ?? 0))
                     : (($user->sahamStaff->syer ?? 0) + ($user->sahamStaff->tambahan_saham ?? 0))),
@@ -1070,6 +1083,8 @@ class PermohonanController extends Controller
         $prefix = match ($staffType) {
             'lecturer_member' => 'lecturer-member',
             'clothing_staff' => 'clothing-staff',
+            Pekerja::SHARE_MANAGER_STAFF_TYPE => 'share-staff',
+            Pekerja::COOP_MANAGER_STAFF_TYPE => 'coop-manager',
             default => 'coop-staff',
         };
 
@@ -1340,6 +1355,17 @@ class PermohonanController extends Controller
         if ($permohonan->id_ahli) {
             $this->notify('ahli', (int) $permohonan->id_ahli, $title, $message, $link);
         }
+    }
+
+    private function applicantNotificationLink(Permohonan $permohonan): string
+    {
+        if ($this->isStaffApplication($permohonan)) {
+            $staff = $this->resolveStaffFromApplication($permohonan);
+
+            return route($this->staffPortalRoutes($staff->staff_type)['permohonan_index'], ['jenis' => $permohonan->jenis]);
+        }
+
+        return route('student.permohonan.status');
     }
 
     private function notifyAdmins(string $title, string $message, ?string $link = null): void

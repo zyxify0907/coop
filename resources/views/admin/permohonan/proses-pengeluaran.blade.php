@@ -85,16 +85,12 @@
             </div>
 
             <div class="field field-full">
-                <label>Maklumat Bayaran / Dokumen {{ $personLabel }}</label>
+                <label>Maklumat Penyelesaian / Dokumen {{ $personLabel }}</label>
                 <div class="info-table">
                     <span>Status Semasa</span>
                     <strong>{{ $defaultStudentStatus === 'aktif' ? 'Aktif' : 'Tidak Aktif / Berhenti / Pindah' }}</strong>
-                    <span>Kaedah Terima Bayaran</span>
+                    <span>Kaedah Penyelesaian</span>
                     <strong>{{ $data['kaedah_terima_bayaran'] ?? '-' }}</strong>
-                    <span>Nama Bank</span>
-                    <strong>{{ $data['nama_bank'] ?? '-' }}</strong>
-                    <span>No Akaun Bank</span>
-                    <strong>{{ $data['no_akaun_bank'] ?? '-' }}</strong>
                     <span>Lain-lain Sebab</span>
                     <strong>{{ $data['lain_lain_sebab'] ?? '-' }}</strong>
                 </div>

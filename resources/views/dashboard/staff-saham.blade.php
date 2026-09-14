@@ -46,7 +46,7 @@
                 <strong>Semak Permohonan</strong>
                 <span>Lihat status permohonan yang telah dihantar.</span>
             </a>
-            <a href="{{ route('koperasi.transactions.index') }}">
+            <a href="{{ route('koperasi.transactions.index', ['scope' => 'mine']) }}">
                 <strong>Transaksi Saham</strong>
                 <span>Semak sejarah transaksi saham anda.</span>
             </a>
@@ -111,7 +111,7 @@
             <article class="module-panel">
                 <header>
                     <div><span>TRANSAKSI</span><h2>Transaksi Saham Terkini</h2></div>
-                    <a href="{{ route('koperasi.transactions.index') }}">Lihat Semua</a>
+                    <a href="{{ route('koperasi.transactions.index', ['scope' => 'mine']) }}">Lihat Semua</a>
                 </header>
                 <div class="module-list">
                     @forelse ($recentTransactions as $transaction)

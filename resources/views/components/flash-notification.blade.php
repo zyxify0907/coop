@@ -1,16 +1,29 @@
 @php
     $notificationType = null;
     $notificationMessage = null;
+    $notificationTitle = null;
+    $notificationLink = null;
+    $unreadPopupNotification = isset($headerNotifications)
+        ? $headerNotifications->first(fn ($notification) => ! $notification->read_at)
+        : null;
 
     if (session('error') || $errors->any()) {
         $notificationType = 'error';
+        $notificationTitle = 'Tidak berjaya';
         $notificationMessage = session('error') ?: $errors->first();
     } elseif (session('warning')) {
         $notificationType = 'warning';
+        $notificationTitle = 'Perhatian';
         $notificationMessage = session('warning');
     } elseif (session('success') || session('status')) {
         $notificationType = 'success';
+        $notificationTitle = 'Berjaya';
         $notificationMessage = session('success') ?: session('status');
+    } elseif ($unreadPopupNotification) {
+        $notificationType = 'success';
+        $notificationTitle = $unreadPopupNotification->title;
+        $notificationMessage = $unreadPopupNotification->message ?? 'Sila semak notifikasi anda.';
+        $notificationLink = $unreadPopupNotification->link;
     }
 @endphp
 
@@ -26,8 +39,11 @@
             @endif
         </span>
         <div class="system-notice__copy">
-            <strong>{{ $notificationType === 'success' ? 'Berjaya' : ($notificationType === 'warning' ? 'Perhatian' : 'Tidak berjaya') }}</strong>
+            <strong>{{ $notificationTitle }}</strong>
             <span>{{ $notificationMessage }}</span>
+            @if ($notificationLink)
+                <a href="{{ $notificationLink }}">Lihat maklumat</a>
+            @endif
         </div>
         <button class="system-notice__close" type="button" data-system-notice-close aria-label="Tutup notifikasi">&times;</button>
     </div>
@@ -69,6 +85,7 @@
     .system-notice__copy { display: grid; gap: 2px; padding-top: 1px; min-width: 0; }
     .system-notice__copy strong { font-size: 14px; line-height: 1.35; }
     .system-notice__copy span { font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; }
+    .system-notice__copy a { margin-top: 4px; color: currentColor; font-size: 13px; font-weight: 900; text-decoration: underline; text-underline-offset: 3px; }
     .system-notice__close { display: grid; width: 32px; height: 32px; place-items: center; padding: 0; border: 0; border-radius: 6px; background: transparent; color: currentColor; font-size: 22px; line-height: 1; }
     .system-notice__close:hover { background: rgba(15, 23, 42, .08); }
     .system-notice.is-closing { opacity: 0; transform: translateY(-8px); transition: opacity 160ms ease, transform 160ms ease; }

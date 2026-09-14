@@ -287,7 +287,7 @@ class AttendanceController extends Controller
             : collect();
 
         return view('admin.dashboards.kehadiran', [
-            'role' => 'admin',
+            'role' => $request->session()->get('auth_role'),
             'user' => $admin,
             'setting' => $setting,
             'summary' => [
@@ -325,7 +325,7 @@ class AttendanceController extends Controller
         $records = AttendanceRecord::query()->whereDate('attendance_date', $today)->get()->keyBy('staff_id');
 
         return view('attendance.admin.live', [
-            'role' => 'admin', 'user' => $admin, 'setting' => $setting,
+            'role' => $request->session()->get('auth_role'), 'user' => $admin, 'setting' => $setting,
             'workers' => $workers, 'records' => $records,
             'summary' => $this->todaySummary($workers, $records, $setting),
         ]);
@@ -345,7 +345,7 @@ class AttendanceController extends Controller
         $records = $this->filteredRecords($filters)->with('staff')->latest('attendance_date')->latest('check_in_time')->paginate(30)->withQueryString();
 
         return view('attendance.admin.records', [
-            'role' => 'admin', 'user' => $admin, 'records' => $records,
+            'role' => $request->session()->get('auth_role'), 'user' => $admin, 'records' => $records,
             'workers' => $this->workerList(), 'filters' => $filters, 'statuses' => $this->statusLabels(),
         ]);
     }
@@ -356,7 +356,7 @@ class AttendanceController extends Controller
         abort_unless($record->staff && $record->staff->staff_type === 'coop_staff', 404);
 
         return view('attendance.admin.show', [
-            'role' => 'admin', 'user' => $admin,
+            'role' => $request->session()->get('auth_role'), 'user' => $admin,
             'record' => $record->load(['staff', 'corrections.reviewer']),
         ]);
     }
@@ -407,12 +407,12 @@ class AttendanceController extends Controller
             ->orderBy('nama')
             ->paginate(30)->withQueryString();
 
-        return view('attendance.admin.workers', compact('admin', 'workers', 'search') + ['role' => 'admin', 'user' => $admin]);
+        return view('attendance.admin.workers', compact('admin', 'workers', 'search') + ['role' => $request->session()->get('auth_role'), 'user' => $admin]);
     }
 
     public function correctionsAdmin(Request $request): View
     {
-        $admin = $this->admin($request);
+        $admin = $this->systemAdmin($request);
         $status = (string) $request->query('status', 'pending');
         $corrections = AttendanceCorrection::query()->with(['staff', 'attendance', 'reviewer'])
             ->when(in_array($status, ['pending', 'approved', 'rejected'], true), fn ($query) => $query->where('status', $status))
@@ -426,7 +426,7 @@ class AttendanceController extends Controller
 
     public function reviewCorrection(Request $request, AttendanceCorrection $correction): RedirectResponse
     {
-        $admin = $this->admin($request);
+        $admin = $this->systemAdmin($request);
         $validated = $request->validate([
             'decision' => ['required', 'in:approved,rejected'],
             'admin_remark' => ['nullable', 'string', 'max:1500'],
@@ -492,7 +492,7 @@ class AttendanceController extends Controller
         $records = $this->filteredRecords($filters)->with('staff')->get();
 
         return view('attendance.admin.reports', [
-            'role' => 'admin', 'user' => $admin, 'filters' => $filters, 'records' => $records,
+            'role' => $request->session()->get('auth_role'), 'user' => $admin, 'filters' => $filters, 'records' => $records,
             'workers' => $this->workerList(), 'statuses' => $this->statusLabels(),
             'summary' => $this->reportSummary($records),
         ]);
@@ -523,14 +523,14 @@ class AttendanceController extends Controller
 
     public function settings(Request $request): View
     {
-        $admin = $this->admin($request);
+        $admin = $this->systemAdmin($request);
 
         return view('attendance.admin.settings', ['role' => 'admin', 'user' => $admin, 'setting' => $this->attendance->setting()]);
     }
 
     public function updateSettings(Request $request): RedirectResponse
     {
-        $admin = $this->admin($request);
+        $admin = $this->systemAdmin($request);
         $validated = $request->validate([
             'work_start_time' => ['required', 'date_format:H:i'],
             'work_end_time' => ['required', 'date_format:H:i', 'after:work_start_time'],
@@ -559,7 +559,22 @@ class AttendanceController extends Controller
         return $staff;
     }
 
-    private function admin(Request $request): AdminUser
+    private function admin(Request $request): AdminUser|Pekerja
+    {
+        if ($request->session()->get('auth_role') === 'admin') {
+            return AdminUser::query()->findOrFail($request->session()->get('auth_id'));
+        }
+
+        abort_unless($request->session()->get('auth_role') === 'staff', 403);
+
+        return Pekerja::query()
+            ->whereKey($request->session()->get('auth_id'))
+            ->where('staff_type', Pekerja::COOP_MANAGER_STAFF_TYPE)
+            ->where('status_aktif', true)
+            ->firstOrFail();
+    }
+
+    private function systemAdmin(Request $request): AdminUser
     {
         abort_unless($request->session()->get('auth_role') === 'admin', 403);
 

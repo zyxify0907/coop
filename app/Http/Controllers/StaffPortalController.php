@@ -76,6 +76,16 @@ class StaffPortalController extends Controller
         ]);
     }
 
+    public function shareManagerDashboard(Request $request): View
+    {
+        return $this->memberDashboard($request, Pekerja::SHARE_MANAGER_STAFF_TYPE);
+    }
+
+    public function coopManagerDashboard(Request $request): View
+    {
+        return $this->memberDashboard($request, Pekerja::COOP_MANAGER_STAFF_TYPE);
+    }
+
     public function clothingOrderDashboard(Request $request): View
     {
         $user = $this->staff($request, ['sahamStaff']);
@@ -126,7 +136,7 @@ class StaffPortalController extends Controller
     public function shares(Request $request): View
     {
         $user = $this->staff($request, ['sahamStaff']);
-        abort_if($user->staff_type === 'coop_staff', 404);
+        abort_unless($user->isEligibleForShares(), 404);
         $memberNumber = $this->ensureStaffMemberNumber($user);
 
         $share = $user->sahamStaff;
@@ -145,7 +155,7 @@ class StaffPortalController extends Controller
     public function shareDashboard(Request $request): View
     {
         $user = $this->staff($request, ['sahamStaff']);
-        abort_if($user->staff_type === 'coop_staff', 404);
+        abort_unless($user->isEligibleForShares(), 404);
         $memberNumber = $this->ensureStaffMemberNumber($user);
 
         $recentTransactions = Schema::hasTable('share_transactions')
@@ -297,10 +307,16 @@ class StaffPortalController extends Controller
             'notifications' => $notifications,
             'home' => $this->staffHomeData($request, $user, $type, $applications, $notifications, $attendanceRecord),
             'portalPrefix' => $this->portalPrefix($type),
-            'portalTitle' => $type === 'lecturer_member' ? 'Dashboard Anggota Staf' : 'Dashboard Pekerja Koperasi',
-            'portalDescription' => $type === 'lecturer_member'
-                ? 'Maklumat keanggotaan dan saham koperasi anda.'
-                : 'Pusat maklumat kerja harian dan kehadiran koperasi.',
+            'portalTitle' => match ($type) {
+                'lecturer_member' => 'Dashboard Anggota Staf',
+                Pekerja::SHARE_MANAGER_STAFF_TYPE => 'Dashboard Staff Mengurus Saham',
+                Pekerja::COOP_MANAGER_STAFF_TYPE => 'Dashboard Staff Mengurus Pekerja Koperasi',
+                default => 'Dashboard Pekerja Koperasi',
+            },
+            'portalDescription' => match ($type) {
+                'lecturer_member', Pekerja::SHARE_MANAGER_STAFF_TYPE, Pekerja::COOP_MANAGER_STAFF_TYPE => 'Maklumat keanggotaan dan saham koperasi anda.',
+                default => 'Pusat maklumat kerja harian dan kehadiran koperasi.',
+            },
             'attendanceRecord' => $attendanceRecord,
             'attendanceEnabled' => $type === 'coop_staff' && (bool) AttendanceSetting::query()->value('status'),
         ]);
@@ -492,6 +508,8 @@ class StaffPortalController extends Controller
         return match ($type) {
             'lecturer_member' => 'lecturer-member',
             'clothing_staff' => 'clothing-staff',
+            Pekerja::SHARE_MANAGER_STAFF_TYPE => 'share-staff',
+            Pekerja::COOP_MANAGER_STAFF_TYPE => 'coop-manager',
             default => 'coop-staff',
         };
     }

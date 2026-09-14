@@ -6,7 +6,9 @@
 
 @php
     $isStudent = $type === 'student';
-    $backRoute = $isStudent ? route('admin.users.students') : route('admin.users.staff');
+    $restrictToCoopWorkers = $restrictToCoopWorkers ?? false;
+    $isCoopWorkerCreate = ! $isStudent && old('staff_type', request('staff_type')) === 'coop_staff';
+    $backRoute = $isStudent ? route('admin.users.students') : ($isCoopWorkerCreate ? route('admin.users.coop-workers') : route('admin.users.staff'));
     $storeRoute = $isStudent ? route('admin.users.students.store') : route('admin.users.staff.store');
     $programOptions = ['JTMK', 'JRKV'];
     $semesterOptions = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6'];
@@ -47,11 +49,6 @@
                     <div class="field">
                         <label for="no_matrik">No Matrik</label>
                         <input id="no_matrik" name="no_matrik" value="{{ old('no_matrik') }}" required>
-                    </div>
-                @else
-                    <div class="field">
-                        <label for="no_pekerja">No Pekerja</label>
-                        <input id="no_pekerja" name="no_pekerja" value="{{ old('no_pekerja') }}" placeholder="PBT-001" required>
                     </div>
                 @endif
 
@@ -110,12 +107,25 @@
                 @else
                     <div class="field">
                         <label for="staff_type">Jenis Staff</label>
-                        <select id="staff_type" name="staff_type" required>
-                            <option value="">Pilih jenis staff</option>
-                            <option value="lecturer_member" @selected($selectedStaffType === 'lecturer_member')>Pensyarah / Staf Akademik</option>
-                            <option value="coop_staff" @selected($selectedStaffType === 'coop_staff')>Pekerja Koperasi</option>
-                            <option value="clothing_staff" @selected($selectedStaffType === 'clothing_staff')>Staff Pengurusan Baju</option>
+                        <select id="staff_type" name="staff_type" required data-staff-type-select @disabled($restrictToCoopWorkers)>
+                            @if (! $restrictToCoopWorkers)
+                                <option value="">Pilih jenis staff</option>
+                                <option value="lecturer_member" @selected($selectedStaffType === 'lecturer_member')>Pensyarah / Staf Akademik</option>
+                                <option value="coop_staff" @selected($selectedStaffType === 'coop_staff')>Pekerja Koperasi</option>
+                                <option value="clothing_staff" @selected($selectedStaffType === 'clothing_staff')>Staff Pengurusan Baju</option>
+                                <option value="share_staff" @selected($selectedStaffType === 'share_staff')>Staff Mengurus Saham</option>
+                                <option value="coop_manager" @selected($selectedStaffType === 'coop_manager')>Staff Mengurus Pekerja Koperasi</option>
+                            @else
+                                <option value="coop_staff" selected>Pekerja Koperasi</option>
+                            @endif
                         </select>
+                        @if ($restrictToCoopWorkers)
+                            <input type="hidden" name="staff_type" value="coop_staff">
+                        @endif
+                    </div>
+                    <div class="field" data-no-pekerja-field @if($selectedStaffType !== 'coop_staff') hidden @endif>
+                        <label for="no_pekerja">No Pekerja</label>
+                        <input id="no_pekerja" name="no_pekerja" value="{{ old('no_pekerja') }}" placeholder="PBT-001" @if($selectedStaffType === 'coop_staff') required @else disabled @endif>
                     </div>
                 @endif
 
@@ -326,6 +336,33 @@
                 semesterSelect.addEventListener('change', renderClassOptions);
                 classSelect.addEventListener('change', syncAcademicFields);
                 renderClassOptions();
+            });
+        </script>
+    @endpush
+@endif
+
+@if (! $isStudent)
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const staffTypeSelect = document.querySelector('[data-staff-type-select]');
+                const noPekerjaField = document.querySelector('[data-no-pekerja-field]');
+                const noPekerjaInput = document.getElementById('no_pekerja');
+
+                if (!staffTypeSelect || !noPekerjaField || !noPekerjaInput) {
+                    return;
+                }
+
+                const syncNoPekerjaField = () => {
+                    const showNoPekerja = staffTypeSelect.value === 'coop_staff';
+
+                    noPekerjaField.hidden = !showNoPekerja;
+                    noPekerjaInput.required = showNoPekerja;
+                    noPekerjaInput.disabled = !showNoPekerja;
+                };
+
+                staffTypeSelect.addEventListener('change', syncNoPekerjaField);
+                syncNoPekerjaField();
             });
         </script>
     @endpush

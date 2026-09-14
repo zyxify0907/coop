@@ -87,9 +87,20 @@
                     value="{{ $search ?? request('search') }}"
                     placeholder="{{ $searchPlaceholder ?? 'Nama, no pekerja, No. KP atau jenis staff' }}">
             </div>
+            @if (! $showWorkerFields)
+                <div class="staff-search-field staff-search-field--small">
+                    <label for="staff_type">Jenis Staff</label>
+                    <select id="staff_type" name="staff_type">
+                        <option value="">Semua jenis</option>
+                        @foreach (($staffTypeOptions ?? []) as $value => $label)
+                            <option value="{{ $value }}" @selected(($filters['staff_type'] ?? request('staff_type')) === $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            @endif
             <div class="staff-search-actions">
                 <button class="staff-search-button" type="submit">Cari</button>
-                @if (($search ?? request('search')))
+                @if (($search ?? request('search')) || collect($filters ?? [])->filter()->isNotEmpty())
                     <a class="staff-reset-button" href="{{ $listRoute ?? route('admin.users.staff') }}">Reset</a>
                 @endif
             </div>
@@ -411,6 +422,10 @@
         flex:1 1 320px;
         min-width:260px;
     }
+    .staff-search-field--small{
+        flex:0 1 210px;
+        min-width:190px;
+    }
     .staff-search-field label{
         color:var(--muted);
         font-size:12px;
@@ -418,7 +433,8 @@
         text-transform:uppercase;
         letter-spacing:.03em;
     }
-    .staff-search-field input{
+    .staff-search-field input,
+    .staff-search-field select{
         width:100%;
         min-height:42px;
         padding:0 14px;
@@ -429,7 +445,11 @@
         font:inherit;
         outline:0;
     }
-    .staff-search-field input:focus{
+    .staff-search-field select{
+        cursor:pointer;
+    }
+    .staff-search-field input:focus,
+    .staff-search-field select:focus{
         border-color:var(--secondary);
         box-shadow:0 0 0 3px rgba(36,83,166,.12);
     }

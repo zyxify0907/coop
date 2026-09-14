@@ -1019,16 +1019,18 @@
                                 </td>
                                 <td>
                                     <div class="actions-cell">
-                                        @if (isset($memberProfiles[$record->id_ahli]))
+                                        @if ($role === 'admin' && isset($memberProfiles[$record->id_ahli]))
                                             <a class="button profile-button" href="{{ route('admin.anggota.show', $memberProfiles[$record->id_ahli]) }}">Lihat Profil</a>
                                         @else
                                             <span class="link-button" aria-disabled="true">Profil Tiada</span>
                                         @endif
-                                        <form method="POST" action="{{ route('admin.saham.destroy', $record) }}" onsubmit="return confirm('Padam rekod saham ini?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button class="link-button danger" type="submit">Delete</button>
-                                        </form>
+                                        @if ($role === 'admin')
+                                            <form method="POST" action="{{ route('admin.saham.destroy', $record) }}" onsubmit="return confirm('Padam rekod saham ini?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button class="link-button danger" type="submit">Delete</button>
+                                            </form>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -1119,7 +1121,7 @@
                 <input type="hidden" name="kategori" value="staff">
                 <div class="field search-compact">
                     <label for="staff_search">Cari Staff</label>
-                    <input id="staff_search" name="search" type="search" value="{{ $filters['search'] ?? '' }}" placeholder="Nama, no pekerja atau IC">
+                    <input id="staff_search" name="search" type="search" value="{{ $filters['search'] ?? '' }}" placeholder="Nama, no anggota staff atau IC">
                 </div>
                 <div class="field date-compact">
                     <label for="staff_tarikh">Tarikh Mula</label>
@@ -1156,7 +1158,7 @@
                         <tr>
                             <th>Bil</th>
                             <th>Nama</th>
-                            <th>No Anggota</th>
+                            <th>No Anggota Staff</th>
                             <th>No KP</th>
                             <th>Jenis Staff</th>
                             <th>Yuran Ahli</th>
@@ -1196,18 +1198,22 @@
                                 </td>
                                 <td>
                                     <div class="actions-cell">
-                                        <a class="button profile-button" href="{{ route('admin.users.edit', ['type' => 'staff', 'id' => $staff->id_pekerja]) }}">Lihat Profil</a>
-                                        <form method="POST" action="{{ route('admin.users.destroy', ['type' => 'staff', 'id' => $staff->id_pekerja]) }}" onsubmit="return confirm('Padam rekod staff ini?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button class="link-button danger" type="submit">Delete</button>
-                                        </form>
+                                        @if ($role === 'admin')
+                                            <a class="button profile-button" href="{{ route('admin.users.edit', ['type' => 'staff', 'id' => $staff->id_pekerja]) }}">Lihat Profil</a>
+                                        @endif
+                                        @if ($role === 'admin')
+                                            <form method="POST" action="{{ route('admin.users.destroy', ['type' => 'staff', 'id' => $staff->id_pekerja]) }}" onsubmit="return confirm('Padam rekod staff ini?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button class="link-button danger" type="submit">Delete</button>
+                                            </form>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="12"><div class="empty">Tiada rekod staff.</div></td>
+                                <td colspan="11"><div class="empty">Tiada rekod staff.</div></td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -1224,21 +1230,21 @@
                 <table class="print-table print-table--staff">
                     <colgroup>
                         <col style="width: 4%;">
-                        <col style="width: 22%;">
+                        <col style="width: 23%;">
+                        <col style="width: 11%;">
                         <col style="width: 10%;">
-                        <col style="width: 10%;">
-                        <col style="width: 12%;">
+                        <col style="width: 13%;">
                         <col style="width: 9%;">
                         <col style="width: 8%;">
                         <col style="width: 8%;">
                         <col style="width: 8%;">
-                        <col style="width: 9%;">
+                        <col style="width: 6%;">
                     </colgroup>
                     <thead>
                         <tr>
                             <th>Bil</th>
                             <th>Nama</th>
-                            <th>No Anggota</th>
+                            <th>No Anggota Staff</th>
                             <th>No KP</th>
                             <th>Jenis Staff</th>
                             <th>Yuran<br>Ahli</th>

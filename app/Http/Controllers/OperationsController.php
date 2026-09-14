@@ -5,22 +5,21 @@ namespace App\Http\Controllers;
 use App\Models\AdminUser;
 use App\Models\Ahli;
 use App\Models\AuditLog;
-use App\Models\Jualan;
+use App\Models\CooperativeNotification;
 use App\Models\Pekerja;
-use App\Models\Pembayaran;
 use App\Models\Permohonan;
 use App\Models\Saham;
 use App\Models\SahamStaff;
 use App\Models\ShareTransaction;
-use App\Models\Stok;
-use App\Models\Tempahan;
 use Carbon\Carbon;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Database\QueryException;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -30,7 +29,7 @@ class OperationsController extends Controller
 {
     public function shareDashboard(Request $request): View|RedirectResponse
     {
-        $auth = $this->requireRole($request, ['admin']);
+        $auth = $this->requireShareManager($request);
 
         if ($auth instanceof RedirectResponse) {
             return $auth;
@@ -259,7 +258,7 @@ class OperationsController extends Controller
             return back()->withErrors(['cart' => 'Troli masih kosong.']);
         }
 
-        DB::transaction(function () use ($user, $cart): void {
+        $tempahanId = DB::transaction(function () use ($user, $cart): int {
             $itemIds = array_map('intval', array_keys($cart));
             $items = DB::table('item_baju')
                 ->whereIn('id_item', $itemIds)
@@ -305,9 +304,12 @@ class OperationsController extends Controller
 
                 DB::table('item_baju')->where('id_item', $item->id_item)->decrement('stok_tertinggal', $quantity);
             }
+
+            return $tempahanId;
         });
 
         $request->session()->forget($this->studentOrderCartKey());
+        $this->notifyNewClothingOrder($user, $tempahanId);
 
         return redirect()->route('student.tempahan.index')->with('status', 'Tempahan dalam troli berjaya dihantar.');
     }
@@ -332,7 +334,7 @@ class OperationsController extends Controller
                 return back()->withErrors(['quantity' => 'Kuantiti melebihi stok baju semasa.'])->withInput();
             }
 
-            DB::transaction(function () use ($user, $item, $validated): void {
+            $tempahanId = DB::transaction(function () use ($user, $item, $validated): int {
                 $tempahanId = DB::table('tempahan')->insertGetId([
                     'id_ahli' => $user->id_ahli,
                     'tarikh_tempahan' => now()->toDateString(),
@@ -349,7 +351,11 @@ class OperationsController extends Controller
                 ]);
 
                 DB::table('item_baju')->where('id_item', $item->id_item)->decrement('stok_tertinggal', $validated['quantity']);
+
+                return $tempahanId;
             });
+
+            $this->notifyNewClothingOrder($user, $tempahanId);
 
             return redirect()->route('student.tempahan.index')->with('status', 'Tempahan baju berjaya dihantar.');
         }
@@ -364,7 +370,7 @@ class OperationsController extends Controller
             return back()->withErrors(['quantity' => 'Kuantiti melebihi stok semasa.'])->withInput();
         }
 
-        DB::transaction(function () use ($user, $item, $validated, $stockKey): void {
+        $tempahanId = DB::transaction(function () use ($user, $item, $validated, $stockKey): ?int {
             if ($this->hasColumn('tempahan', 'no_matrik')) {
                 DB::table('tempahan')->insert([
                     'no_matrik' => $user->no_matrik,
@@ -376,7 +382,7 @@ class OperationsController extends Controller
                     'updated_at' => now(),
                 ]);
 
-                return;
+                return null;
             }
 
             $tempahanId = DB::table('tempahan')->insertGetId([
@@ -395,7 +401,11 @@ class OperationsController extends Controller
                     'subtotal' => ((float) ($item->harga_jual ?? $item->harga ?? 0)) * (int) $validated['quantity'],
                 ]);
             }
+
+            return $tempahanId;
         });
+
+        $this->notifyNewClothingOrder($user, $tempahanId);
 
         return redirect()->route('student.tempahan.index')->with('status', 'Tempahan berjaya dihantar.');
     }
@@ -490,7 +500,24 @@ class OperationsController extends Controller
             $pickupDate = null;
         }
 
-        if ($this->hasColumn('item_tempahan', 'status')) {
+        $usesItemStatus = $this->hasColumn('item_tempahan', 'status');
+        $previousOrder = $usesItemStatus
+            ? DB::table('item_tempahan')
+                ->where('id_item_tempahan', $id)
+                ->select([
+                    'status',
+                    ...($this->hasColumn('item_tempahan', 'tarikh_ambil') ? ['tarikh_ambil'] : [DB::raw('NULL as tarikh_ambil')]),
+                ])
+                ->first()
+            : DB::table('tempahan')
+                ->where($this->orderKeyColumn(), $id)
+                ->select([
+                    'status',
+                    ...($this->hasColumn('tempahan', 'tarikh_ambil') ? ['tarikh_ambil'] : [DB::raw('NULL as tarikh_ambil')]),
+                ])
+                ->first();
+
+        if ($usesItemStatus) {
             $payload = ['status' => $status];
 
             if ($this->hasColumn('item_tempahan', 'tarikh_ambil')) {
@@ -506,6 +533,10 @@ class OperationsController extends Controller
             }
 
             DB::table('tempahan')->where($this->orderKeyColumn(), $id)->update($payload);
+        }
+
+        if ($status === 'sudah_ambil' && $this->normalizeOrderStatus((string) ($previousOrder->status ?? ''), $previousOrder->tarikh_ambil ?? null) !== 'sudah_ambil') {
+            $this->notifyClothingOrderPickedUp($id, $usesItemStatus);
         }
 
         return redirect()->route($this->tempahanIndexRoute($auth))->with('status', 'Status tempahan berjaya dikemaskini.');
@@ -699,14 +730,12 @@ class OperationsController extends Controller
 
         $validated = $request->validate([
             'nama_vendor' => ['required', 'string', 'max:255'],
-            'no_akaun' => ['required', 'string', 'max:255'],
-            'bank' => ['required', 'string', 'max:255'],
         ]);
 
         DB::table('vendor')->insert([
             'nama_vendor' => $validated['nama_vendor'],
-            'no_akaun' => $validated['no_akaun'],
-            'bank' => $validated['bank'],
+            ...($this->hasColumn('vendor', 'no_akaun') ? ['no_akaun' => '-'] : []),
+            ...($this->hasColumn('vendor', 'bank') ? ['bank' => '-'] : []),
             ...($this->hasColumn('vendor', 'created_at') ? ['created_at' => now(), 'updated_at' => now()] : []),
         ]);
 
@@ -723,14 +752,12 @@ class OperationsController extends Controller
 
         $validated = $request->validate([
             'nama_vendor' => ['required', 'string', 'max:255'],
-            'no_akaun' => ['required', 'string', 'max:255'],
-            'bank' => ['required', 'string', 'max:255'],
         ]);
 
         DB::table('vendor')->where($this->vendorKeyColumn(), $id)->update([
             'nama_vendor' => $validated['nama_vendor'],
-            'no_akaun' => $validated['no_akaun'],
-            'bank' => $validated['bank'],
+            ...($this->hasColumn('vendor', 'no_akaun') ? ['no_akaun' => '-'] : []),
+            ...($this->hasColumn('vendor', 'bank') ? ['bank' => '-'] : []),
             ...($this->hasColumn('vendor', 'updated_at') ? ['updated_at' => now()] : []),
         ]);
 
@@ -1063,11 +1090,20 @@ class OperationsController extends Controller
             return back()->withErrors(['status' => 'Status tempahan tidak sah.']);
         }
 
+        $previousOrder = DB::table('tempahan')
+            ->where('id_tempahan', $id)
+            ->select('status', 'tarikh_ambil')
+            ->first();
+
         DB::table('tempahan')->where('id_tempahan', $id)->update([
             'status' => $status,
             'tarikh_siap' => $validated['tarikh_siap'] ?: null,
             'tarikh_ambil' => $validated['tarikh_ambil'] ?: null,
         ]);
+
+        if ($status === 'sudah_ambil' && $this->normalizeOrderStatus((string) ($previousOrder->status ?? ''), $previousOrder->tarikh_ambil ?? null) !== 'sudah_ambil') {
+            $this->notifyClothingOrderPickedUp($id, false);
+        }
 
         return redirect()->route($this->bajuOrdersRoute($auth))->with('status', 'Tempahan baju berjaya dikemaskini.');
     }
@@ -1090,7 +1126,7 @@ class OperationsController extends Controller
 
     public function saham(Request $request): View|RedirectResponse
     {
-        $auth = $this->requireRole($request, ['admin']);
+        $auth = $this->requireShareManager($request);
 
         if ($auth instanceof RedirectResponse) {
             return $auth;
@@ -1252,7 +1288,7 @@ class OperationsController extends Controller
 
     public function exportSahamCsv(Request $request): StreamedResponse|RedirectResponse
     {
-        $auth = $this->requireRole($request, ['admin']);
+        $auth = $this->requireShareManager($request);
 
         if ($auth instanceof RedirectResponse) {
             return $auth;
@@ -1276,7 +1312,7 @@ class OperationsController extends Controller
                 return;
             }
 
-            fputs($handle, "\xEF\xBB\xBF");
+            fwrite($handle, "\xEF\xBB\xBF");
 
             if ($category === 'pelajar') {
                 fputcsv($handle, ['BIL', 'NAMA', 'NO KP', 'NO MATRIK', 'PROGRAM', 'KELAS', 'TARIKH DAFTAR AHLI', 'YURAN AHLI', 'SAHAM SEMASA', 'TAMBAHAN SAHAM', 'JUMLAH SAHAM', 'STATUS PELAJAR']);
@@ -1358,7 +1394,7 @@ class OperationsController extends Controller
 
     public function storeSaham(Request $request): RedirectResponse
     {
-        $auth = $this->requireRole($request, ['admin']);
+        $auth = $this->requireShareManager($request);
 
         if ($auth instanceof RedirectResponse) {
             return $auth;
@@ -1383,7 +1419,7 @@ class OperationsController extends Controller
 
     public function updateSaham(Request $request, Saham $saham): RedirectResponse
     {
-        $auth = $this->requireRole($request, ['admin']);
+        $auth = $this->requireShareManager($request);
 
         if ($auth instanceof RedirectResponse) {
             return $auth;
@@ -1428,7 +1464,7 @@ class OperationsController extends Controller
 
     public function updateStaffSaham(Request $request, Pekerja $staff): RedirectResponse
     {
-        $auth = $this->requireRole($request, ['admin']);
+        $auth = $this->requireShareManager($request);
 
         if ($auth instanceof RedirectResponse) {
             return $auth;
@@ -1485,7 +1521,7 @@ class OperationsController extends Controller
 
     public function destroySaham(Request $request, Saham $saham): RedirectResponse
     {
-        $auth = $this->requireRole($request, ['admin']);
+        $auth = $this->requireShareManager($request);
 
         if ($auth instanceof RedirectResponse) {
             return $auth;
@@ -1499,7 +1535,7 @@ class OperationsController extends Controller
 
     public function reports(Request $request): View|RedirectResponse
     {
-        $auth = $this->requireRole($request, ['admin']);
+        $auth = $this->requireShareManager($request);
 
         if ($auth instanceof RedirectResponse) {
             return $auth;
@@ -1531,7 +1567,7 @@ class OperationsController extends Controller
         return view('shared.rules.index', $auth);
     }
 
-    private function stockQuery(): \Illuminate\Database\Query\Builder
+    private function stockQuery(): Builder
     {
         return DB::table('stok')->select([
             "{$this->stockKeyColumn()} as item_id",
@@ -1541,7 +1577,7 @@ class OperationsController extends Controller
         ]);
     }
 
-    private function ordersQuery(): \Illuminate\Database\Query\Builder
+    private function ordersQuery(): Builder
     {
         if ($this->hasColumn('tempahan', 'no_matrik')) {
             return DB::table('tempahan')
@@ -1609,7 +1645,7 @@ class OperationsController extends Controller
         };
     }
 
-    private function studentBajuItemsQuery(): \Illuminate\Database\Query\Builder
+    private function studentBajuItemsQuery(): Builder
     {
         return DB::table('item_baju')
             ->leftJoin('kategori_baju', 'item_baju.id_kategori', '=', 'kategori_baju.id_kategori')
@@ -1629,7 +1665,7 @@ class OperationsController extends Controller
         return 'student_tempahan_cart';
     }
 
-    private function studentOrderCartItems(Request $request): \Illuminate\Support\Collection
+    private function studentOrderCartItems(Request $request): Collection
     {
         $cart = $request->session()->get($this->studentOrderCartKey(), []);
 
@@ -1653,7 +1689,7 @@ class OperationsController extends Controller
             ->values();
     }
 
-    private function salesQuery(): \Illuminate\Database\Query\Builder
+    private function salesQuery(): Builder
     {
         return DB::table('jualan')
             ->leftJoin('stok', "jualan.{$this->salesStockColumn()}", '=', "stok.{$this->stockKeyColumn()}")
@@ -1666,7 +1702,7 @@ class OperationsController extends Controller
             ->orderByDesc($this->salesDateColumn());
     }
 
-    private function vendorsQuery(): \Illuminate\Database\Query\Builder
+    private function vendorsQuery(): Builder
     {
         $vendorKey = $this->vendorKeyColumn();
         $paymentTable = $this->paymentTable();
@@ -1676,8 +1712,6 @@ class OperationsController extends Controller
             ->select([
                 "{$vendorKey} as vendor_id",
                 'nama_vendor',
-                'no_akaun',
-                'bank',
             ])
             ->orderBy('nama_vendor');
 
@@ -1695,7 +1729,7 @@ class OperationsController extends Controller
         return $query;
     }
 
-    private function paymentsQuery(): \Illuminate\Database\Query\Builder
+    private function paymentsQuery(): Builder
     {
         $table = $this->paymentTable();
 
@@ -1870,7 +1904,7 @@ class OperationsController extends Controller
     }
 
     /**
-     * @param array{role:string,user:AdminUser|Pekerja} $auth
+     * @param  array{role:string,user:AdminUser|Pekerja}  $auth
      */
     private function bajuIndexRoute(array $auth): string
     {
@@ -1878,7 +1912,7 @@ class OperationsController extends Controller
     }
 
     /**
-     * @param array{role:string,user:AdminUser|Pekerja} $auth
+     * @param  array{role:string,user:AdminUser|Pekerja}  $auth
      */
     private function bajuUpdateRoute(array $auth): string
     {
@@ -1886,7 +1920,7 @@ class OperationsController extends Controller
     }
 
     /**
-     * @param array{role:string,user:AdminUser|Pekerja} $auth
+     * @param  array{role:string,user:AdminUser|Pekerja}  $auth
      */
     private function bajuOrdersRoute(array $auth): string
     {
@@ -1894,14 +1928,14 @@ class OperationsController extends Controller
     }
 
     /**
-     * @param array{role:string,user:AdminUser|Pekerja} $auth
+     * @param  array{role:string,user:AdminUser|Pekerja}  $auth
      */
     private function tempahanIndexRoute(array $auth): string
     {
         return $auth['role'] === 'admin' ? 'admin.tempahan.index' : 'clothing-staff.orders.index';
     }
 
-    private function bajuGroupRows(object $item): \Illuminate\Support\Collection
+    private function bajuGroupRows(object $item): Collection
     {
         return DB::table('item_baju')
             ->where('nama_item', $item->nama_item)
@@ -1960,12 +1994,18 @@ class OperationsController extends Controller
             ->with('sahamStaff')
             ->whereIn('no_pekerja', $approvedStaffNumbers->isNotEmpty() ? $approvedStaffNumbers : ['__none__'])
             ->when($search !== '', function ($query) use ($search): void {
-                $query->where(function ($staffQuery) use ($search): void {
+                $staffHasMemberNumber = Schema::hasColumn('pekerja', 'no_anggota');
+
+                $query->where(function ($staffQuery) use ($search, $staffHasMemberNumber): void {
                     $staffQuery
                         ->where('nama', 'like', "%{$search}%")
                         ->orWhere('no_pekerja', 'like', "%{$search}%")
                         ->orWhere('nric', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%");
+
+                    if ($staffHasMemberNumber) {
+                        $staffQuery->orWhere('no_anggota', 'like', "%{$search}%");
+                    }
                 });
             })
             ->when($status !== '', fn ($query) => $query->where('status_aktif', $status === 'aktif'))
@@ -1974,7 +2014,7 @@ class OperationsController extends Controller
             ->orderBy('nama');
     }
 
-    private function approvedStaffMemberApplications(): \Illuminate\Support\Collection
+    private function approvedStaffMemberApplications(): Collection
     {
         return Permohonan::query()
             ->where('jenis', 'anggota')
@@ -2235,7 +2275,7 @@ class OperationsController extends Controller
             : [$startYear, $endYear];
     }
 
-    private function fiscalYearOptions(int ...$selectedYears): \Illuminate\Support\Collection
+    private function fiscalYearOptions(int ...$selectedYears): Collection
     {
         $years = $this->shareSummaryRows()
             ->map(fn (array $row): int => $row['date']->month >= 9 ? $row['date']->year + 1 : $row['date']->year)
@@ -2248,7 +2288,7 @@ class OperationsController extends Controller
         return $years->isEmpty() ? collect($selectedYears) : $years;
     }
 
-    private function shareSummaryRows(): \Illuminate\Support\Collection
+    private function shareSummaryRows(): Collection
     {
         $rows = collect();
 
@@ -2298,7 +2338,7 @@ class OperationsController extends Controller
         return $rows;
     }
 
-    private function annualShareSummaries(): \Illuminate\Support\Collection
+    private function annualShareSummaries(): Collection
     {
         $rows = collect();
 
@@ -2414,6 +2454,26 @@ class OperationsController extends Controller
         return compact('role', 'user');
     }
 
+    /**
+     * @return array{role:string,user:AdminUser|Pekerja}|RedirectResponse
+     */
+    private function requireShareManager(Request $request): array|RedirectResponse
+    {
+        $auth = $this->requireRole($request, ['admin', 'staff']);
+
+        if ($auth instanceof RedirectResponse) {
+            return $auth;
+        }
+
+        if ($auth['role'] === 'staff' && ($auth['user']->staff_type !== Pekerja::SHARE_MANAGER_STAFF_TYPE || ! $auth['user']->status_aktif)) {
+            return redirect()
+                ->route('auth.dashboard')
+                ->with('error', 'Akses modul saham hanya untuk Staff Mengurus Saham.');
+        }
+
+        return $auth;
+    }
+
     private function recordShareTransaction(string $memberType, int $memberId, string $type, string $direction, float $amount, float $balanceAfter, string $referenceType, int $referenceId, array $auth, string $notes): void
     {
         if (! Schema::hasTable('share_transactions') || $amount <= 0) {
@@ -2433,6 +2493,91 @@ class OperationsController extends Controller
             'processed_by_id' => $auth['user']->getKey(),
             'notes' => $notes,
             'transacted_at' => now()->toDateString(),
+        ]);
+    }
+
+    private function notifyNewClothingOrder(Ahli $student, ?int $tempahanId): void
+    {
+        if (! Schema::hasTable('notifications')) {
+            return;
+        }
+
+        $link = route('admin.tempahan.index', ['search' => $student->no_matrik]);
+        $title = 'Tempahan baju baharu';
+        $message = trim($student->nama.' menghantar tempahan baju'.($tempahanId ? ' #'.$tempahanId : '').'.');
+
+        AdminUser::query()
+            ->where('status_aktif', true)
+            ->each(fn (AdminUser $admin) => CooperativeNotification::query()->create([
+                'recipient_role' => 'admin',
+                'recipient_id' => $admin->getKey(),
+                'title' => $title,
+                'message' => $message,
+                'link' => $link,
+            ]));
+
+        Pekerja::query()
+            ->where('staff_type', 'clothing_staff')
+            ->where('status_aktif', true)
+            ->each(fn (Pekerja $staff) => CooperativeNotification::query()->create([
+                'recipient_role' => 'staff',
+                'recipient_id' => $staff->getKey(),
+                'title' => $title,
+                'message' => $message,
+                'link' => route('clothing-staff.orders.index', ['search' => $student->no_matrik]),
+            ]));
+    }
+
+    private function notifyClothingOrderPickedUp(int $orderId, bool $usesItemStatus): void
+    {
+        if (! Schema::hasTable('notifications')) {
+            return;
+        }
+
+        $order = $usesItemStatus
+            ? DB::table('item_tempahan')
+                ->join('tempahan', 'item_tempahan.id_tempahan', '=', 'tempahan.id_tempahan')
+                ->leftJoin('ahli', 'tempahan.id_ahli', '=', 'ahli.id_ahli')
+                ->leftJoin('item_baju', 'item_tempahan.id_item', '=', 'item_baju.id_item')
+                ->where('item_tempahan.id_item_tempahan', $orderId)
+                ->select([
+                    'tempahan.id_tempahan',
+                    'ahli.id_ahli',
+                    'ahli.nama',
+                    'ahli.no_matrik',
+                    DB::raw('COALESCE(item_baju.nama_item, "-") as nama_item'),
+                    DB::raw('COALESCE(item_baju.saiz, "-") as saiz'),
+                ])
+                ->first()
+            : DB::table('tempahan')
+                ->leftJoin('ahli', 'tempahan.id_ahli', '=', 'ahli.id_ahli')
+                ->where("tempahan.{$this->orderKeyColumn()}", $orderId)
+                ->select([
+                    DB::raw("tempahan.{$this->orderKeyColumn()} as id_tempahan"),
+                    'ahli.id_ahli',
+                    'ahli.nama',
+                    'ahli.no_matrik',
+                    DB::raw('NULL as nama_item'),
+                    DB::raw('NULL as saiz'),
+                ])
+                ->first();
+
+        if (! $order?->id_ahli) {
+            return;
+        }
+
+        $itemName = collect([$order->nama_item ?? null, $order->saiz ?? null])
+            ->filter(fn ($value): bool => filled($value) && $value !== '-')
+            ->implode(' ');
+
+        CooperativeNotification::query()->create([
+            'recipient_role' => 'ahli',
+            'recipient_id' => $order->id_ahli,
+            'title' => 'Baju anda telah diambil',
+            'message' => $itemName !== ''
+                ? "Tempahan {$itemName} anda telah ditandakan sudah diambil."
+                : 'Tempahan baju anda telah ditandakan sudah diambil.',
+            'link' => route('student.tempahan.index'),
         ]);
     }
 

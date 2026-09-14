@@ -824,6 +824,8 @@ class AuthController extends Controller
         return match ($staffType) {
             'lecturer_member' => 'lecturer-member.dashboard',
             'clothing_staff' => 'clothing-staff.dashboard',
+            Pekerja::SHARE_MANAGER_STAFF_TYPE => 'share-staff.dashboard',
+            Pekerja::COOP_MANAGER_STAFF_TYPE => 'coop-manager.dashboard',
             default => 'coop-staff.dashboard',
         };
     }

@@ -180,11 +180,13 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('admin.permohonan.destroy', $application) }}" onsubmit="return confirm('Padam permohonan ini? Tindakan ini tidak boleh dibatalkan.');">
-            @csrf
-            @method('DELETE')
-            <button class="delete-button" type="submit">Delete Permohonan</button>
-        </form>
+        @if ($role === 'admin')
+            <form method="POST" action="{{ route('admin.permohonan.destroy', $application) }}" onsubmit="return confirm('Padam permohonan ini? Tindakan ini tidak boleh dibatalkan.');">
+                @csrf
+                @method('DELETE')
+                <button class="delete-button" type="submit">Delete Permohonan</button>
+            </form>
+        @endif
 
         @unless ($isDialogMode)
             <a class="back-under-delete" href="{{ route('admin.permohonan.index') }}">Kembali</a>

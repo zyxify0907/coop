@@ -80,47 +80,30 @@
                 <header class="home-panel__head">
                     <div>
                         <span>NOTIFIKASI</span>
-                        <h2>Pusat Notifikasi</h2>
+                        <h2>Senarai Notifikasi</h2>
                     </div>
+                    <a class="mini-action" href="{{ route('notifications.index') }}">Lihat Semua</a>
                 </header>
                 <div class="notification-list">
-                    @foreach ($home['notifications'] as $notification)
-                        <a class="notification-item {{ $notification['tone'] }}" href="{{ $notification['route'] }}">
+                    @forelse ($home['notifications'] as $notification)
+                        <a class="notification-item {{ $notification->read_at ? 'is-read' : 'is-unread' }}" href="{{ $notification->link ?: route('notifications.index') }}">
                             <span class="notification-dot"></span>
-                            <strong>{{ number_format($notification['count']) }}</strong>
-                            <p>{{ $notification['label'] }}</p>
+                            <div>
+                                <strong>{{ $notification->title }}</strong>
+                                <p>{{ $notification->message ?? 'Tiada makluman tambahan.' }}</p>
+                                <small>{{ $notification->created_at?->format('d/m/Y H:i') }}</small>
+                            </div>
                         </a>
-                    @endforeach
+                    @empty
+                        <div class="home-empty compact">
+                            <strong>Tiada notifikasi terkini.</strong>
+                            <span>Notifikasi baharu akan dipaparkan di sini.</span>
+                        </div>
+                    @endforelse
                 </div>
             </aside>
         </section>
 
-        <section class="home-grid home-grid--support">
-            <article class="home-panel">
-                <header class="home-panel__head">
-                    <div>
-                        <span>AKTIVITI TERKINI</span>
-                        <h2>Aktiviti Sistem Terkini</h2>
-                    </div>
-                </header>
-                <div class="activity-list">
-                    @forelse ($home['recent_activities'] as $activity)
-                        <div class="activity-item">
-                            <span class="activity-dot"></span>
-                            <div>
-                                <strong>{{ $activity['name'] }}</strong>
-                                <small>{{ $activity['user'] }} - {{ $activity['time'] }}</small>
-                            </div>
-                        </div>
-                    @empty
-                        <div class="home-empty compact">
-                            <strong>Tiada aktiviti terkini.</strong>
-                            <span>Aktiviti baharu akan dipaparkan di sini.</span>
-                        </div>
-                    @endforelse
-                </div>
-            </article>
-        </section>
     </div>
 @endsection
 
@@ -137,13 +120,12 @@
     .home-login-card small{color:#64748B;font-weight:800}
     .home-grid{display:grid;gap:18px}
     .home-grid--main{grid-template-columns:minmax(0,1.35fr) minmax(320px,.65fr)}
-    .home-grid--support{grid-template-columns:1fr}
     .home-panel{padding:22px;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.05)}
     .home-panel__head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--line)}
     .home-panel__head h2{margin:4px 0 0;color:#0F172A;font-size:20px;line-height:1.25;font-weight:900}
     .home-primary,.mini-action{display:inline-flex;align-items:center;justify-content:center;min-height:40px;border-radius:8px;background:var(--secondary);color:#fff;padding:0 16px;text-decoration:none;font-weight:900}
     .mini-action{min-height:36px;background:#fff;color:var(--secondary);border:1px solid #BFD7FF}
-    .announcement-stack,.notification-list,.pending-list,.activity-list,.status-list{display:grid;gap:12px}
+    .announcement-stack,.notification-list{display:grid;gap:12px}
     .home-announcement{display:grid;gap:10px;padding:16px;border:1px solid #D7E3F5;border-radius:12px;background:#F8FBFF}
     .home-announcement__top,.home-announcement__meta,.home-announcement__actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
     .home-announcement__top{justify-content:space-between}
@@ -159,19 +141,15 @@
     .category-pill.general{background:#DBEAFE;color:#1D4ED8}
     .status-pill.active{background:#DCFCE7;color:#15803D}
     .status-pill.inactive{background:#FEE2E2;color:#B91C1C}
-    .notification-item,.pending-item{display:grid;grid-template-columns:auto auto minmax(0,1fr);align-items:center;gap:10px;padding:14px;border:1px solid #D7E3F5;border-radius:12px;background:#fff;color:inherit;text-decoration:none}
-    .notification-item strong,.pending-item strong{color:#0F172A;font-size:20px;font-weight:900}
-    .notification-item p{margin:0;color:#334155;font-weight:800}
+    .notification-item,.pending-item{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:flex-start;gap:10px;padding:13px 14px;border:1px solid #D7E3F5;border-radius:8px;background:#fff;color:inherit;text-decoration:none}
+    .notification-item:hover{border-color:#BFD7FF;background:#F8FBFF}
+    .notification-item strong,.pending-item strong{display:block;color:#0F172A;font-size:14px;font-weight:900;line-height:1.4}
+    .notification-item p{margin:3px 0 0;color:#475569;font-size:12px;font-weight:700;line-height:1.45}
+    .notification-item small{display:block;margin-top:6px;color:#64748B;font-size:11px;font-weight:700}
     .notification-dot{width:10px;height:10px;border-radius:999px;background:#2563EB}
-    .notification-item.yellow .notification-dot{background:#D97706}
-    .notification-item.green .notification-dot{background:#16A34A}
-    .notification-item.red .notification-dot{background:#DC2626}
+    .notification-item.is-read .notification-dot{background:#94A3B8}
     .pending-item{grid-template-columns:minmax(0,1fr) auto}
     .pending-item span{color:#334155;font-weight:900}
-    .activity-item{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff}
-    .activity-dot{width:10px;height:10px;margin-top:7px;border-radius:999px;background:var(--secondary)}
-    .activity-item strong{display:block;color:#0F172A;font-weight:900}
-    .activity-item small{display:block;margin-top:4px;color:#64748B;font-weight:800}
     .system-status-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:#fff}
     .system-status-item span{color:#334155;font-weight:900}
     .system-status-item strong{font-weight:900}
@@ -181,7 +159,7 @@
     .home-empty.compact{padding:18px}
     .home-empty strong{color:#0F172A;font-weight:900}
     .home-empty span{color:#64748B;font-weight:700}
-    @media (max-width:1100px){.home-grid--main,.home-grid--support,.home-grid--extra{grid-template-columns:1fr}}
+    @media (max-width:1100px){.home-grid--main{grid-template-columns:1fr}}
     @media (max-width:720px){.home-welcome,.home-panel__head{align-items:stretch;flex-direction:column}.home-login-card{text-align:left;min-width:0}.home-welcome h1{font-size:28px}.home-primary{width:100%}}
 </style>
 @endpush

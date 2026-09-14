@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -158,36 +159,59 @@ class AdminProfileController extends Controller
         $user = AdminUser::query()->find($request->session()->get('auth_id'));
         $validated = $request->validate([
             'search' => ['nullable', 'string', 'max:100'],
+            'staff_type' => ['nullable', Rule::in([
+                'lecturer_member',
+                'clothing_staff',
+                Pekerja::SHARE_MANAGER_STAFF_TYPE,
+                Pekerja::COOP_MANAGER_STAFF_TYPE,
+            ])],
         ]);
 
-        $staffQuery = Pekerja::query()->eligibleForShares()->orderBy('nama');
+        $staffQuery = Pekerja::query()
+            ->whereIn('staff_type', array_unique([
+                ...Pekerja::SHAREHOLDER_STAFF_TYPES,
+                Pekerja::SHARE_MANAGER_STAFF_TYPE,
+                Pekerja::COOP_MANAGER_STAFF_TYPE,
+            ]))
+            ->orderBy('nama');
         $search = trim((string) ($validated['search'] ?? ''));
+        $staffType = $validated['staff_type'] ?? '';
 
         if ($search !== '') {
             $staffQuery->where(function ($query) use ($search) {
                 $query
                     ->where('nama', 'like', '%'.$search.'%')
-                    ->orWhere('no_pekerja', 'like', '%'.$search.'%')
-                    ->orWhere('nric', 'like', '%'.$search.'%')
-                    ->orWhere('staff_type', 'like', '%'.$search.'%');
+                    ->orWhere('nric', 'like', '%'.$search.'%');
             });
         }
+
+        $staffQuery
+            ->when($staffType !== '', fn ($query) => $query->where('staff_type', $staffType));
 
         return view('admin.admin_users.staff', [
             'role' => $role,
             'user' => $user,
             'staff' => $staffQuery->paginate(30)->withQueryString(),
             'search' => $search,
+            'filters' => [
+                'staff_type' => $staffType,
+            ],
+            'staffTypeOptions' => [
+                'lecturer_member' => 'Pensyarah / Staf Akademik',
+                'clothing_staff' => 'Staff Pengurusan Baju',
+                Pekerja::SHARE_MANAGER_STAFF_TYPE => 'Staff Mengurus Saham',
+                Pekerja::COOP_MANAGER_STAFF_TYPE => 'Staff Mengurus Pekerja Koperasi',
+            ],
             'listTitle' => 'Senarai Staff',
-            'listSubtitle' => 'Paparan staff yang layak mempunyai saham koperasi sahaja.',
+            'listSubtitle' => 'Paparan staff ahli koperasi dan Support Admin.',
             'heroTitle' => 'Manage Staff',
-            'heroSubtitle' => 'Kemaskini maklumat staff yang mempunyai saham koperasi.',
+            'heroSubtitle' => 'Kemaskini maklumat staff ahli koperasi dan Support Admin.',
             'recordLabel' => 'rekod staff',
             'addButtonLabel' => 'Tambah Staff',
             'emptyTitle' => 'Tiada rekod staff.',
             'emptySubtitle' => 'Pekerja koperasi dipaparkan dalam senarai berasingan.',
             'searchLabel' => 'Cari Staff',
-            'searchPlaceholder' => 'Nama, No. KP atau jenis staff',
+            'searchPlaceholder' => 'Nama atau No. KP',
             'listRoute' => route('admin.users.staff'),
             'addButtonRoute' => route('admin.users.create', ['type' => 'staff']),
             'importRoute' => route('admin.users.staff.import'),
@@ -197,12 +221,12 @@ class AdminProfileController extends Controller
 
     public function coopWorkers(Request $request): View|RedirectResponse
     {
-        if (! $this->isAdmin($request)) {
+        if (! $this->canManageCoopWorkers($request)) {
             return redirect()->route('login');
         }
 
-        $role = 'admin';
-        $user = AdminUser::query()->find($request->session()->get('auth_id'));
+        $role = (string) $request->session()->get('auth_role');
+        $user = $this->currentBackOfficeUser($request);
         $validated = $request->validate([
             'search' => ['nullable', 'string', 'max:100'],
         ]);
@@ -214,9 +238,7 @@ class AdminProfileController extends Controller
             $staffQuery->where(function ($query) use ($search) {
                 $query
                     ->where('nama', 'like', '%'.$search.'%')
-                    ->orWhere('no_anggota', 'like', '%'.$search.'%')
-                    ->orWhere('nric', 'like', '%'.$search.'%')
-                    ->orWhere('staff_type', 'like', '%'.$search.'%');
+                    ->orWhere('nric', 'like', '%'.$search.'%');
             });
         }
 
@@ -234,7 +256,7 @@ class AdminProfileController extends Controller
             'emptyTitle' => 'Tiada rekod pekerja koperasi.',
             'emptySubtitle' => 'Klik Tambah Pekerja untuk daftar pekerja koperasi baru.',
             'searchLabel' => 'Cari Pekerja Koperasi',
-            'searchPlaceholder' => 'Nama, no pekerja atau No. KP',
+            'searchPlaceholder' => 'Nama atau No. KP',
             'listRoute' => route('admin.users.coop-workers'),
             'addButtonRoute' => route('admin.users.create', ['type' => 'staff', 'staff_type' => Pekerja::COOP_WORKER_STAFF_TYPE]),
             'showWorkerFields' => true,
@@ -243,19 +265,22 @@ class AdminProfileController extends Controller
 
     public function create(Request $request, string $type): View|RedirectResponse
     {
-        if (! $this->isAdmin($request)) {
+        $restrictToCoopWorkers = $this->isCoopManager($request);
+
+        if (! $this->isAdmin($request) && (! $restrictToCoopWorkers || $type !== 'staff' || $request->query('staff_type') !== Pekerja::COOP_WORKER_STAFF_TYPE)) {
             return redirect()->route('login');
         }
 
         abort_unless(in_array($type, ['student', 'staff'], true), 404);
 
-        $role = 'admin';
-        $user = AdminUser::query()->find($request->session()->get('auth_id'));
+        $role = (string) $request->session()->get('auth_role');
+        $user = $this->currentBackOfficeUser($request);
 
         return view('admin.admin_users.create', [
             'type' => $type,
             'role' => $role,
             'user' => $user,
+            'restrictToCoopWorkers' => $restrictToCoopWorkers,
         ]);
     }
 
@@ -335,17 +360,17 @@ class AdminProfileController extends Controller
 
     public function storeStaff(Request $request): RedirectResponse
     {
-        if (! $this->isAdmin($request)) {
+        $requestedStaffType = (string) $request->input('staff_type');
+
+        if (! $this->isAdmin($request) && (! $this->isCoopManager($request) || $requestedStaffType !== Pekerja::COOP_WORKER_STAFF_TYPE)) {
             return redirect()->route('login');
         }
-
-        $requestedStaffType = (string) $request->input('staff_type');
 
         $validated = $request->validate([
             'no_pekerja' => [Rule::requiredIf($requestedStaffType === Pekerja::COOP_WORKER_STAFF_TYPE), 'nullable', 'string', 'max:20', 'regex:/^PBT-\d+$/', 'unique:pekerja,no_pekerja'],
             'nama' => ['required', 'string', 'max:100'],
             'nric' => ['required', 'string', 'max:20', 'unique:pekerja,nric'],
-            'staff_type' => ['required', Rule::in(['lecturer_member', 'coop_staff', 'clothing_staff'])],
+            'staff_type' => ['required', Rule::in(Pekerja::STAFF_TYPES)],
             'no_tel' => ['nullable', 'string', 'max:15'],
             'email' => ['nullable', 'email', 'max:100', 'unique:pekerja,email'],
             'kadar_elaun' => ['nullable', 'numeric', 'min:0'],
@@ -382,7 +407,7 @@ class AdminProfileController extends Controller
 
     public function edit(Request $request, string $type, int $id): View|RedirectResponse
     {
-        if (! $this->isAdmin($request)) {
+        if (! $this->isAdmin($request) && ! $this->isCoopManager($request)) {
             return redirect()->route('login');
         }
 
@@ -390,26 +415,35 @@ class AdminProfileController extends Controller
 
         abort_if(! $user, 404);
 
-        $role = 'admin';
-        $adminUser = AdminUser::query()->find($request->session()->get('auth_id'));
+        if ($this->isCoopManager($request) && ($type !== 'staff' || $user->staff_type !== Pekerja::COOP_WORKER_STAFF_TYPE)) {
+            abort(403);
+        }
+
+        $role = (string) $request->session()->get('auth_role');
+        $adminUser = $this->currentBackOfficeUser($request);
 
         return view('admin.admin_users.edit', [
             'type' => $type,
             'profile' => $user,
             'role' => $role,
             'user' => $adminUser,
+            'restrictToCoopWorkers' => $this->isCoopManager($request),
         ]);
     }
 
     public function update(Request $request, string $type, int $id): RedirectResponse
     {
-        if (! $this->isAdmin($request)) {
+        if (! $this->isAdmin($request) && ! $this->isCoopManager($request)) {
             return redirect()->route('login');
         }
 
         $user = $this->findUser($type, $id);
 
         abort_if(! $user, 404);
+
+        if ($this->isCoopManager($request) && ($type !== 'staff' || $user->staff_type !== Pekerja::COOP_WORKER_STAFF_TYPE || $request->input('staff_type') !== Pekerja::COOP_WORKER_STAFF_TYPE)) {
+            abort(403);
+        }
 
         $rules = [
             'nama' => ['required', 'string', 'max:100'],
@@ -431,7 +465,7 @@ class AdminProfileController extends Controller
             $rules['email'][] = Rule::unique('pekerja', 'email')->ignore($id, 'id_pekerja');
             $requestedStaffType = (string) $request->input('staff_type', $user->staff_type);
             $rules['no_pekerja'] = [Rule::requiredIf($requestedStaffType === Pekerja::COOP_WORKER_STAFF_TYPE), 'nullable', 'string', 'max:20', 'regex:/^PBT-\d+$/', Rule::unique('pekerja', 'no_pekerja')->ignore($id, 'id_pekerja')];
-            $rules['staff_type'] = ['required', Rule::in(['lecturer_member', 'coop_staff', 'clothing_staff'])];
+            $rules['staff_type'] = ['required', Rule::in(Pekerja::STAFF_TYPES)];
             $rules['kadar_elaun'] = ['nullable', 'numeric', 'min:0'];
             $rules['tarikh_mula'] = ['nullable', 'date'];
             $rules['status_aktif'] = ['nullable', 'boolean'];
@@ -477,7 +511,7 @@ class AdminProfileController extends Controller
 
     public function destroy(Request $request, string $type, int $id): JsonResponse|RedirectResponse
     {
-        if (! $this->isAdmin($request)) {
+        if (! $this->isAdmin($request) && ! $this->isCoopManager($request)) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Sesi tamat. Sila log masuk semula.'], 401);
             }
@@ -494,6 +528,14 @@ class AdminProfileController extends Controller
 
             abort(404);
         }
+
+        if ($this->isCoopManager($request) && ($type !== 'staff' || $user->staff_type !== Pekerja::COOP_WORKER_STAFF_TYPE)) {
+            abort(403);
+        }
+
+        $redirectRoute = $type === 'student'
+            ? 'admin.users.students'
+            : ($user->staff_type === Pekerja::COOP_WORKER_STAFF_TYPE ? 'admin.users.coop-workers' : 'admin.users.staff');
 
         try {
             DB::transaction(function () use ($type, $user): void {
@@ -518,7 +560,7 @@ class AdminProfileController extends Controller
             }
 
             return redirect()
-                ->route($type === 'student' ? 'admin.users.students' : 'admin.users.staff')
+                ->route($redirectRoute)
                 ->withErrors(['delete' => 'Rekod tidak boleh dipadam kerana masih mempunyai data berkaitan.']);
         }
 
@@ -529,13 +571,38 @@ class AdminProfileController extends Controller
         }
 
         return redirect()
-            ->route($type === 'student' ? 'admin.users.students' : 'admin.users.staff')
+            ->route($redirectRoute)
             ->with('status', $message);
     }
 
     private function isAdmin(Request $request): bool
     {
         return $request->session()->get('auth_role') === 'admin';
+    }
+
+    private function isCoopManager(Request $request): bool
+    {
+        if ($request->session()->get('auth_role') !== 'staff') {
+            return false;
+        }
+
+        return Pekerja::query()
+            ->whereKey($request->session()->get('auth_id'))
+            ->where('staff_type', Pekerja::COOP_MANAGER_STAFF_TYPE)
+            ->where('status_aktif', true)
+            ->exists();
+    }
+
+    private function canManageCoopWorkers(Request $request): bool
+    {
+        return $this->isAdmin($request) || $this->isCoopManager($request);
+    }
+
+    private function currentBackOfficeUser(Request $request): AdminUser|Pekerja|null
+    {
+        return $this->isAdmin($request)
+            ? AdminUser::query()->find($request->session()->get('auth_id'))
+            : Pekerja::query()->find($request->session()->get('auth_id'));
     }
 
     private function findUser(string $type, int $id): Ahli|Pekerja|null

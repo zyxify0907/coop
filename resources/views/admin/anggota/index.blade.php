@@ -60,7 +60,7 @@
 
         <form class="anggota-search" method="GET" action="{{ route($isStaffList ? 'admin.anggota.staff' : 'admin.anggota.students') }}">
             <label for="search">Cari {{ $isStaffList ? 'Anggota Staff' : 'Anggota Student' }}</label>
-            <input id="search" name="search" type="search" value="{{ $filters['search'] ?? '' }}" placeholder="{{ $isStaffList ? 'Nama, no anggota, no pekerja, no KP atau jenis staff' : 'Nama, no anggota, no matrik, no KP atau program' }}">
+            <input id="search" name="search" type="search" value="{{ $filters['search'] ?? '' }}" placeholder="{{ $isStaffList ? 'Nama, no anggota staff, no KP atau jenis staff' : 'Nama, no anggota, no matrik, no KP atau program' }}">
             <button type="submit">Cari</button>
             @if (($filters['search'] ?? '') !== '')
                 <a href="{{ route($isStaffList ? 'admin.anggota.staff' : 'admin.anggota.students') }}">Reset</a>
@@ -72,7 +72,7 @@
                 <thead>
                     <tr>
                         <th>Nama</th>
-                        <th>{{ $isStaffList ? 'No Anggota Staff' : 'No Anggota' }}</th>
+                        <th>{{ $isStaffList ? 'No Anggota Staff' : 'No Anggota Pelajar' }}</th>
                         @unless ($isStaffList)
                             <th>No Matrik</th>
                         @endunless

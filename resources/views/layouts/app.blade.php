@@ -15,6 +15,8 @@
             ? match ($staffType) {
                 'lecturer_member' => 'Pensyarah / Staf Akademik',
                 'clothing_staff' => 'Staff Pengurusan Baju',
+                'share_staff' => 'Staff Mengurus Saham',
+                'coop_manager' => 'Staff Mengurus Pekerja Koperasi',
                 default => 'Pekerja Koperasi',
             }
             : 'Student / Ahli');
@@ -82,6 +84,50 @@
         ['section' => 'Tempahan Baju', 'label' => 'Senarai Tempahan', 'route' => 'clothing-staff.orders.index', 'active' => 'clothing-staff.orders.*', 'icon' => 'clipboard'],
     ];
 
+    $shareStaffLinks = [
+        ['section' => 'Home', 'label' => 'Home', 'route' => 'share-staff.dashboard', 'active' => 'share-staff.dashboard', 'icon' => 'grid'],
+        ['section' => 'Saham', 'label' => 'Saham', 'route' => 'share-staff.dashboard.saham', 'active' => ['share-staff.dashboard.saham', 'share-staff.shares', 'share-staff.permohonan.*', 'student.permohonan.status'], 'icon' => 'chart'],
+        ['section' => 'SAHAM', 'label' => 'Permohonan Pelajar', 'route' => 'admin.permohonan.index', 'params' => ['pemohon' => 'pelajar'], 'active' => 'admin.permohonan.*', 'icon' => 'clipboard'],
+        ['section' => 'SAHAM', 'label' => 'Permohonan Staff', 'route' => 'admin.permohonan.index', 'params' => ['pemohon' => 'staff'], 'active' => 'admin.permohonan.*', 'icon' => 'shield'],
+        ['section' => 'SAHAM', 'label' => 'Rumusan Saham', 'route' => 'admin.saham.index', 'params' => ['kategori' => 'rumusan'], 'active' => 'admin.saham.*', 'icon' => 'chart'],
+        ['section' => 'SAHAM', 'label' => 'Senarai Saham', 'route' => 'admin.saham.index', 'active' => 'admin.saham.*', 'icon' => 'book'],
+        ['section' => 'SAHAM', 'label' => 'Transaksi Saham', 'route' => 'koperasi.transactions.index', 'active' => 'koperasi.transactions.*', 'icon' => 'chart'],
+        ['section' => 'Saham Sendiri', 'label' => 'Saham', 'route' => 'share-staff.shares', 'active' => ['share-staff.shares', 'share-staff.permohonan.*'], 'icon' => 'shield'],
+    ];
+
+    $shareStaffManagementDropdown = [
+        'label' => 'Pengurusan Saham',
+        'active' => ['admin.dashboard.saham', 'admin.permohonan.*', 'admin.saham.*', 'koperasi.transactions.*'],
+        'children' => [
+            ['label' => 'Dashboard Pengurusan Saham', 'route' => 'admin.dashboard.saham', 'active' => 'admin.dashboard.saham'],
+            ['label' => 'Permohonan Anggota Pelajar', 'route' => 'admin.permohonan.index', 'params' => ['pemohon' => 'pelajar', 'jenis' => 'anggota'], 'active' => 'admin.permohonan.*'],
+            ['label' => 'Permohonan Anggota Staff', 'route' => 'admin.permohonan.index', 'params' => ['pemohon' => 'staff', 'jenis' => 'anggota'], 'active' => 'admin.permohonan.*'],
+            ['label' => 'Proses Tambah Saham', 'route' => 'admin.permohonan.index', 'params' => ['jenis' => 'saham'], 'active' => 'admin.permohonan.*'],
+            ['label' => 'Pengeluaran / Berhenti / Pindah / Bersara', 'route' => 'admin.permohonan.index', 'params' => ['jenis' => 'berhenti'], 'active' => 'admin.permohonan.*'],
+            ['label' => 'Rumusan Saham', 'route' => 'admin.saham.index', 'params' => ['kategori' => 'rumusan'], 'active' => 'admin.saham.*'],
+            ['label' => 'Transaksi Saham', 'route' => 'koperasi.transactions.index', 'params' => ['scope' => 'all'], 'active' => 'koperasi.transactions.*'],
+        ],
+    ];
+
+    $coopManagerLinks = [
+        ['section' => 'Home', 'label' => 'Home', 'route' => 'coop-manager.dashboard', 'active' => 'coop-manager.dashboard', 'icon' => 'grid'],
+        ['section' => 'Saham', 'label' => 'Saham', 'route' => 'coop-manager.dashboard.saham', 'active' => ['coop-manager.dashboard.saham', 'coop-manager.shares', 'coop-manager.permohonan.*', 'student.permohonan.status'], 'icon' => 'chart'],
+        ['section' => 'Pekerja Koperasi', 'label' => 'Akaun Pekerja', 'route' => 'admin.users.coop-workers', 'active' => 'admin.users.coop-workers', 'icon' => 'users'],
+        ['section' => 'Kehadiran Pekerja', 'label' => 'Rekod Kehadiran', 'route' => 'admin.attendance.records', 'active' => 'admin.attendance.records*', 'icon' => 'book'],
+        ['section' => 'Kehadiran Pekerja', 'label' => 'Laporan Attendance', 'route' => 'admin.attendance.reports', 'active' => 'admin.attendance.reports*', 'icon' => 'chart'],
+    ];
+
+    $coopManagerManagementDropdown = [
+        'label' => 'Pengurusan Koperasi',
+        'active' => ['coop-manager.dashboard.koperasi', 'admin.attendance.dashboard', 'admin.users.coop-workers', 'admin.attendance.records*', 'admin.attendance.reports*'],
+        'children' => [
+            ['label' => 'Dashboard Pengurusan Koperasi', 'route' => 'coop-manager.dashboard.koperasi', 'active' => ['coop-manager.dashboard.koperasi', 'admin.attendance.dashboard']],
+            ['label' => 'Akaun Pekerja Koperasi', 'route' => 'admin.users.coop-workers', 'active' => 'admin.users.coop-workers'],
+            ['label' => 'Rekod Kehadiran', 'route' => 'admin.attendance.records', 'active' => 'admin.attendance.records*'],
+            ['label' => 'Laporan Attendance', 'route' => 'admin.attendance.reports', 'active' => 'admin.attendance.reports*'],
+        ],
+    ];
+
     $studentLinks = [
         ['section' => 'Home', 'label' => 'Home', 'route' => 'auth.dashboard', 'active' => 'auth.dashboard', 'icon' => 'grid'],
         ['section' => 'Saham', 'label' => 'Saham', 'route' => 'student.dashboard.saham', 'active' => ['student.dashboard.saham', 'student.permohonan.*', 'koperasi.transactions.*'], 'icon' => 'chart'],
@@ -95,6 +141,8 @@
         'staff' => match ($staffType) {
             'lecturer_member' => $lecturerLinks,
             'clothing_staff' => $clothingStaffLinks,
+            'share_staff' => $shareStaffLinks,
+            'coop_manager' => $coopManagerLinks,
             default => $coopStaffLinks,
         },
         'ahli' => $studentLinks,
@@ -111,6 +159,16 @@
             ['section' => 'Saham', 'label' => 'Saham', 'route' => 'clothing-staff.dashboard.saham', 'active' => ['clothing-staff.dashboard.saham', 'clothing-staff.permohonan.*', 'student.permohonan.status', 'koperasi.transactions.*'], 'icon' => 'chart'],
             ['section' => 'Tempahan', 'label' => 'Tempahan', 'route' => 'clothing-staff.dashboard.baju', 'active' => ['clothing-staff.dashboard.baju', 'clothing-staff.baju.*', 'clothing-staff.orders.*'], 'icon' => 'box'],
         ],
+        'share_staff' => [
+            $shareStaffLinks[0],
+            $shareStaffLinks[1],
+            $shareStaffManagementDropdown,
+        ],
+        'coop_manager' => [
+            $coopManagerLinks[0],
+            $coopManagerLinks[1],
+            $coopManagerManagementDropdown,
+        ],
         default => [
             $coopStaffLinks[0],
             ['section' => 'Kehadiran', 'label' => 'Kehadiran', 'route' => 'coop-staff.attendance.index', 'active' => 'coop-staff.attendance.index', 'icon' => 'clipboard'],
@@ -125,11 +183,25 @@
         $role === 'admin' => 'admin.profile',
         $role === 'staff' && $staffType === 'lecturer_member' => 'lecturer-member.profile',
         $role === 'staff' && $staffType === 'clothing_staff' => 'clothing-staff.profile',
+        $role === 'staff' && $staffType === 'share_staff' => 'share-staff.profile',
+        $role === 'staff' && $staffType === 'coop_manager' => 'coop-manager.profile',
         $role === 'staff' => 'coop-staff.profile',
         $role === 'ahli' => 'student.profile',
         default => null,
     };
     $profileUrl = $profileRoute ? route($profileRoute) : '#';
+    $isPortalLinkActive = function (array $link): bool {
+        $activePatterns = (array) ($link['active'] ?? []);
+        $active = $activePatterns !== [] && request()->routeIs(...$activePatterns);
+
+        foreach (['pemohon', 'jenis', 'kategori'] as $queryKey) {
+            if (isset($link['params'][$queryKey])) {
+                $active = $active && request($queryKey) === $link['params'][$queryKey];
+            }
+        }
+
+        return $active;
+    };
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="{{ $isDialogMode ? 'dialog-mode embedded-frame' : '' }}">
@@ -2087,7 +2159,7 @@
             align-items: center;
             gap: 6px;
             margin-left: auto;
-            overflow-x: auto;
+            overflow: visible;
             scrollbar-width: none;
         }
 
@@ -2116,6 +2188,88 @@
             border-bottom-color: var(--primary);
         }
 
+        .student-topnav__dropdown {
+            position: relative;
+            flex: 0 0 auto;
+        }
+
+        .student-topnav__dropdown > summary {
+            min-height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 0 16px;
+            border-bottom: 3px solid transparent;
+            color: #334155;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 900;
+            line-height: 1;
+            list-style: none;
+            white-space: nowrap;
+        }
+
+        .student-topnav__dropdown > summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .student-topnav__dropdown > summary::after {
+            width: 7px;
+            height: 7px;
+            border-right: 2px solid currentColor;
+            border-bottom: 2px solid currentColor;
+            content: "";
+            transform: translateY(-2px) rotate(45deg);
+            transition: transform .16s ease;
+        }
+
+        .student-topnav__dropdown[open] > summary::after {
+            transform: translateY(2px) rotate(225deg);
+        }
+
+        .student-topnav__dropdown > summary:hover,
+        .student-topnav__dropdown > summary:focus-visible,
+        .student-topnav__dropdown > summary.active {
+            color: var(--secondary);
+            border-bottom-color: var(--primary);
+            outline: none;
+        }
+
+        .student-topnav__dropdown-menu {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            z-index: 70;
+            width: min(320px, calc(100vw - 32px));
+            padding: 8px;
+            border: 1px solid #E2E8F0;
+            border-radius: 8px;
+            background: #FFFFFF;
+            box-shadow: 0 18px 44px rgba(15, 23, 42, .16);
+        }
+
+        .student-topnav__links .student-topnav__dropdown-menu a {
+            width: 100%;
+            min-height: 38px;
+            justify-content: flex-start;
+            padding: 0 11px;
+            border: 0;
+            border-radius: 6px;
+            color: #334155;
+            font-size: 13px;
+            font-weight: 800;
+            line-height: 1.25;
+            white-space: normal;
+        }
+
+        .student-topnav__links .student-topnav__dropdown-menu a:hover,
+        .student-topnav__links .student-topnav__dropdown-menu a:focus-visible,
+        .student-topnav__links .student-topnav__dropdown-menu a.active {
+            background: #EEF2F7;
+            color: var(--secondary);
+        }
+
         body.student-navbar-page .topbar-actions {
             flex: 0 0 auto;
         }
@@ -2138,11 +2292,27 @@
 
             .student-topnav__links {
                 width: 100%;
+                flex-wrap: wrap;
             }
 
             .student-topnav__links a {
                 min-height: 34px;
                 padding-inline: 12px;
+            }
+
+            .student-topnav__dropdown {
+                position: static;
+            }
+
+            .student-topnav__dropdown > summary {
+                min-height: 34px;
+                padding-inline: 12px;
+            }
+
+            .student-topnav__dropdown-menu {
+                left: 12px;
+                right: auto;
+                width: min(320px, calc(100vw - 24px));
             }
 
             body.student-navbar-page .topbar-actions {
@@ -2527,11 +2697,32 @@
                             <nav class="student-topnav__links" aria-label="Menu utama">
                                 @foreach ($portalLinks as $link)
                                     @php
-                                        $href = $link['route'] ? route($link['route'], $link['params'] ?? []) : '#';
-                                        $activePatterns = (array) ($link['active'] ?? []);
-                                        $active = request()->routeIs(...$activePatterns);
+                                        $hasChildren = isset($link['children']) && is_array($link['children']);
                                     @endphp
-                                    <a class="{{ $active ? 'active' : '' }}" href="{{ $href }}" @if($active) aria-current="page" @endif>{{ $link['label'] }}</a>
+                                    @if ($hasChildren)
+                                        @php
+                                            $dropdownActive = request()->routeIs(...((array) ($link['active'] ?? [])))
+                                                || collect($link['children'])->contains(fn ($child) => $isPortalLinkActive($child));
+                                        @endphp
+                                        <details class="student-topnav__dropdown">
+                                            <summary class="{{ $dropdownActive ? 'active' : '' }}" @if($dropdownActive) aria-current="page" @endif>{{ $link['label'] }}</summary>
+                                            <div class="student-topnav__dropdown-menu">
+                                                @foreach ($link['children'] as $child)
+                                                    @php
+                                                        $href = $child['route'] ? route($child['route'], $child['params'] ?? []) : '#';
+                                                        $active = $isPortalLinkActive($child);
+                                                    @endphp
+                                                    <a class="{{ $active ? 'active' : '' }}" href="{{ $href }}" @if($active) aria-current="page" @endif>{{ $child['label'] }}</a>
+                                                @endforeach
+                                            </div>
+                                        </details>
+                                    @else
+                                        @php
+                                            $href = $link['route'] ? route($link['route'], $link['params'] ?? []) : '#';
+                                            $active = $isPortalLinkActive($link);
+                                        @endphp
+                                        <a class="{{ $active ? 'active' : '' }}" href="{{ $href }}" @if($active) aria-current="page" @endif>{{ $link['label'] }}</a>
+                                    @endif
                                 @endforeach
                             </nav>
                         </div>
@@ -2635,13 +2826,13 @@
     @stack('scripts')
     @if ($showAccountTools)
         <script>
-            document.querySelectorAll('.notification-menu, .profile-menu').forEach(function (menu) {
+            document.querySelectorAll('.notification-menu, .profile-menu, .student-topnav__dropdown').forEach(function (menu) {
                 menu.addEventListener('toggle', function () {
                     if (!menu.open) {
                         return;
                     }
 
-                    document.querySelectorAll('.notification-menu[open], .profile-menu[open]').forEach(function (otherMenu) {
+                    document.querySelectorAll('.notification-menu[open], .profile-menu[open], .student-topnav__dropdown[open]').forEach(function (otherMenu) {
                         if (otherMenu !== menu) {
                             otherMenu.open = false;
                         }
@@ -2650,7 +2841,7 @@
             });
 
             document.addEventListener('click', function (event) {
-                document.querySelectorAll('.notification-menu[open], .profile-menu[open]').forEach(function (menu) {
+                document.querySelectorAll('.notification-menu[open], .profile-menu[open], .student-topnav__dropdown[open]').forEach(function (menu) {
                     if (!menu.contains(event.target)) {
                         menu.open = false;
                     }
@@ -2659,7 +2850,7 @@
 
             document.addEventListener('keydown', function (event) {
                 if (event.key === 'Escape') {
-                    document.querySelectorAll('.notification-menu[open], .profile-menu[open]').forEach(function (menu) {
+                    document.querySelectorAll('.notification-menu[open], .profile-menu[open], .student-topnav__dropdown[open]').forEach(function (menu) {
                         menu.open = false;
                     });
                 }

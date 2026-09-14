@@ -6,6 +6,7 @@
 
 @php
     $isStudent = $type === 'student';
+    $restrictToCoopWorkers = $restrictToCoopWorkers ?? false;
     $isCoopWorkerProfile = ! $isStudent && old('staff_type', $profile->staff_type) === 'coop_staff';
     $backRoute = $isStudent
         ? route('admin.users.students')
@@ -109,17 +110,24 @@
                                 <input id="no_pekerja" name="no_pekerja" value="{{ old('no_pekerja', $profile->no_pekerja) }}" placeholder="PBT-001" required>
                                 @error('no_pekerja')<div class="field-error">{{ $message }}</div>@enderror
                             </div>
-                        @else
-                            <input type="hidden" name="no_pekerja" value="{{ old('no_pekerja', $profile->no_pekerja) }}">
                         @endif
 
                         <div class="field">
                             <label for="staff_type">Jenis Staff</label>
-                            <select id="staff_type" name="staff_type" required>
-                                <option value="lecturer_member" @selected(old('staff_type', $profile->staff_type) === 'lecturer_member')>Pensyarah / Staf Akademik</option>
-                                <option value="coop_staff" @selected(old('staff_type', $profile->staff_type) === 'coop_staff')>Pekerja Koperasi</option>
-                                <option value="clothing_staff" @selected(old('staff_type', $profile->staff_type) === 'clothing_staff')>Staff Pengurusan Baju</option>
+                            <select id="staff_type" name="staff_type" required @if(! $isCoopWorkerProfile || $restrictToCoopWorkers) disabled @endif>
+                                @if (! $restrictToCoopWorkers)
+                                    <option value="lecturer_member" @selected(old('staff_type', $profile->staff_type) === 'lecturer_member')>Pensyarah / Staf Akademik</option>
+                                    <option value="coop_staff" @selected(old('staff_type', $profile->staff_type) === 'coop_staff')>Pekerja Koperasi</option>
+                                    <option value="clothing_staff" @selected(old('staff_type', $profile->staff_type) === 'clothing_staff')>Staff Pengurusan Baju</option>
+                                    <option value="share_staff" @selected(old('staff_type', $profile->staff_type) === 'share_staff')>Staff Mengurus Saham</option>
+                                    <option value="coop_manager" @selected(old('staff_type', $profile->staff_type) === 'coop_manager')>Staff Mengurus Pekerja Koperasi</option>
+                                @else
+                                    <option value="coop_staff" selected>Pekerja Koperasi</option>
+                                @endif
                             </select>
+                            @if (! $isCoopWorkerProfile || $restrictToCoopWorkers)
+                                <input type="hidden" name="staff_type" value="{{ $profile->staff_type }}">
+                            @endif
                             @error('staff_type')<div class="field-error">{{ $message }}</div>@enderror
                         </div>
 

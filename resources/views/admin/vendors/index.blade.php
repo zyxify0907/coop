@@ -448,6 +448,7 @@
         .field.col-3 { grid-column: span 3; }
         .field.col-2 { grid-column: span 2; }
         .field.col-1 { grid-column: span 1; }
+        .field.col-11 { grid-column: span 11; }
         .field.actions { grid-column: span 1; }
     }
 
@@ -483,12 +484,12 @@
     <div class="page-head">
         <div class="page-title">
             <h1>Vendors</h1>
-            <p>Manage vendor information and payments</p>
+            <p>Manage vendor profiles and payment records</p>
         </div>
 
         <div class="page-actions">
             <div class="search-box">
-                <input type="search" id="vendorSearch" placeholder="Search vendor, account, or bank...">
+                <input type="search" id="vendorSearch" placeholder="Search vendor...">
             </div>
             <a href="#new-vendor" class="btn btn-blue">+ New Vendor</a>
         </div>
@@ -518,7 +519,7 @@
                 <form method="POST" action="{{ route('admin.vendors.store') }}">
                     @csrf
                     <div class="form-grid">
-                        <div class="field col-4 {{ $errors->has('nama_vendor') ? 'is-invalid' : '' }}">
+                        <div class="field col-11 {{ $errors->has('nama_vendor') ? 'is-invalid' : '' }}">
                             <label for="nama_vendor">Vendor</label>
                             <input
                                 id="nama_vendor"
@@ -530,38 +531,6 @@
                             >
                             <small class="help">Enter the vendor’s legal or trading name.</small>
                             @error('nama_vendor')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="field col-4 {{ $errors->has('no_akaun') ? 'is-invalid' : '' }}">
-                            <label for="no_akaun">Account</label>
-                            <input
-                                id="no_akaun"
-                                type="text"
-                                name="no_akaun"
-                                placeholder="Account number"
-                                value="{{ old('no_akaun') }}"
-                                required
-                            >
-                            <small class="help">Use the payment account number.</small>
-                            @error('no_akaun')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="field col-3 {{ $errors->has('bank') ? 'is-invalid' : '' }}">
-                            <label for="bank">Bank</label>
-                            <input
-                                id="bank"
-                                type="text"
-                                name="bank"
-                                placeholder="Bank name"
-                                value="{{ old('bank') }}"
-                                required
-                            >
-                            <small class="help">Example: Maybank, CIMB, RHB.</small>
-                            @error('bank')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -586,8 +555,6 @@
                         <tr>
                             <th style="width:60px;">#</th>
                             <th>Name</th>
-                            <th>Account</th>
-                            <th>Bank</th>
                             <th style="text-align:center;">Payments</th>
                             <th style="text-align:right;width:220px;">Actions</th>
                         </tr>
@@ -609,26 +576,6 @@
                                         >
                                     </form>
                                 </td>
-                                <td>
-                                    <input
-                                        type="text"
-                                        class="inline-input"
-                                        form="frm-{{ $vendor->vendor_id }}"
-                                        name="no_akaun"
-                                        value="{{ $vendor->no_akaun }}"
-                                        required
-                                    >
-                                </td>
-                                <td>
-                                    <input
-                                        type="text"
-                                        class="inline-input"
-                                        form="frm-{{ $vendor->vendor_id }}"
-                                        name="bank"
-                                        value="{{ $vendor->bank }}"
-                                        required
-                                    >
-                                </td>
                                 <td style="text-align:center;">
                                     <span class="badge">{{ $vendor->pembayaran_count }}</span>
                                 </td>
@@ -645,7 +592,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6">
+                                <td colspan="4">
                                     <div class="empty">
                                         <p>No vendors yet</p>
                                         <small>Add one using the form above.</small>

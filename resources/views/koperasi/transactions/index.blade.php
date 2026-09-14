@@ -25,8 +25,11 @@
             ($role ?? null) === 'ahli' => 'student.dashboard.saham',
             ($role ?? null) === 'staff' && ($user->staff_type ?? null) === 'lecturer_member' => 'lecturer-member.dashboard.saham',
             ($role ?? null) === 'staff' && ($user->staff_type ?? null) === 'clothing_staff' => 'clothing-staff.dashboard.saham',
+            ($role ?? null) === 'staff' && ($user->staff_type ?? null) === 'share_staff' => 'share-staff.dashboard.saham',
+            ($role ?? null) === 'staff' && ($user->staff_type ?? null) === 'coop_manager' => 'coop-manager.dashboard.saham',
             default => null,
         };
+        $showAllTransactions = ($canViewAllTransactions ?? false) && ! ($showOwnTransactions ?? false);
     @endphp
 
     <div class="coop-wrap transaction-page">
@@ -34,7 +37,7 @@
             <div>
                 <span class="coop-kicker">LEJAR SAHAM</span>
                 <h1>Transaksi Saham</h1>
-                <p>Setiap kali saham bertambah atau berkurang, sistem simpan rekod di sini supaya baki boleh disemak semula.</p>
+                <p>{{ $showAllTransactions ? 'Cari transaksi saham semua pelajar dan staff dalam satu tempat.' : 'Setiap kali saham bertambah atau berkurang, sistem simpan rekod di sini supaya baki boleh disemak semula.' }}</p>
             </div>
             <div class="transaction-hero__side">
                 @if ($shareDashboardRoute)
@@ -47,14 +50,25 @@
             <div class="transaction-panel__head">
                 <div>
                     <h2>Senarai Transaksi</h2>
-                    <p>Cari nama ahli, no matrik, no anggota staff atau IC untuk semak senarai transaksi saham.</p>
+                    <p>{{ $showAllTransactions ? 'Cari nama ahli, no matrik, no pekerja, no anggota staff atau IC untuk semak transaksi.' : 'Cari nama ahli, no matrik, no anggota staff atau IC untuk semak senarai transaksi saham.' }}</p>
                 </div>
             </div>
 
             <form class="transaction-filter" method="GET" action="{{ route('koperasi.transactions.index') }}">
+                @if ($canViewAllTransactions ?? false)
+                    <input type="hidden" name="scope" value="{{ $filters['scope'] ?? 'all' }}">
+                    <div class="field">
+                        <label for="member_type">Kategori Ahli</label>
+                        <select id="member_type" name="member_type">
+                            <option value="">Semua pelajar & staff</option>
+                            <option value="student" @selected(($filters['member_type'] ?? '') === 'student')>Pelajar sahaja</option>
+                            <option value="staff" @selected(($filters['member_type'] ?? '') === 'staff')>Staff sahaja</option>
+                        </select>
+                    </div>
+                @endif
                 <div class="field">
                     <label for="search">Cari Ahli</label>
-                    <input id="search" name="search" type="search" value="{{ $filters['search'] ?? '' }}" placeholder="Nama, no matrik, no anggota staff atau IC">
+                    <input id="search" name="search" type="search" value="{{ $filters['search'] ?? '' }}" placeholder="Nama, no matrik, no pekerja, no anggota staff atau IC">
                 </div>
                 <div class="field">
                     <label for="type">Jenis Transaksi</label>
@@ -75,7 +89,7 @@
                 </div>
                 <div class="transaction-filter__actions">
                     <button class="button" type="submit">Cari</button>
-                    <a class="link-button secondary" href="{{ route('koperasi.transactions.index') }}">Reset</a>
+                    <a class="link-button secondary" href="{{ route('koperasi.transactions.index', ($filters['scope'] ?? '') === 'mine' ? ['scope' => 'mine'] : []) }}">Reset</a>
                 </div>
             </form>
 
@@ -98,7 +112,7 @@
                                 $member = $transaction->member_type === 'staff' ? $transaction->staff : $transaction->student;
                                 $memberName = $member->nama ?? 'Ahli tidak dijumpai';
                                 $memberNumber = $transaction->member_type === 'staff'
-                                    ? ($member->no_anggota ?? 'Staff #'.$transaction->member_id)
+                                    ? ($member->no_anggota ?? $member->no_pekerja ?? 'Staff #'.$transaction->member_id)
                                     : ($member->no_matrik ?? 'Pelajar #'.$transaction->member_id);
                                 $memberMeta = $transaction->member_type === 'staff' ? 'Staff' : 'Pelajar';
                                 $isCredit = $transaction->direction === 'CREDIT';

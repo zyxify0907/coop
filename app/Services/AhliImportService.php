@@ -794,6 +794,8 @@ class AhliImportService
         return match ($normalized) {
             'lecturer_member', 'lecturer', 'pensyarah', 'pensyarah_staf_akademik', 'staf_akademik', 'staff_akademik' => 'lecturer_member',
             'clothing_staff', 'baju', 'staff_baju', 'staf_baju', 'pengurusan_baju' => 'clothing_staff',
+            'share_staff', 'staff_mengurus_saham', 'staf_mengurus_saham', 'pengurusan_saham' => 'share_staff',
+            'coop_manager', 'staff_mengurus_pekerja_koperasi', 'staf_mengurus_pekerja_koperasi', 'pengurusan_pekerja_koperasi' => 'coop_manager',
             default => null,
         };
     }

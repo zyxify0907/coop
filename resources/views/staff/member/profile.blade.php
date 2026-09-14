@@ -12,7 +12,10 @@
         $staffTypeLabel = match($staffType) {
             'lecturer_member' => 'Pensyarah / Staf Akademik',
             'coop_staff' => 'Pekerja Koperasi',
-            default => 'Staff Pengurusan Baju',
+            'clothing_staff' => 'Staff Pengurusan Baju',
+            'share_staff' => 'Staff Mengurus Saham',
+            'coop_manager' => 'Staff Mengurus Pekerja Koperasi',
+            default => 'Staff',
         };
         $isShareholderStaff = $user->isEligibleForShares();
         $memberNumber = $staffMemberNumber ?? $user->no_anggota;

@@ -29,6 +29,8 @@
         $role === 'ahli' => 'student.dashboard.saham',
         $role === 'staff' && ($user->staff_type ?? null) === 'lecturer_member' => 'lecturer-member.dashboard.saham',
         $role === 'staff' && ($user->staff_type ?? null) === 'clothing_staff' => 'clothing-staff.dashboard.saham',
+        $role === 'staff' && ($user->staff_type ?? null) === 'share_staff' => 'share-staff.dashboard.saham',
+        $role === 'staff' && ($user->staff_type ?? null) === 'coop_manager' => 'coop-manager.dashboard.saham',
         default => null,
     };
     $shareApplicationTypes = ['anggota', 'saham', 'berhenti', 'pengeluaran', 'pindah', 'bersara'];

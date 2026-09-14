@@ -106,7 +106,7 @@
                                 $owner = $document->owner_role === 'staff' ? $document->staff : $document->student;
                                 $ownerName = $owner->nama ?? 'Pemilik tidak dijumpai';
                                 $ownerNumber = $document->owner_role === 'staff'
-                                    ? ($owner->no_pekerja ?? 'Staff #'.$document->owner_id)
+                                    ? ($owner->no_anggota ?? 'Staff #'.$document->owner_id)
                                     : ($owner->no_matrik ?? 'Pelajar #'.$document->owner_id);
                                 $ownerLabel = $ownerLabels[$document->owner_role] ?? strtoupper($document->owner_role);
                                 $extension = strtoupper(pathinfo($document->original_name, PATHINFO_EXTENSION) ?: 'FILE');

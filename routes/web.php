@@ -40,7 +40,7 @@ Route::post('/student/tempahan/troli', [OperationsController::class, 'addStudent
 Route::patch('/student/tempahan/troli/{itemId}', [OperationsController::class, 'updateStudentOrderCart'])->name('student.tempahan.cart.update');
 Route::post('/student/tempahan/troli/hantar', [OperationsController::class, 'checkoutStudentOrderCart'])->name('student.tempahan.cart.checkout');
 Route::delete('/student/tempahan/troli/{itemId}', [OperationsController::class, 'removeStudentOrderCart'])->name('student.tempahan.cart.remove');
-Route::middleware('staff.type:lecturer_member,coop_staff,clothing_staff')->group(function (): void {
+Route::middleware('staff.type:lecturer_member,coop_staff,clothing_staff,share_staff,coop_manager')->group(function (): void {
     Route::get('/student/permohonan/{jenis?}', [PermohonanController::class, 'studentIndex'])->name('student.permohonan.index');
     Route::post('/student/permohonan/{jenis}', [PermohonanController::class, 'store'])->name('student.permohonan.store');
     Route::get('/koperasi/dokumen', [CooperativeController::class, 'documents'])->name('koperasi.documents.index');
@@ -66,6 +66,29 @@ Route::prefix('lecturer-member')->middleware('staff.type:strict,lecturer_member'
 
 Route::prefix('coop-staff')->middleware('staff.type:strict,coop_staff')->name('coop-staff.')->group(function (): void {
     Route::get('/dashboard', [StaffPortalController::class, 'cooperativeDashboard'])->name('dashboard');
+    Route::get('/profil', [StaffPortalController::class, 'profile'])->name('profile');
+    Route::patch('/profil', [StaffPortalController::class, 'updateProfile'])->name('profile.update');
+    Route::patch('/profil/password', [StaffPortalController::class, 'updatePassword'])->name('profile.password');
+});
+
+Route::prefix('share-staff')->middleware('staff.type:strict,share_staff')->name('share-staff.')->group(function (): void {
+    Route::get('/dashboard', [StaffPortalController::class, 'shareManagerDashboard'])->name('dashboard');
+    Route::get('/dashboard-saham', [StaffPortalController::class, 'shareDashboard'])->name('dashboard.saham');
+    Route::get('/permohonan/{jenis?}', [PermohonanController::class, 'studentIndex'])->name('permohonan.index');
+    Route::post('/permohonan/{jenis}', [PermohonanController::class, 'store'])->name('permohonan.store');
+    Route::get('/saham-sendiri', [StaffPortalController::class, 'shares'])->name('shares');
+    Route::get('/profil', [StaffPortalController::class, 'profile'])->name('profile');
+    Route::patch('/profil', [StaffPortalController::class, 'updateProfile'])->name('profile.update');
+    Route::patch('/profil/password', [StaffPortalController::class, 'updatePassword'])->name('profile.password');
+});
+
+Route::prefix('coop-manager')->middleware('staff.type:strict,coop_manager')->name('coop-manager.')->group(function (): void {
+    Route::get('/dashboard', [StaffPortalController::class, 'coopManagerDashboard'])->name('dashboard');
+    Route::get('/dashboard-saham', [StaffPortalController::class, 'shareDashboard'])->name('dashboard.saham');
+    Route::get('/dashboard-koperasi', [AttendanceController::class, 'dashboard'])->name('dashboard.koperasi');
+    Route::get('/permohonan/{jenis?}', [PermohonanController::class, 'studentIndex'])->name('permohonan.index');
+    Route::post('/permohonan/{jenis}', [PermohonanController::class, 'store'])->name('permohonan.store');
+    Route::get('/saham-sendiri', [StaffPortalController::class, 'shares'])->name('shares');
     Route::get('/profil', [StaffPortalController::class, 'profile'])->name('profile');
     Route::patch('/profil', [StaffPortalController::class, 'updateProfile'])->name('profile.update');
     Route::patch('/profil/password', [StaffPortalController::class, 'updatePassword'])->name('profile.password');

@@ -122,11 +122,13 @@
 
                     <div class="row-actions">
                         <a class="mini-button mini-button--view" href="{{ route('admin.permohonan.show', $application) }}" data-view-dialog-open data-dialog-title="Butiran Permohonan" data-dialog-url="{{ route('admin.permohonan.show', ['permohonan' => $application, 'dialog' => 1]) }}">Lihat</a>
-                        <form method="POST" action="{{ route('admin.permohonan.destroy', $application) }}" onsubmit="return confirm('Padam permohonan ini? Tindakan ini tidak boleh dibatalkan.');">
-                            @csrf
-                            @method('DELETE')
-                            <button class="mini-button mini-button--delete" type="submit">Delete</button>
-                        </form>
+                        @if ($role === 'admin')
+                            <form method="POST" action="{{ route('admin.permohonan.destroy', $application) }}" onsubmit="return confirm('Padam permohonan ini? Tindakan ini tidak boleh dibatalkan.');">
+                                @csrf
+                                @method('DELETE')
+                                <button class="mini-button mini-button--delete" type="submit">Delete</button>
+                            </form>
+                        @endif
                     </div>
                 </div>
             </div>

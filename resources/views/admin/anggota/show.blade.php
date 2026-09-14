@@ -23,7 +23,7 @@
     $memberInfo = $isStaffMember ? collect([
         'nama_penuh' => $application->nama_pemohon,
         'no_tel' => $application->no_tel,
-        'no_anggota' => $memberNumber,
+        'no_anggota_staff' => $memberNumber,
         'no_kp' => optional($member)->nric ?? $data['no_kad_pengenalan'] ?? '-',
         'jenis_staff' => optional($member)->staff_type_label ?? $data['jenis_staff'] ?? '-',
         'status_anggota' => 'Diluluskan',
@@ -43,7 +43,7 @@
         'nama_penuh' => $application->nama_pemohon,
         'no_tel' => $application->no_tel,
         'no_matrik' => $application->no_matrik,
-        'no_anggota' => optional($member)->no_anggota,
+        'no_anggota_pelajar' => optional($member)->no_anggota,
         'no_kp' => optional($member)->nric ?? $data['no_kad_pengenalan'] ?? '-',
         'semester' => optional($member)->semester,
         'program' => $data['program_pengajian'] ?? optional($member)->program,
@@ -98,7 +98,7 @@
 
     <div class="detail-metrics">
         <section>
-            <span>No Anggota</span>
+            <span>{{ $isStaffMember ? 'No Anggota Staff' : 'No Anggota Pelajar' }}</span>
             <strong>{{ $memberNumber ?: '-' }}</strong>
         </section>
         <section>

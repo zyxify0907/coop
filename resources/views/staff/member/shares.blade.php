@@ -13,9 +13,11 @@
     $staffTypeLabel = match ($staffType) {
         'lecturer_member' => 'Pensyarah / Staf Akademik',
         'clothing_staff' => 'Staff Pengurusan Baju',
-        default => 'Pekerja Koperasi',
+        'share_staff' => 'Staff Mengurus Saham',
+        'coop_manager' => 'Staff Mengurus Pekerja Koperasi',
+        default => 'Staff',
     };
-    $memberNumber = $user->no_anggota ?? 'Belum dijana';
+    $memberNumber = $staffMemberNumber ?? $user->no_anggota ?? 'Belum menjadi anggota';
     $moneyOrPending = fn ($value) => $shareRecord ? 'RM '.number_format((float) $value, 2) : 'Belum diisi admin';
 @endphp
 
@@ -30,7 +32,7 @@
 
     <div class="shares-metrics">
         <section>
-            <span>No Anggota</span>
+            <span>No Anggota Staff</span>
             <strong>{{ $memberNumber }}</strong>
             <small>{{ $staffTypeLabel }}</small>
         </section>
@@ -72,7 +74,6 @@
             </div>
             <table class="detail-table">
                 <tr><th>Nama</th><td>{{ $user->nama }}</td></tr>
-                <tr><th>No Pekerja</th><td>{{ $user->no_pekerja ?? '-' }}</td></tr>
                 <tr><th>No. KP</th><td>{{ $user->nric ?? '-' }}</td></tr>
                 <tr><th>Jenis Staff</th><td>{{ $staffTypeLabel }}</td></tr>
                 <tr><th>Syer Asas</th><td>{{ $moneyOrPending(optional($shareRecord)->syer) }}</td></tr>

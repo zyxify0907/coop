@@ -44,6 +44,7 @@
                 </div>
             </article>
 
+            @if ($role === 'admin')
             <article class="module-panel">
                 <header><div><span>CORRECTION</span><h2>Pembetulan Pending</h2></div><a href="{{ route('admin.attendance.corrections') }}">Semak</a></header>
                 <div class="module-list">
@@ -57,6 +58,7 @@
                     @endforelse
                 </div>
             </article>
+            @endif
         </section>
     </div>
 @endsection

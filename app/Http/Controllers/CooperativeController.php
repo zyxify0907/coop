@@ -10,8 +10,6 @@ use App\Models\CooperativeSetting;
 use App\Models\DocumentUpload;
 use App\Models\Pekerja;
 use App\Models\Permohonan;
-use App\Models\Saham;
-use App\Models\SahamStaff;
 use App\Models\ShareTransaction;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -58,7 +56,9 @@ class CooperativeController extends Controller
             ->when(array_key_exists($category, $categories), fn ($query) => $query->where('category', $category))
             ->when($auth['role'] === 'admin' && in_array($ownerRole, $allowedOwnerRoles, true), fn ($query) => $query->where('owner_role', $ownerRole))
             ->when($search !== '', function ($query) use ($search): void {
-                $query->where(function ($searchQuery) use ($search): void {
+                $staffHasMemberNumber = Schema::hasColumn('pekerja', 'no_anggota');
+
+                $query->where(function ($searchQuery) use ($search, $staffHasMemberNumber): void {
                     $searchQuery
                         ->where('original_name', 'like', "%{$search}%")
                         ->when(Schema::hasColumn('document_uploads', 'application_purpose'), fn ($purposeQuery) => $purposeQuery->orWhere('application_purpose', 'like', "%{$search}%"))
@@ -72,14 +72,18 @@ class CooperativeController extends Controller
                                         ->orWhere('nric', 'like', "%{$search}%");
                                 });
                         })
-                        ->orWhere(function ($staffScope) use ($search): void {
+                        ->orWhere(function ($staffScope) use ($search, $staffHasMemberNumber): void {
                             $staffScope
                                 ->where('owner_role', 'staff')
-                                ->whereHas('staff', function ($staffQuery) use ($search): void {
+                                ->whereHas('staff', function ($staffQuery) use ($search, $staffHasMemberNumber): void {
                                     $staffQuery
                                         ->where('nama', 'like', "%{$search}%")
                                         ->orWhere('no_pekerja', 'like', "%{$search}%")
                                         ->orWhere('nric', 'like', "%{$search}%");
+
+                                    if ($staffHasMemberNumber) {
+                                        $staffQuery->orWhere('no_anggota', 'like', "%{$search}%");
+                                    }
                                 });
                         });
                 });
@@ -222,15 +226,27 @@ class CooperativeController extends Controller
         $search = trim((string) $request->query('search', ''));
         $type = trim((string) $request->query('type', ''));
         $direction = trim((string) $request->query('direction', ''));
+        $memberType = trim((string) $request->query('member_type', ''));
+        $scope = trim((string) $request->query('scope', ''));
         $allowedTypes = ['OPENING_BALANCE', 'SHARE_ADDITION', 'SHARE_WITHDRAWAL', 'MANUAL_CREATE', 'MANUAL_UPDATE', 'MANUAL_ADJUSTMENT'];
         $allowedDirections = ['CREDIT', 'DEBIT'];
+        $allowedMemberTypes = ['student', 'staff'];
+        $canViewAllTransactions = $auth['role'] === 'admin'
+            || (
+                $auth['role'] === 'staff'
+                && ($auth['user']->staff_type ?? null) === Pekerja::SHARE_MANAGER_STAFF_TYPE
+            );
+        $showOwnTransactions = ! $canViewAllTransactions || $scope === 'mine';
 
         $transactions = ShareTransaction::query()
             ->with(['student', 'staff'])
             ->when(in_array($type, $allowedTypes, true), fn ($query) => $query->where('transaction_type', $type))
             ->when(in_array($direction, $allowedDirections, true), fn ($query) => $query->where('direction', $direction))
+            ->when($canViewAllTransactions && in_array($memberType, $allowedMemberTypes, true), fn ($query) => $query->where('member_type', $memberType))
             ->when($search !== '', function ($query) use ($search): void {
-                $query->where(function ($searchQuery) use ($search): void {
+                $staffHasMemberNumber = Schema::hasColumn('pekerja', 'no_anggota');
+
+                $query->where(function ($searchQuery) use ($search, $staffHasMemberNumber): void {
                     $searchQuery
                         ->where(function ($studentScope) use ($search): void {
                             $studentScope
@@ -242,14 +258,18 @@ class CooperativeController extends Controller
                                         ->orWhere('nric', 'like', "%{$search}%");
                                 });
                         })
-                        ->orWhere(function ($staffScope) use ($search): void {
+                        ->orWhere(function ($staffScope) use ($search, $staffHasMemberNumber): void {
                             $staffScope
                                 ->where('member_type', 'staff')
-                                ->whereHas('staff', function ($staffQuery) use ($search): void {
+                                ->whereHas('staff', function ($staffQuery) use ($search, $staffHasMemberNumber): void {
                                     $staffQuery
                                         ->where('nama', 'like', "%{$search}%")
                                         ->orWhere('no_pekerja', 'like', "%{$search}%")
                                         ->orWhere('nric', 'like', "%{$search}%");
+
+                                    if ($staffHasMemberNumber) {
+                                        $staffQuery->orWhere('no_anggota', 'like', "%{$search}%");
+                                    }
                                 });
                         });
                 });
@@ -259,17 +279,21 @@ class CooperativeController extends Controller
 
         if ($auth['role'] === 'ahli') {
             $transactions->where('member_type', 'student')->where('member_id', $auth['user']->getKey());
-        } elseif ($auth['role'] === 'staff') {
+        } elseif ($auth['role'] === 'staff' && $showOwnTransactions) {
             $transactions->where('member_type', 'staff')->where('member_id', $auth['user']->getKey());
         }
 
         return view('koperasi.transactions.index', [
             ...$auth,
             'transactions' => $transactions->paginate(30)->withQueryString(),
+            'canViewAllTransactions' => $canViewAllTransactions,
+            'showOwnTransactions' => $showOwnTransactions,
             'filters' => [
                 'search' => $search,
                 'type' => in_array($type, $allowedTypes, true) ? $type : '',
                 'direction' => in_array($direction, $allowedDirections, true) ? $direction : '',
+                'member_type' => $canViewAllTransactions && in_array($memberType, $allowedMemberTypes, true) ? $memberType : '',
+                'scope' => $showOwnTransactions ? 'mine' : 'all',
             ],
         ]);
     }
@@ -323,13 +347,53 @@ class CooperativeController extends Controller
             return $auth;
         }
 
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:100'],
+            'status' => ['nullable', 'in:all,unread,read'],
+            'period' => ['nullable', 'in:all,today,week,month'],
+        ]);
+        $filters['status'] = $filters['status'] ?? 'all';
+        $filters['period'] = $filters['period'] ?? 'all';
+
+        $notificationQuery = CooperativeNotification::query()
+            ->where('recipient_role', $auth['role'])
+            ->where('recipient_id', $auth['user']->getKey());
+
+        $summary = [
+            'total' => (clone $notificationQuery)->count(),
+            'unread' => (clone $notificationQuery)->whereNull('read_at')->count(),
+            'read' => (clone $notificationQuery)->whereNotNull('read_at')->count(),
+        ];
+
+        if ($filters['search'] ?? null) {
+            $search = trim($filters['search']);
+            $notificationQuery->where(function ($query) use ($search): void {
+                $query->where('title', 'like', "%{$search}%")
+                    ->orWhere('message', 'like', "%{$search}%");
+            });
+        }
+
+        match ($filters['status']) {
+            'unread' => $notificationQuery->whereNull('read_at'),
+            'read' => $notificationQuery->whereNotNull('read_at'),
+            default => null,
+        };
+
+        match ($filters['period']) {
+            'today' => $notificationQuery->whereDate('created_at', today()),
+            'week' => $notificationQuery->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]),
+            'month' => $notificationQuery->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()]),
+            default => null,
+        };
+
         return view('koperasi.notifications.index', [
             ...$auth,
-            'notifications' => CooperativeNotification::query()
-                ->where('recipient_role', $auth['role'])
-                ->where('recipient_id', $auth['user']->getKey())
+            'filters' => $filters,
+            'summary' => $summary,
+            'notifications' => $notificationQuery
                 ->latest()
-                ->paginate(20),
+                ->paginate(20)
+                ->withQueryString(),
         ]);
     }
 
@@ -341,13 +405,22 @@ class CooperativeController extends Controller
             return $auth;
         }
 
-        CooperativeNotification::query()
+        $validated = $request->validate([
+            'notification_id' => ['nullable', 'integer'],
+        ]);
+
+        $query = CooperativeNotification::query()
             ->where('recipient_role', $auth['role'])
             ->where('recipient_id', $auth['user']->getKey())
-            ->whereNull('read_at')
-            ->update(['read_at' => now()]);
+            ->whereNull('read_at');
 
-        return back()->with('status', 'Semua notifikasi ditanda sudah dibaca.');
+        if (! empty($validated['notification_id'])) {
+            $query->whereKey($validated['notification_id']);
+        }
+
+        $query->update(['read_at' => now()]);
+
+        return back()->with('status', 'Notifikasi ditanda sudah dibaca.');
     }
 
     public function staffWorkflow(Request $request): View|RedirectResponse

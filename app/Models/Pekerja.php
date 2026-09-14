@@ -10,9 +10,26 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 #[Fillable(['no_anggota', 'no_pekerja', 'nama', 'nric', 'password_hash', 'jawatan', 'staff_type', 'no_tel', 'email', 'kadar_elaun', 'tarikh_mula', 'status_aktif'])]
 class Pekerja extends Model
 {
-    public const SHAREHOLDER_STAFF_TYPES = ['lecturer_member', 'clothing_staff'];
+    public const SHAREHOLDER_STAFF_TYPES = [
+        'lecturer_member',
+        'clothing_staff',
+        self::SHARE_MANAGER_STAFF_TYPE,
+        self::COOP_MANAGER_STAFF_TYPE,
+    ];
 
     public const COOP_WORKER_STAFF_TYPE = 'coop_staff';
+
+    public const SHARE_MANAGER_STAFF_TYPE = 'share_staff';
+
+    public const COOP_MANAGER_STAFF_TYPE = 'coop_manager';
+
+    public const STAFF_TYPES = [
+        'lecturer_member',
+        self::COOP_WORKER_STAFF_TYPE,
+        'clothing_staff',
+        self::SHARE_MANAGER_STAFF_TYPE,
+        self::COOP_MANAGER_STAFF_TYPE,
+    ];
 
     protected $table = 'pekerja';
 
@@ -45,6 +62,8 @@ class Pekerja extends Model
         return match ($this->staff_type) {
             'lecturer_member' => 'Pensyarah / Staf Akademik',
             'clothing_staff' => 'Staff Pengurusan Baju',
+            self::SHARE_MANAGER_STAFF_TYPE => 'Staff Mengurus Saham',
+            self::COOP_MANAGER_STAFF_TYPE => 'Staff Mengurus Pekerja Koperasi',
             default => 'Pekerja Koperasi',
         };
     }

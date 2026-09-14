@@ -15,8 +15,8 @@ use App\Services\AhliImportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class AhliController extends Controller
@@ -109,7 +109,6 @@ class AhliController extends Controller
                         }
 
                         $staffQuery
-                            ->orWhere('no_pekerja', 'like', "%{$search}%")
                             ->orWhere('nama', 'like', "%{$search}%")
                             ->orWhere('nric', 'like', "%{$search}%")
                             ->orWhere('email', 'like', "%{$search}%")

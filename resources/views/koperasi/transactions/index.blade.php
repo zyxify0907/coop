@@ -398,5 +398,303 @@
                 width: 100%;
             }
         }
+
+        .content:has(> .transaction-page) {
+            background: #F4F7FB;
+        }
+
+        .content > .transaction-page {
+            width: min(100% - 48px, 1500px);
+            max-width: 1500px;
+            margin-inline: auto;
+            gap: 20px;
+        }
+
+        .content .transaction-page .transaction-hero {
+            position: relative;
+            min-height: 0 !important;
+            padding: 26px 30px !important;
+            border: 1px solid #D7E2EF !important;
+            border-left: 6px solid #082F59 !important;
+            border-radius: 10px !important;
+            background: #fff !important;
+            background-image: none !important;
+            box-shadow: 0 7px 18px rgba(8, 47, 89, .035) !important;
+        }
+
+        .content .transaction-page .transaction-hero::before {
+            content: "";
+            position: absolute;
+            top: 24px;
+            left: 30px;
+            width: 42px;
+            height: 3px;
+            border-radius: 999px;
+            background: #ED1C2E;
+        }
+
+        .content .transaction-page .coop-kicker {
+            margin-top: 15px;
+            min-height: 24px;
+            padding: 0 10px;
+            border-radius: 5px;
+            background: #EAF3FF;
+            color: #0B5ED7;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: .04em;
+        }
+
+        .content .transaction-page .transaction-hero h1 {
+            margin: 12px 0 0 !important;
+            color: #082F59 !important;
+            font-size: 32px !important;
+            line-height: 1.15 !important;
+            font-weight: 900 !important;
+        }
+
+        .content .transaction-page .transaction-hero p {
+            margin: 9px 0 0 !important;
+            color: #496487 !important;
+            font-size: 15px !important;
+            font-weight: 750 !important;
+            line-height: 1.45 !important;
+        }
+
+        .content .transaction-page .student-share-backlink {
+            min-height: 40px;
+            padding: 0 17px;
+            border: 1px solid #B9CBE4;
+            border-radius: 7px;
+            background: #fff;
+            color: #0B5ED7;
+            font-size: 13px;
+            box-shadow: none;
+        }
+
+        .content .transaction-page .student-share-backlink::before {
+            color: #082F59;
+        }
+
+        .content .transaction-page .transaction-panel {
+            border: 1px solid #D7E2EF !important;
+            border-radius: 10px !important;
+            background: #fff !important;
+            box-shadow: 0 7px 18px rgba(8, 47, 89, .035) !important;
+        }
+
+        .content .transaction-page .transaction-panel__head {
+            position: relative;
+            padding: 25px 26px 20px;
+            border-bottom: 1px solid #D7E2EF;
+            background: #fff;
+        }
+
+        .content .transaction-page .transaction-panel__head::before {
+            content: "";
+            display: block;
+            width: 42px;
+            height: 3px;
+            margin-bottom: 11px;
+            border-radius: 999px;
+            background: #ED1C2E;
+        }
+
+        .content .transaction-page .transaction-panel__head h2 {
+            color: #082F59;
+            font-size: 24px;
+            line-height: 1.2;
+            font-weight: 900;
+        }
+
+        .content .transaction-page .transaction-panel__head p {
+            margin-top: 7px;
+            color: #496487;
+            font-size: 14px;
+            font-weight: 750;
+        }
+
+        .content .transaction-page .transaction-filter {
+            display: flex;
+            align-items: end;
+            gap: 10px;
+            padding: 13px 26px 15px;
+            border-bottom: 1px solid #D7E2EF;
+            background: #FBFDFF;
+        }
+
+        .content .transaction-page .transaction-filter .field {
+            min-width: 0;
+            flex: 1 1 0;
+        }
+
+        .content .transaction-page .transaction-filter .field:first-of-type {
+            flex-basis: 230px;
+        }
+
+        .content .transaction-page .transaction-filter .field:nth-of-type(2) {
+            flex-basis: 270px;
+        }
+
+        .content .transaction-page .transaction-filter__actions {
+            flex: 0 0 auto;
+            gap: 8px;
+        }
+
+        .content .transaction-page .transaction-filter .field label {
+            margin-bottom: 6px;
+            color: #496487;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: .04em;
+        }
+
+        .content .transaction-page .transaction-filter input,
+        .content .transaction-page .transaction-filter select {
+            min-height: 38px;
+            border: 1px solid #D7E2EF;
+            border-radius: 7px;
+            background: #fff;
+            color: #082F59;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .content .transaction-page .button,
+        .content .transaction-page .link-button {
+            min-height: 38px !important;
+            border-radius: 7px !important;
+            padding: 0 16px !important;
+            font-size: 12px !important;
+            font-weight: 900 !important;
+        }
+
+        .content .transaction-page .button {
+            border-color: #0B5ED7 !important;
+            background: #0B5ED7 !important;
+            color: #fff !important;
+            box-shadow: 0 6px 14px rgba(11, 94, 215, .14) !important;
+        }
+
+        .content .transaction-page .link-button {
+            border: 1px solid #B9CBE4 !important;
+            background: #fff !important;
+            color: #0B5ED7 !important;
+        }
+
+        .content .transaction-page .transaction-table-wrap {
+            overflow-x: auto;
+            background: #fff;
+        }
+
+        .content .transaction-page .transaction-table {
+            width: 100%;
+            min-width: 1060px;
+            border-collapse: collapse;
+        }
+
+        .content .transaction-page .transaction-table th {
+            padding: 11px 16px;
+            border-bottom: 1px solid #D7E2EF;
+            background: #F8FBFF;
+            color: #496487;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: .03em;
+        }
+
+        .content .transaction-page .transaction-table td {
+            padding: 10px 16px;
+            border-bottom: 1px solid #D7E2EF;
+            color: #082F59;
+            font-size: 13px;
+            font-weight: 750;
+        }
+
+        .content .transaction-page .transaction-table tbody tr:hover td {
+            background: #F8FBFF;
+        }
+
+        .content .transaction-page .member-cell {
+            gap: 10px;
+        }
+
+        .content .transaction-page .member-avatar {
+            width: 34px;
+            height: 34px;
+            border: 1px solid #CFE0F5;
+            background: #EAF3FF;
+            color: #0B5ED7;
+            font-size: 12px;
+        }
+
+        .content .transaction-page .member-cell strong {
+            color: #082F59;
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        .content .transaction-page .member-cell span {
+            color: #496487;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .content .transaction-page .type-pill,
+        .content .transaction-page .direction-pill {
+            min-height: 26px;
+            padding: 0 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 900;
+        }
+
+        .content .transaction-page .type-pill {
+            border: 1px solid #CFE0F5;
+            background: #EAF3FF;
+            color: #0B5ED7;
+        }
+
+        .content .transaction-page .direction-pill.is-credit {
+            border: 1px solid #B8EFCB;
+            background: #DDF8E7;
+            color: #128A4A;
+        }
+
+        .content .transaction-page .direction-pill.is-debit {
+            border: 1px solid #F6C7C7;
+            background: #FDECEC;
+            color: #C4162A;
+        }
+
+        .content .transaction-page .money {
+            color: #082F59;
+            font-family: inherit;
+            font-weight: 900;
+        }
+
+        .content .transaction-page .money--credit {
+            color: #128A4A;
+        }
+
+        .content .transaction-page .money--debit {
+            color: #C4162A;
+        }
+
+        .content .transaction-page .note-cell {
+            color: #496487;
+            line-height: 1.45;
+        }
+
+        @media (max-width: 900px) {
+            .content > .transaction-page {
+                width: 100%;
+            }
+
+            .content .transaction-page .transaction-filter {
+                display: grid;
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 @endpush

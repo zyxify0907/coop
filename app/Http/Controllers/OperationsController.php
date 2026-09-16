@@ -1533,6 +1533,30 @@ class OperationsController extends Controller
         return redirect()->route('admin.saham.index')->with('status', 'Rekod saham berjaya dipadam.');
     }
 
+    public function destroyStaffSaham(Request $request, Pekerja $staff): RedirectResponse
+    {
+        $auth = $this->requireShareManager($request);
+
+        if ($auth instanceof RedirectResponse) {
+            return $auth;
+        }
+
+        $share = SahamStaff::query()->where('id_pekerja', $staff->id_pekerja)->first();
+
+        if (! $share) {
+            return redirect()
+                ->route('admin.saham.index', ['kategori' => 'staff'])
+                ->withErrors(['saham' => 'Rekod saham staff tidak dijumpai.']);
+        }
+
+        $this->audit($request, $auth, 'delete', 'saham_staff', $share, 'Rekod saham staff dipadam.');
+        $share->delete();
+
+        return redirect()
+            ->route('admin.saham.index', ['kategori' => 'staff'])
+            ->with('status', 'Rekod saham staff berjaya dipadam.');
+    }
+
     public function reports(Request $request): View|RedirectResponse
     {
         $auth = $this->requireShareManager($request);

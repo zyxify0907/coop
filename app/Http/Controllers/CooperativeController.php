@@ -204,7 +204,7 @@ class CooperativeController extends Controller
             return $auth;
         }
 
-        if (! $this->canAccessDocument($auth, $document)) {
+        if (! $this->canAccessDocument($auth, $document, false)) {
             return redirect()->route('auth.dashboard')->withErrors(['access' => 'Anda tidak dibenarkan memadam dokumen ini.']);
         }
 
@@ -570,9 +570,16 @@ class CooperativeController extends Controller
         return $application;
     }
 
-    private function canAccessDocument(array $auth, DocumentUpload $document): bool
+    private function canAccessDocument(array $auth, DocumentUpload $document, bool $allowShareManager = true): bool
     {
         if ($auth['role'] === 'admin') {
+            return true;
+        }
+
+        if ($allowShareManager
+            && $auth['role'] === 'staff'
+            && ($auth['user']->staff_type ?? null) === Pekerja::SHARE_MANAGER_STAFF_TYPE
+            && ($auth['user']->status_aktif ?? false)) {
             return true;
         }
 

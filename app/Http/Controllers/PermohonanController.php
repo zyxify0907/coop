@@ -349,6 +349,7 @@ class PermohonanController extends Controller
 
         $this->audit($request, $authRole, $user->getKey(), 'create', 'permohonan', $application, 'Permohonan koperasi dihantar.');
         $this->notifyAdmins('Permohonan baru', $user->nama.' menghantar '.$types[$jenis]['label'].'.', route('admin.permohonan.show', $application));
+        $this->notifyShareManagers('Permohonan baru', $user->nama.' menghantar '.$types[$jenis]['label'].'.', route('admin.permohonan.show', $application));
 
         $documentPrompt = $this->buildDocumentUploadPrompt($jenis, $validated);
         $redirectRoute = $authRole === 'staff'
@@ -734,11 +735,16 @@ class PermohonanController extends Controller
             $this->notifyApplicant($application, 'Tambah saham diluluskan', 'Permohonan tambah saham anda telah diluluskan.', route('student.permohonan.index', ['jenis' => 'saham']));
         });
 
+        $statusMessage = $this->isStaffApplication($application)
+            ? 'Saham staff berjaya ditambah dan rekod itu sudah masuk ke senarai Saham Staff.'
+            : 'Saham pelajar berjaya ditambah. Anda masih boleh simpan catatan admin di page ini, dan perubahan itu sudah masuk ke senarai Saham Pelajar.';
+
         return redirect()
-            ->route('admin.permohonan.show', $application)
-            ->with('status', $this->isStaffApplication($application)
-                ? 'Saham staff berjaya ditambah dan rekod itu sudah masuk ke senarai Saham Staff.'
-                : 'Saham pelajar berjaya ditambah. Anda masih boleh simpan catatan admin di page ini, dan perubahan itu sudah masuk ke senarai Saham Pelajar.');
+            ->route('admin.permohonan.show', [
+                'permohonan' => $application,
+                ...($request->boolean('dialog') ? ['dialog' => 1, 'dialog_complete' => 1] : []),
+            ])
+            ->with('status', $statusMessage);
     }
 
     public function storeWithdrawalProcess(Request $request, Permohonan $permohonan): RedirectResponse
@@ -833,19 +839,27 @@ class PermohonanController extends Controller
             $this->notifyApplicant($application, 'Pengeluaran diproses', 'Permohonan pengeluaran anda telah diproses.', route('student.permohonan.index', ['jenis' => 'berhenti']));
         });
 
+        $statusMessage = $this->isStaffApplication($application)
+            ? 'Pengeluaran staff berjaya diproses dan baki baharu sudah dikemaskini dalam rekod saham staff.'
+            : 'Pengeluaran berjaya diproses. Anda masih boleh simpan catatan admin di page ini, dan baki baharu sudah dikemaskini dalam rekod saham.';
+
         return redirect()
-            ->route('admin.permohonan.show', $application)
-            ->with('status', $this->isStaffApplication($application)
-                ? 'Pengeluaran staff berjaya diproses dan baki baharu sudah dikemaskini dalam rekod saham staff.'
-                : 'Pengeluaran berjaya diproses. Anda masih boleh simpan catatan admin di page ini, dan baki baharu sudah dikemaskini dalam rekod saham.');
+            ->route('admin.permohonan.show', [
+                'permohonan' => $application,
+                ...($request->boolean('dialog') ? ['dialog' => 1, 'dialog_complete' => 1] : []),
+            ])
+            ->with('status', $statusMessage);
     }
 
     public function destroy(Request $request, Permohonan $permohonan): RedirectResponse
     {
-        if ($request->session()->get('auth_role') !== 'admin') {
-            return redirect()->route('login');
+        $auth = $this->requireShareManager($request);
+
+        if ($auth instanceof RedirectResponse) {
+            return $auth;
         }
 
+        $this->audit($request, $auth['role'], (int) $auth['user']->getKey(), 'delete', 'permohonan', $permohonan, 'Permohonan dipadam.');
         $permohonan->delete();
 
         return redirect()->route('admin.permohonan.index')->with('status', 'Permohonan berjaya dipadam.');
@@ -1377,6 +1391,20 @@ class PermohonanController extends Controller
         AdminUser::query()->where('status_aktif', true)->each(function (AdminUser $admin) use ($title, $message, $link): void {
             $this->notify('admin', $admin->id_admin, $title, $message, $link);
         });
+    }
+
+    private function notifyShareManagers(string $title, string $message, ?string $link = null): void
+    {
+        if (! Schema::hasTable('notifications')) {
+            return;
+        }
+
+        Pekerja::query()
+            ->where('staff_type', Pekerja::SHARE_MANAGER_STAFF_TYPE)
+            ->where('status_aktif', true)
+            ->each(function (Pekerja $staff) use ($title, $message, $link): void {
+                $this->notify('staff', $staff->id_pekerja, $title, $message, $link);
+            });
     }
 
     /**

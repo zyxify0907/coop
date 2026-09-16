@@ -58,6 +58,9 @@
 
         <form method="POST" action="{{ route('admin.permohonan.saham.store', $application) }}" class="share-form">
             @csrf
+            @if (request()->boolean('dialog'))
+                <input type="hidden" name="dialog" value="1">
+            @endif
             <input type="hidden" name="confirm_share_addition" value="1">
             <div class="field field-full">
                 <label for="amaun_tambahan">Amaun Tambahan Saham</label>

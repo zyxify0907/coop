@@ -97,14 +97,14 @@
 
     $shareStaffManagementDropdown = [
         'label' => 'Pengurusan Saham',
-        'active' => ['admin.dashboard.saham', 'admin.permohonan.*', 'admin.saham.*', 'koperasi.transactions.*'],
+        'active' => ['admin.dashboard.saham', 'admin.permohonan.*', 'admin.anggota.*', 'admin.saham.*', 'koperasi.transactions.*'],
         'children' => [
             ['label' => 'Dashboard Pengurusan Saham', 'route' => 'admin.dashboard.saham', 'active' => 'admin.dashboard.saham'],
             ['label' => 'Permohonan Anggota Pelajar', 'route' => 'admin.permohonan.index', 'params' => ['pemohon' => 'pelajar', 'jenis' => 'anggota'], 'active' => 'admin.permohonan.*'],
             ['label' => 'Permohonan Anggota Staff', 'route' => 'admin.permohonan.index', 'params' => ['pemohon' => 'staff', 'jenis' => 'anggota'], 'active' => 'admin.permohonan.*'],
-            ['label' => 'Proses Tambah Saham', 'route' => 'admin.permohonan.index', 'params' => ['jenis' => 'saham'], 'active' => 'admin.permohonan.*'],
-            ['label' => 'Pengeluaran / Berhenti / Pindah / Bersara', 'route' => 'admin.permohonan.index', 'params' => ['jenis' => 'berhenti'], 'active' => 'admin.permohonan.*'],
-            ['label' => 'Rumusan Saham', 'route' => 'admin.saham.index', 'params' => ['kategori' => 'rumusan'], 'active' => 'admin.saham.*'],
+            ['label' => 'Anggota Student', 'route' => 'admin.anggota.students', 'active' => 'admin.anggota.students'],
+            ['label' => 'Anggota Staff', 'route' => 'admin.anggota.staff', 'active' => 'admin.anggota.staff'],
+            ['label' => 'Saham', 'route' => 'admin.saham.index', 'active' => 'admin.saham.*'],
             ['label' => 'Transaksi Saham', 'route' => 'koperasi.transactions.index', 'params' => ['scope' => 'all'], 'active' => 'koperasi.transactions.*'],
         ],
     ];

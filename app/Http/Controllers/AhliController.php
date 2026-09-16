@@ -75,16 +75,10 @@ class AhliController extends Controller
 
     private function renderAnggotaList(Request $request, string $memberType): View|RedirectResponse
     {
-        $role = $request->session()->get('auth_role');
+        $auth = $this->requireAnggotaManager($request);
 
-        if ($role !== 'admin') {
-            return redirect()->route('login');
-        }
-
-        $user = AdminUser::query()->find($request->session()->get('auth_id'));
-
-        if (! $user) {
-            return redirect()->route('login');
+        if ($auth instanceof RedirectResponse) {
+            return $auth;
         }
 
         $validated = $request->validate([
@@ -163,8 +157,8 @@ class AhliController extends Controller
             ->withQueryString();
 
         return view('admin.anggota.index', [
-            'role' => $role,
-            'user' => $user,
+            'role' => $auth['role'],
+            'user' => $auth['user'],
             'memberType' => $memberType,
             'members' => $members,
             'staffMembers' => Pekerja::query()
@@ -193,16 +187,10 @@ class AhliController extends Controller
 
     public function anggotaShow(Request $request, Permohonan $permohonan): View|RedirectResponse
     {
-        $role = $request->session()->get('auth_role');
+        $auth = $this->requireAnggotaManager($request);
 
-        if ($role !== 'admin') {
-            return redirect()->route('login');
-        }
-
-        $user = AdminUser::query()->find($request->session()->get('auth_id'));
-
-        if (! $user) {
-            return redirect()->route('login');
+        if ($auth instanceof RedirectResponse) {
+            return $auth;
         }
 
         abort_unless($permohonan->jenis === 'anggota' && $permohonan->status === 'diluluskan', 404);
@@ -213,8 +201,8 @@ class AhliController extends Controller
             : null;
 
         return view('admin.anggota.show', [
-            'role' => $role,
-            'user' => $user,
+            'role' => $auth['role'],
+            'user' => $auth['user'],
             'memberApplication' => $application,
             'staffMember' => $staffMember,
         ]);
@@ -222,16 +210,10 @@ class AhliController extends Controller
 
     public function anggotaDestroy(Request $request, Permohonan $permohonan): RedirectResponse
     {
-        $role = $request->session()->get('auth_role');
+        $auth = $this->requireAnggotaManager($request);
 
-        if ($role !== 'admin') {
-            return redirect()->route('login');
-        }
-
-        $user = AdminUser::query()->find($request->session()->get('auth_id'));
-
-        if (! $user) {
-            return redirect()->route('login');
+        if ($auth instanceof RedirectResponse) {
+            return $auth;
         }
 
         abort_unless($permohonan->jenis === 'anggota' && $permohonan->status === 'diluluskan', 404);
@@ -269,5 +251,34 @@ class AhliController extends Controller
         return redirect()
             ->route($redirectRoute)
             ->with('status', 'Rekod anggota berjaya dipadam.');
+    }
+
+    /**
+     * @return array{role:string,user:AdminUser|Pekerja}|RedirectResponse
+     */
+    private function requireAnggotaManager(Request $request): array|RedirectResponse
+    {
+        $role = $request->session()->get('auth_role');
+        $user = match ($role) {
+            'admin' => AdminUser::query()->find($request->session()->get('auth_id')),
+            'staff' => Pekerja::query()->find($request->session()->get('auth_id')),
+            default => null,
+        };
+
+        if (! $user) {
+            return redirect()->route('login');
+        }
+
+        if ($role === 'admin') {
+            return compact('role', 'user');
+        }
+
+        if ($role === 'staff' && $user->staff_type === Pekerja::SHARE_MANAGER_STAFF_TYPE && $user->status_aktif) {
+            return compact('role', 'user');
+        }
+
+        return redirect()
+            ->route('auth.dashboard')
+            ->with('error', 'Akses senarai anggota hanya untuk Admin atau Staff Mengurus Saham.');
     }
 }

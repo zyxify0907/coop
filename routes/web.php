@@ -195,6 +195,7 @@ Route::get('/admin/saham', [OperationsController::class, 'saham'])->name('admin.
 Route::get('/admin/saham/export/csv', [OperationsController::class, 'exportSahamCsv'])->name('admin.saham.export.csv');
 Route::post('/admin/saham', [OperationsController::class, 'storeSaham'])->name('admin.saham.store');
 Route::put('/admin/saham/staff/{staff}', [OperationsController::class, 'updateStaffSaham'])->name('admin.saham.staff.update');
+Route::delete('/admin/saham/staff/{staff}', [OperationsController::class, 'destroyStaffSaham'])->name('admin.saham.staff.destroy');
 Route::put('/admin/saham/{saham}', [OperationsController::class, 'updateSaham'])->name('admin.saham.update');
 Route::delete('/admin/saham/{saham}', [OperationsController::class, 'destroySaham'])->name('admin.saham.destroy');
 Route::get('/admin/settings-koperasi', [CooperativeController::class, 'settings'])->name('admin.settings.index');

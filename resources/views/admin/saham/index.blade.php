@@ -876,6 +876,333 @@
             padding-inline: 10px;
         }
     }
+
+    .content:has(> .share-wrap) {
+        background: #F4F7FB;
+    }
+
+    .content .share-wrap .share-head {
+        position: relative;
+        align-items: center !important;
+        margin-bottom: 18px !important;
+        padding: 26px 28px !important;
+        border: 1px solid #D7E2EF !important;
+        border-left: 6px solid #082F59 !important;
+        border-radius: 10px !important;
+        background: #fff !important;
+        background-image: none !important;
+        box-shadow: 0 7px 18px rgba(8, 47, 89, .035) !important;
+    }
+
+    .content .share-wrap .share-head::before {
+        content: "";
+        position: absolute;
+        top: 22px;
+        left: 28px;
+        width: 42px;
+        height: 3px;
+        border-radius: 999px;
+        background: #ED1C2E;
+    }
+
+    .content .share-wrap .share-head h1 {
+        margin: 14px 0 0 !important;
+        color: #082F59 !important;
+        font-size: 34px !important;
+        line-height: 1.15 !important;
+        font-weight: 900 !important;
+    }
+
+    .content .share-wrap .share-head p {
+        margin: 8px 0 0 !important;
+        color: #496487 !important;
+        font-size: 15px !important;
+        font-weight: 750 !important;
+    }
+
+    .content .share-wrap .panel {
+        border: 1px solid #D7E2EF !important;
+        border-radius: 10px !important;
+        background: #fff !important;
+        box-shadow: 0 7px 18px rgba(8, 47, 89, .035) !important;
+    }
+
+    .content .share-wrap .panel-head {
+        padding: 22px 24px 18px !important;
+        border-bottom: 0 !important;
+        background: #fff !important;
+    }
+
+    .content .share-wrap .panel-head h2 {
+        color: #082F59 !important;
+        font-size: 24px !important;
+        font-weight: 900 !important;
+    }
+
+    .content .share-wrap .panel-head h2::before {
+        content: "";
+        display: block;
+        width: 42px;
+        height: 3px;
+        margin-bottom: 10px;
+        border-radius: 999px;
+        background: #ED1C2E;
+    }
+
+    .content .share-wrap .panel-head span {
+        margin-top: 7px !important;
+        color: #496487 !important;
+        font-size: 14px !important;
+        font-weight: 750 !important;
+    }
+
+    .content .share-wrap .tabs {
+        gap: 8px !important;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .content .share-wrap .tab {
+        min-height: 38px !important;
+        padding: 0 16px !important;
+        border: 1px solid #B9CBE4 !important;
+        border-radius: 7px !important;
+        background: #fff !important;
+        color: #0B5ED7 !important;
+        font-size: 13px !important;
+        font-weight: 900 !important;
+    }
+
+    .content .share-wrap .tab.is-active {
+        border-color: #0B5ED7 !important;
+        background: #0B5ED7 !important;
+        color: #fff !important;
+        box-shadow: 0 6px 14px rgba(11, 94, 215, .14) !important;
+    }
+
+    .content .share-wrap .share-filter,
+    .content .share-wrap .share-filter.share-filter--staff {
+        display: flex !important;
+        align-items: end !important;
+        gap: 10px !important;
+        padding: 12px 24px 16px !important;
+        border-top: 0 !important;
+        border-bottom: 1px solid #D7E2EF !important;
+        background: #fff !important;
+        flex-wrap: nowrap !important;
+    }
+
+    .content .share-wrap .share-filter .field,
+    .content .share-wrap .share-filter .field.search-compact,
+    .content .share-wrap .share-filter .field.date-compact {
+        width: auto !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        flex: 1 1 0 !important;
+    }
+
+    .content .share-wrap .share-filter .field.search-compact {
+        flex-basis: 230px !important;
+    }
+
+    .content .share-wrap .share-filter .field.date-compact {
+        flex: 0 0 150px !important;
+    }
+
+    .content .share-wrap .share-filter__actions {
+        flex: 0 0 auto !important;
+        display: flex !important;
+        gap: 8px !important;
+        align-items: center !important;
+        flex-wrap: nowrap !important;
+    }
+
+    .content .share-wrap .field label {
+        color: #496487 !important;
+        font-size: 11px !important;
+        font-weight: 900 !important;
+    }
+
+    .content .share-wrap .share-filter input,
+    .content .share-wrap .share-filter select {
+        min-height: 38px !important;
+        border: 1px solid #D7E2EF !important;
+        border-radius: 7px !important;
+        color: #082F59 !important;
+        font-size: 13px !important;
+        font-weight: 700 !important;
+    }
+
+    .content .share-wrap .button,
+    .content .share-wrap .link-button {
+        min-height: 38px !important;
+        border-radius: 7px !important;
+        font-size: 12px !important;
+        font-weight: 900 !important;
+    }
+
+    .content .share-wrap .button {
+        background: #0B5ED7 !important;
+        border-color: #0B5ED7 !important;
+        color: #fff !important;
+        box-shadow: 0 6px 14px rgba(11, 94, 215, .14) !important;
+    }
+
+    .content .share-wrap .link-button {
+        border-color: #B9CBE4 !important;
+        background: #fff !important;
+        color: #0B5ED7 !important;
+    }
+
+    .content .share-wrap .link-button.danger {
+        border-color: #F6C7C7 !important;
+        background: #FDECEC !important;
+        color: #C4162A !important;
+    }
+
+    .content .share-wrap .table-wrap {
+        width: calc(100% - 32px) !important;
+        margin: 0 16px 16px !important;
+        overflow-x: auto !important;
+        border: 1px solid #D7E2EF !important;
+        border-radius: 8px !important;
+        background: #fff !important;
+        box-shadow: none !important;
+    }
+
+    .content .share-wrap .student-share-table,
+    .content .share-wrap .staff-share-table {
+        width: 100% !important;
+        min-width: 0 !important;
+        table-layout: fixed !important;
+        border-collapse: collapse !important;
+    }
+
+    .content .share-wrap .student-share-table th,
+    .content .share-wrap .student-share-table td,
+    .content .share-wrap .staff-share-table th,
+    .content .share-wrap .staff-share-table td {
+        padding: 9px 8px !important;
+        border-bottom: 1px solid #D7E2EF !important;
+        color: #082F59 !important;
+        font-size: 12px !important;
+        line-height: 1.3 !important;
+        vertical-align: middle !important;
+    }
+
+    .content .share-wrap .student-share-table th,
+    .content .share-wrap .staff-share-table th {
+        background: #F8FBFF !important;
+        color: #496487 !important;
+        font-size: 10px !important;
+        font-weight: 900 !important;
+        letter-spacing: .03em !important;
+        text-transform: uppercase !important;
+    }
+
+    .content .share-wrap .student-share-table th:nth-child(1),
+    .content .share-wrap .student-share-table td:nth-child(1),
+    .content .share-wrap .staff-share-table th:nth-child(1),
+    .content .share-wrap .staff-share-table td:nth-child(1) {
+        width: 40px !important;
+        min-width: 40px !important;
+        max-width: 40px !important;
+        text-align: center !important;
+    }
+
+    .content .share-wrap .student-share-table th:nth-child(2),
+    .content .share-wrap .student-share-table td:nth-child(2) {
+        width: 180px !important;
+        min-width: 180px !important;
+        max-width: 180px !important;
+    }
+
+    .content .share-wrap .staff-share-table th:nth-child(2),
+    .content .share-wrap .staff-share-table td:nth-child(2) {
+        width: 210px !important;
+        min-width: 210px !important;
+        max-width: 210px !important;
+    }
+
+    .content .share-wrap .student-share-table th:last-child,
+    .content .share-wrap .student-share-table td:last-child,
+    .content .share-wrap .staff-share-table th:last-child,
+    .content .share-wrap .staff-share-table td:last-child {
+        width: 150px !important;
+        min-width: 150px !important;
+        max-width: 150px !important;
+        text-align: center !important;
+    }
+
+    .content .share-wrap .student-share-table .name,
+    .content .share-wrap .staff-share-table .name {
+        display: block !important;
+        color: #082F59 !important;
+        font-size: 12px !important;
+        font-weight: 900 !important;
+        line-height: 1.25 !important;
+        white-space: normal !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    .content .share-wrap .amount {
+        color: #082F59 !important;
+        font-family: inherit !important;
+        font-size: 12px !important;
+        font-weight: 750 !important;
+        white-space: nowrap !important;
+    }
+
+    .content .share-wrap .status-badge {
+        min-width: 62px !important;
+        min-height: 24px !important;
+        padding: 0 9px !important;
+        border-radius: 999px !important;
+        font-size: 11px !important;
+        font-weight: 900 !important;
+    }
+
+    .content .share-wrap .status-badge.active {
+        border: 1px solid #B8EFCB !important;
+        background: #DDF8E7 !important;
+        color: #128A4A !important;
+    }
+
+    .content .share-wrap .actions-cell {
+        display: flex !important;
+        justify-content: center !important;
+        gap: 6px !important;
+        flex-wrap: wrap !important;
+    }
+
+    .content .share-wrap .actions-cell .button,
+    .content .share-wrap .actions-cell .link-button,
+    .content .share-wrap .actions-cell .profile-button {
+        width: 88px !important;
+        min-width: 88px !important;
+        min-height: 30px !important;
+        padding: 0 9px !important;
+        border-radius: 6px !important;
+        font-size: 11px !important;
+    }
+
+    @media (max-width: 1180px) {
+        .content .share-wrap .share-filter,
+        .content .share-wrap .share-filter.share-filter--staff {
+            flex-wrap: wrap !important;
+        }
+
+        .content .share-wrap .share-filter__actions {
+            flex-wrap: wrap !important;
+        }
+
+        .content .share-wrap .student-share-table,
+        .content .share-wrap .staff-share-table {
+            min-width: 1180px !important;
+        }
+    }
 </style>
 
 @php
@@ -1019,12 +1346,12 @@
                                 </td>
                                 <td>
                                     <div class="actions-cell">
-                                        @if ($role === 'admin' && isset($memberProfiles[$record->id_ahli]))
+                                        @if (($role === 'admin' || ($role === 'staff' && ($user->staff_type ?? null) === \App\Models\Pekerja::SHARE_MANAGER_STAFF_TYPE)) && isset($memberProfiles[$record->id_ahli]))
                                             <a class="button profile-button" href="{{ route('admin.anggota.show', $memberProfiles[$record->id_ahli]) }}">Lihat Profil</a>
                                         @else
                                             <span class="link-button" aria-disabled="true">Profil Tiada</span>
                                         @endif
-                                        @if ($role === 'admin')
+                                        @if ($role === 'admin' || ($role === 'staff' && ($user->staff_type ?? null) === \App\Models\Pekerja::SHARE_MANAGER_STAFF_TYPE))
                                             <form method="POST" action="{{ route('admin.saham.destroy', $record) }}" onsubmit="return confirm('Padam rekod saham ini?');">
                                                 @csrf
                                                 @method('DELETE')
@@ -1201,8 +1528,8 @@
                                         @if ($role === 'admin')
                                             <a class="button profile-button" href="{{ route('admin.users.edit', ['type' => 'staff', 'id' => $staff->id_pekerja]) }}">Lihat Profil</a>
                                         @endif
-                                        @if ($role === 'admin')
-                                            <form method="POST" action="{{ route('admin.users.destroy', ['type' => 'staff', 'id' => $staff->id_pekerja]) }}" onsubmit="return confirm('Padam rekod staff ini?');">
+                                        @if ($role === 'admin' || ($role === 'staff' && ($user->staff_type ?? null) === \App\Models\Pekerja::SHARE_MANAGER_STAFF_TYPE))
+                                            <form method="POST" action="{{ route('admin.saham.staff.destroy', $staff) }}" onsubmit="return confirm('Padam rekod saham staff ini?');">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button class="link-button danger" type="submit">Delete</button>

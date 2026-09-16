@@ -6,6 +6,8 @@
 
 @php
     $isDialogMode = request()->boolean('dialog');
+    $dialogComplete = $isDialogMode && request()->boolean('dialog_complete');
+    $dialogCompleteMessage = session('status') ?: session('success');
     $data = $application->data_permohonan ?? [];
     $isStaffRequest = ($data['pemohon_role'] ?? 'ahli') === 'staff';
     $amountFields = ['amaun_tambahan', 'amaun_dipohon', 'syer_semasa', 'yuran_anggota', 'modal_saham', 'saham_dipohon', 'jumlah_dipohon'];
@@ -180,7 +182,7 @@
             </div>
         @endif
 
-        @if ($role === 'admin')
+        @if ($role === 'admin' || ($role === 'staff' && ($user->staff_type ?? null) === \App\Models\Pekerja::SHARE_MANAGER_STAFF_TYPE))
             <form method="POST" action="{{ route('admin.permohonan.destroy', $application) }}" onsubmit="return confirm('Padam permohonan ini? Tindakan ini tidak boleh dibatalkan.');">
                 @csrf
                 @method('DELETE')
@@ -952,6 +954,32 @@
             const openButtons = document.querySelectorAll('[data-share-dialog-open]');
             const closeButton = document.querySelector('[data-share-dialog-close]');
             const completionPath = @json(parse_url(route('admin.permohonan.show', $application), PHP_URL_PATH));
+            const dialogComplete = @json($dialogComplete);
+            const dialogCompleteMessage = @json($dialogCompleteMessage);
+
+            if (dialogComplete && window.parent && window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'coopbest:dialog-complete',
+                    notice: {
+                        type: 'success',
+                        title: 'Berjaya',
+                        message: dialogCompleteMessage || 'Proses berjaya disimpan.',
+                    },
+                }, window.location.origin);
+            }
+
+            window.addEventListener('message', (event) => {
+                if (event.origin !== window.location.origin || event.data?.type !== 'coopbest:dialog-complete') {
+                    return;
+                }
+
+                if (event.data.notice) {
+                    window.sessionStorage.setItem('coopbest:dialogNotice', JSON.stringify(event.data.notice));
+                }
+
+                dialog?.close();
+                window.location.reload();
+            });
 
             openButtons.forEach((button) => {
                 button.addEventListener('click', (event) => {
@@ -982,9 +1010,10 @@
             frame?.addEventListener('load', () => {
                 try {
                     const doc = frame.contentDocument;
-                    const framePath = frame.contentWindow.location.pathname;
+                    const frameUrl = new URL(frame.contentWindow.location.href);
+                    const framePath = frameUrl.pathname;
 
-                    if (framePath === completionPath) {
+                    if (framePath === completionPath && frameUrl.searchParams.get('dialog_complete') === '1') {
                         dialog?.close();
                         window.location.reload();
                         return;

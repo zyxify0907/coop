@@ -3,11 +3,14 @@
     $notificationMessage = null;
     $notificationTitle = null;
     $notificationLink = null;
+    $suppressDialogNotice = request()->boolean('dialog');
     $unreadPopupNotification = isset($headerNotifications)
         ? $headerNotifications->first(fn ($notification) => ! $notification->read_at)
         : null;
 
-    if (session('error') || $errors->any()) {
+    if ($suppressDialogNotice) {
+        $notificationType = null;
+    } elseif (session('error') || $errors->any()) {
         $notificationType = 'error';
         $notificationTitle = 'Tidak berjaya';
         $notificationMessage = session('error') ?: $errors->first();
@@ -103,7 +106,7 @@
 </style>
 
 <script>
-    document.querySelectorAll('[data-system-notice]').forEach((notice) => {
+    const bindSystemNotice = (notice) => {
         const close = () => {
             notice.classList.add('is-closing');
             window.setTimeout(() => notice.remove(), 180);
@@ -114,5 +117,65 @@
         if (notice.classList.contains('system-notice--success')) {
             window.setTimeout(close, 6000);
         }
-    });
+    };
+
+    window.showSystemNotice = (payload) => {
+        if (!payload || !payload.message) {
+            return;
+        }
+
+        document.querySelectorAll('[data-system-notice]').forEach((notice) => notice.remove());
+
+        const type = ['success', 'error', 'warning'].includes(payload.type) ? payload.type : 'success';
+        const notice = document.createElement('div');
+        notice.className = `system-notice system-notice--${type}`;
+        notice.dataset.systemNotice = '';
+        notice.setAttribute('role', type === 'error' ? 'alert' : 'status');
+        notice.setAttribute('aria-live', type === 'error' ? 'assertive' : 'polite');
+
+        const icon = document.createElement('span');
+        icon.className = 'system-notice__icon';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.innerHTML = type === 'success'
+            ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4.2 4.2L19 6.5"/></svg>'
+            : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>';
+
+        const copy = document.createElement('div');
+        copy.className = 'system-notice__copy';
+        const title = document.createElement('strong');
+        title.textContent = payload.title || (type === 'error' ? 'Tidak berjaya' : 'Berjaya');
+        const message = document.createElement('span');
+        message.textContent = payload.message;
+        copy.append(title, message);
+
+        if (payload.link) {
+            const link = document.createElement('a');
+            link.href = payload.link;
+            link.textContent = 'Lihat maklumat';
+            copy.append(link);
+        }
+
+        const closeButton = document.createElement('button');
+        closeButton.className = 'system-notice__close';
+        closeButton.type = 'button';
+        closeButton.dataset.systemNoticeClose = '';
+        closeButton.setAttribute('aria-label', 'Tutup notifikasi');
+        closeButton.textContent = '×';
+
+        notice.append(icon, copy, closeButton);
+        document.body.append(notice);
+        bindSystemNotice(notice);
+    };
+
+    document.querySelectorAll('[data-system-notice]').forEach(bindSystemNotice);
+
+    const dialogNotice = window.sessionStorage.getItem('coopbest:dialogNotice');
+    if (dialogNotice) {
+        window.sessionStorage.removeItem('coopbest:dialogNotice');
+        try {
+            window.showSystemNotice(JSON.parse(dialogNotice));
+        } catch (error) {
+            // Ignore malformed stored notice payloads.
+        }
+    }
 </script>

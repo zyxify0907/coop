@@ -70,6 +70,9 @@
 
         <form method="POST" action="{{ route('admin.permohonan.pengeluaran.store', $application) }}" class="withdrawal-form">
             @csrf
+            @if (request()->boolean('dialog'))
+                <input type="hidden" name="dialog" value="1">
+            @endif
             <input type="hidden" name="confirm_withdrawal_process" value="1">
 
             <div class="field">

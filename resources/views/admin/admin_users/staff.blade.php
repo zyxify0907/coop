@@ -128,6 +128,11 @@
                 </thead>
                 <tbody>
                     @forelse ($staff as $member)
+                        @php
+                            $displayStaffType = in_array($member->nric, $activeAdminNrics ?? [], true)
+                                ? 'Admin Pengurusan Sistem'
+                                : $member->staff_type_label;
+                        @endphp
                         <tr>
                             <td>
                                 <div class="user-cell">
@@ -136,7 +141,7 @@
                                     </div>
                                     <div>
                                         <div class="user-name">{{ $member->nama }}</div>
-                                        <div class="user-sub">{{ $member->staff_type_label }}</div>
+                                        <div class="user-sub">{{ $displayStaffType }}</div>
                                     </div>
                                 </div>
                             </td>
@@ -144,7 +149,7 @@
                                 <td class="no-pekerja-cell"><code class="badge-code">{{ $member->no_pekerja }}</code></td>
                             @endif
                             <td><span class="mono">{{ $member->nric ?? '-' }}</span></td>
-                            <td>{{ $member->staff_type_label }}</td>
+                            <td>{{ $displayStaffType }}</td>
                             <td>{{ $member->email ?? '-' }}</td>
                             <td>{{ $member->no_tel ?? '-' }}</td>
                             <td>{{ optional($member->tarikh_mula)->format('d/m/Y') ?? '-' }}</td>
@@ -556,9 +561,217 @@
     .delete-button:hover{background:var(--danger);color:#fff}
     .empty-state{display:grid;gap:6px;padding:40px 20px;text-align:center;color:var(--muted-2)}
     .empty-state strong{color:var(--text)}
+
+    .content:has(> .staff-page-hero){
+        background:#F4F7FB;
+    }
+    .content > .staff-page-hero,
+    .content > .staff-list-panel,
+    .content > .staff-import-panel{
+        max-width:none;
+    }
+    .content > .staff-page-hero{
+        position:relative;
+        align-items:flex-start;
+        margin-bottom:30px;
+        padding:26px 28px!important;
+        border:1px solid #D7E2EF!important;
+        border-left:6px solid #0b1e36!important;
+        border-radius:12px!important;
+        background:#fff!important;
+        box-shadow:0 12px 28px rgba(11,30,54,.08)!important;
+    }
+    .content > .staff-page-hero::before{
+        content:"";
+        position:absolute;
+        top:30px;
+        left:28px;
+        width:42px;
+        height:3px;
+        border-radius:999px;
+        background:#ED1C2E;
+    }
+    .content > .staff-page-hero h1{
+        margin:20px 0 0!important;
+        color:#071A33!important;
+        font-size:26px!important;
+        line-height:1.15!important;
+        font-weight:700!important;
+    }
+    .content > .staff-page-hero p{
+        margin:8px 0 0!important;
+        color:#263A54!important;
+        font-size:14px!important;
+        line-height:1.45!important;
+        font-weight:600!important;
+    }
+    .content > .staff-page-hero .staff-page-hero__meta{
+        padding-top:48px;
+    }
+    .content > .staff-page-hero .staff-page-hero__meta span{
+        min-height:32px;
+        border-radius:999px;
+        background:#EAF3FF;
+        color:#0B5ED7;
+        padding:0 14px;
+        font-size:13px;
+    }
+    .content > .staff-list-panel,
+    .content > .staff-import-panel{
+        border:1px solid #D7E2EF!important;
+        border-radius:12px!important;
+        background:#fff!important;
+        box-shadow:0 8px 20px rgba(8,47,89,.035)!important;
+    }
+    .content .staff-list-head{
+        padding:24px 28px;
+        border-bottom:1px solid #D7E2EF;
+        background:#fff;
+    }
+    .content .staff-list-head h2{
+        color:#082F59;
+        font-size:24px;
+        line-height:1.2;
+        font-weight:900;
+    }
+    .content .staff-list-head h2::before{
+        content:"";
+        display:block;
+        width:34px;
+        height:4px;
+        margin-bottom:10px;
+        border-radius:999px;
+        background:#ED1C2E;
+    }
+    .content .staff-list-head p{
+        margin-top:6px;
+        color:#31517D;
+        font-size:15px;
+        font-weight:650;
+    }
+    .content .record-badge{
+        min-height:32px;
+        border:1px solid #BBF7D0;
+        background:#DCFCE7;
+        color:#15803D;
+        padding:0 14px;
+        font-size:13px;
+    }
+    .content .record-badge::before{
+        background:#16A34A;
+    }
+    .content .add-staff-button,
+    .content .staff-search-button,
+    .content .staff-reset-button{
+        min-height:42px;
+        border-radius:6px;
+        font-size:14px;
+        box-shadow:none;
+    }
+    .content .add-staff-button,
+    .content .staff-search-button{
+        border:1px solid #0B5ED7;
+        background:#0B5ED7;
+        color:#fff;
+    }
+    .content .staff-search-bar{
+        gap:16px;
+        margin:0;
+        padding:18px 28px 20px;
+        border-bottom:1px solid #D7E2EF;
+        background:#FBFDFF;
+    }
+    .content .staff-search-field label{
+        color:#082F59;
+        font-size:13px;
+        font-weight:800;
+        letter-spacing:0;
+    }
+    .content .staff-search-field input,
+    .content .staff-search-field select{
+        min-height:42px;
+        border:1px solid #C8D6E7;
+        border-radius:6px;
+        color:#102033;
+        font-size:14px;
+        font-weight:650;
+    }
+    .content .staff-table{
+        border-collapse:collapse;
+    }
+    .content .staff-table th{
+        min-height:56px;
+        padding:13px 16px;
+        border-bottom:1px solid #D7E2EF;
+        background:#F8F9FA;
+        color:#082F59;
+        font-size:12px;
+        font-weight:900;
+        letter-spacing:.04em;
+    }
+    .content .staff-table td{
+        padding:14px 16px;
+        border-bottom:1px solid #DCE5F0;
+        color:#082F59;
+        font-size:13px;
+    }
+    .content .staff-table tbody tr:hover{
+        background:#F8FBFF;
+    }
+    .content .user-cell{
+        min-width:190px;
+    }
+    .content .avatar{
+        width:36px;
+        height:36px;
+        background:#EAF3FF;
+        color:#0B5ED7;
+        border-color:#CFE0F5;
+        font-size:12px;
+    }
+    .content .user-name{
+        color:#082F59;
+        font-size:14px;
+        font-weight:900;
+    }
+    .content .user-sub{
+        color:#526987;
+        font-size:12px;
+    }
+    .content .badge-code{
+        min-height:26px;
+        align-items:center;
+        border-radius:6px;
+        background:#F1F6FC;
+        color:#082F59;
+        padding:0 10px;
+        font-size:12px;
+        font-weight:750;
+    }
+    .content .status-badge{
+        min-height:26px;
+        padding:0 10px;
+        font-size:12px;
+    }
+    .content .edit-button,
+    .content .delete-button{
+        width:76px;
+        min-height:34px;
+        border-radius:6px;
+    }
+    .content .edit-button{
+        background:#E8F0FE;
+        color:#1A73E8;
+    }
+    .content .delete-button{
+        background:#FEF2F2;
+        color:#B91C1C;
+    }
+
     @media (max-width:640px){
         .staff-page-hero{align-items:flex-start;flex-direction:column;padding:24px}
         .staff-page-hero h1{font-size:30px}
+        .content > .staff-page-hero .staff-page-hero__meta{padding-top:0}
         .staff-alert{top:12px;right:12px;left:12px;max-width:none}
         .staff-import-panel{grid-template-columns:1fr;padding:22px}
         .staff-import-form{justify-content:flex-start}

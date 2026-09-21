@@ -7,12 +7,13 @@
 @php
     $isStudent = $type === 'student';
     $restrictToCoopWorkers = $restrictToCoopWorkers ?? false;
-    $isCoopWorkerCreate = ! $isStudent && old('staff_type', request('staff_type')) === 'coop_staff';
+    $lockToCoopWorker = ! $isStudent && ($restrictToCoopWorkers || request('staff_type') === 'coop_staff');
+    $isCoopWorkerCreate = ! $isStudent && ($lockToCoopWorker || old('staff_type', request('staff_type')) === 'coop_staff');
     $backRoute = $isStudent ? route('admin.users.students') : ($isCoopWorkerCreate ? route('admin.users.coop-workers') : route('admin.users.staff'));
     $storeRoute = $isStudent ? route('admin.users.students.store') : route('admin.users.staff.store');
     $programOptions = ['JTMK', 'JRKV'];
     $semesterOptions = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6'];
-    $selectedStaffType = old('staff_type', request('staff_type'));
+    $selectedStaffType = $lockToCoopWorker ? 'coop_staff' : old('staff_type', request('staff_type'));
     $classOptionsBySemester = collect(range(1, 6))->mapWithKeys(fn ($semester) => [
         'Sem '.$semester => ['DIT'.$semester.'A', 'DIT'.$semester.'B', 'DDC'.$semester.'A', 'DBF'.$semester.'A'],
     ])->all();
@@ -63,8 +64,9 @@
                 </div>
 
                 <div class="field">
-                    <label for="email">Email</label>
-                    <input id="email" name="email" type="email" value="{{ old('email') }}">
+                    <label for="profile_email_display">Email</label>
+                    <input id="profile_email_display" name="email_display" type="text" inputmode="email" value="{{ old('email') }}" autocomplete="new-password" data-email-display>
+                    <input id="email" name="email" type="hidden" value="{{ old('email') }}" data-email-hidden>
                 </div>
 
                 <div class="field">
@@ -107,19 +109,21 @@
                 @else
                     <div class="field">
                         <label for="staff_type">Jenis Staff</label>
-                        <select id="staff_type" name="staff_type" required data-staff-type-select @disabled($restrictToCoopWorkers)>
-                            @if (! $restrictToCoopWorkers)
+                        <select id="staff_type" name="staff_type" required data-staff-type-select @disabled($lockToCoopWorker)>
+                            @if (! $lockToCoopWorker)
                                 <option value="">Pilih jenis staff</option>
                                 <option value="lecturer_member" @selected($selectedStaffType === 'lecturer_member')>Pensyarah / Staf Akademik</option>
-                                <option value="coop_staff" @selected($selectedStaffType === 'coop_staff')>Pekerja Koperasi</option>
-                                <option value="clothing_staff" @selected($selectedStaffType === 'clothing_staff')>Staff Pengurusan Baju</option>
-                                <option value="share_staff" @selected($selectedStaffType === 'share_staff')>Staff Mengurus Saham</option>
-                                <option value="coop_manager" @selected($selectedStaffType === 'coop_manager')>Staff Mengurus Pekerja Koperasi</option>
+                                @if ($selectedStaffType === 'coop_staff')
+                                    <option value="coop_staff" @selected($selectedStaffType === 'coop_staff')>Pekerja Koperasi</option>
+                                @endif
+                                <option value="clothing_staff" @selected($selectedStaffType === 'clothing_staff')>Staff Pengurus Baju</option>
+                                <option value="share_staff" @selected($selectedStaffType === 'share_staff')>Staff Pengurus Saham</option>
+                                <option value="coop_manager" @selected($selectedStaffType === 'coop_manager')>Staff Pengurus Pekerja Koperasi</option>
                             @else
                                 <option value="coop_staff" selected>Pekerja Koperasi</option>
                             @endif
                         </select>
-                        @if ($restrictToCoopWorkers)
+                        @if ($lockToCoopWorker)
                             <input type="hidden" name="staff_type" value="coop_staff">
                         @endif
                     </div>
@@ -267,6 +271,36 @@
         .save-button,.cancel-button{width:100%}
     }
 </style>
+@endpush
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const display = document.querySelector('[data-email-display]');
+            const hidden = document.querySelector('[data-email-hidden]');
+            const form = display?.closest('form');
+            const isEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+            const syncEmail = () => {
+                const value = display.value.trim();
+                hidden.value = value === '' || isEmail(value) ? value : '';
+            };
+
+            if (!display || !hidden || !form) {
+                return;
+            }
+
+            setTimeout(() => {
+                if (display.value.trim() !== '' && !isEmail(display.value)) {
+                    display.value = '';
+                }
+
+                syncEmail();
+            }, 250);
+
+            display.addEventListener('input', syncEmail);
+            form.addEventListener('submit', syncEmail);
+        });
+    </script>
 @endpush
 
 @if ($isStudent)

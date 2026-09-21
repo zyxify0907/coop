@@ -16,7 +16,11 @@ class AttendanceService
         return AttendanceSetting::query()->firstOrCreate([], [
             'work_start_time' => '08:00:00',
             'work_end_time' => '17:00:00',
+            'break_start_time' => '13:00:00',
+            'break_end_time' => '14:00:00',
             'grace_period_minutes' => 10,
+            'full_day_minutes' => 480,
+            'half_day_rate_multiplier' => 0.50,
             'checkout_cutoff_time' => '20:00:00',
             'working_days' => [1, 2, 3, 4, 5],
             'allowed_radius_meter' => 100,
@@ -72,8 +76,11 @@ class AttendanceService
         $end = $this->scheduledDateTime($record, $setting->work_end_time);
 
         $record->working_minutes = max(0, $checkIn->diffInMinutes($checkOut));
+        $record->break_minutes = $this->breakMinutes($record, $setting);
+        $record->total_minutes = max(0, (int) $record->working_minutes - (int) $record->break_minutes);
         $record->early_leave_minutes = max(0, $checkOut->lessThan($end) ? $checkOut->diffInMinutes($end) : 0);
         $record->status = $record->early_leave_minutes > 0 ? 'early_leave' : ($record->late_minutes > (int) $setting->grace_period_minutes ? 'late' : 'present');
+        $this->applyAllowanceAmount($record, $setting);
     }
 
     public function displayStatus(?AttendanceRecord $record, AttendanceSetting $setting, ?CarbonImmutable $now = null): string
@@ -189,6 +196,39 @@ class AttendanceService
     private function scheduledDateTime(AttendanceRecord $record, string $time): CarbonImmutable
     {
         return CarbonImmutable::parse($record->attendance_date->toDateString().' '.$time, self::TIMEZONE);
+    }
+
+    private function breakMinutes(AttendanceRecord $record, AttendanceSetting $setting): int
+    {
+        if (! $record->check_in_time || ! $record->check_out_time) {
+            return 0;
+        }
+
+        $checkIn = $this->localDateTime($record->check_in_time);
+        $checkOut = $this->localDateTime($record->check_out_time);
+        $date = $record->attendance_date->toDateString();
+        $breakStart = CarbonImmutable::parse($date.' '.($setting->break_start_time ?? '13:00:00'), self::TIMEZONE);
+        $breakEnd = CarbonImmutable::parse($date.' '.($setting->break_end_time ?? '14:00:00'), self::TIMEZONE);
+        $overlapStart = $checkIn->greaterThan($breakStart) ? $checkIn : $breakStart;
+        $overlapEnd = $checkOut->lessThan($breakEnd) ? $checkOut : $breakEnd;
+
+        return $overlapEnd->greaterThan($overlapStart) ? $overlapStart->diffInMinutes($overlapEnd) : 0;
+    }
+
+    private function applyAllowanceAmount(AttendanceRecord $record, AttendanceSetting $setting): void
+    {
+        $record->loadMissing('staff');
+        $dailyRate = (float) ($record->staff?->kadar_elaun ?? 0);
+        $fullDayMinutes = max(1, (int) ($setting->full_day_minutes ?? 480));
+        $eligible = in_array($record->status, ['present', 'late', 'early_leave', 'half_day', 'outside_area'], true)
+            && (int) ($record->total_minutes ?? 0) > 0;
+
+        $record->daily_rate = $dailyRate;
+        $record->allowance_amount = match (true) {
+            ! $eligible => 0,
+            $record->status === 'half_day' => round($dailyRate * (float) ($setting->half_day_rate_multiplier ?? 0.50), 2),
+            default => round(((int) $record->total_minutes / $fullDayMinutes) * $dailyRate, 2),
+        };
     }
 
     public function distanceMeters(float $latA, float $lonA, float $latB, float $lonB): float

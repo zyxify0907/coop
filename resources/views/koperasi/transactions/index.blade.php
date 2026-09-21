@@ -404,9 +404,9 @@
         }
 
         .content > .transaction-page {
-            width: min(100% - 48px, 1500px);
-            max-width: 1500px;
-            margin-inline: auto;
+            width: 100%;
+            max-width: none;
+            margin: 0;
             gap: 20px;
         }
 
@@ -583,18 +583,55 @@
         }
 
         .content .transaction-page .transaction-table-wrap {
+            width: calc(100% - 32px);
+            margin: 0 16px 16px;
             overflow-x: auto;
+            border: 1px solid #D7E2EF;
+            border-radius: 8px;
             background: #fff;
         }
 
         .content .transaction-page .transaction-table {
             width: 100%;
             min-width: 1060px;
+            table-layout: fixed;
             border-collapse: collapse;
         }
 
+        .content .transaction-page .transaction-table th:nth-child(1),
+        .content .transaction-page .transaction-table td:nth-child(1) {
+            width: 9%;
+        }
+
+        .content .transaction-page .transaction-table th:nth-child(2),
+        .content .transaction-page .transaction-table td:nth-child(2) {
+            width: 22%;
+        }
+
+        .content .transaction-page .transaction-table th:nth-child(3),
+        .content .transaction-page .transaction-table td:nth-child(3) {
+            width: 15%;
+        }
+
+        .content .transaction-page .transaction-table th:nth-child(4),
+        .content .transaction-page .transaction-table td:nth-child(4) {
+            width: 14%;
+        }
+
+        .content .transaction-page .transaction-table th:nth-child(5),
+        .content .transaction-page .transaction-table td:nth-child(5),
+        .content .transaction-page .transaction-table th:nth-child(6),
+        .content .transaction-page .transaction-table td:nth-child(6) {
+            width: 14%;
+        }
+
+        .content .transaction-page .transaction-table th:nth-child(7),
+        .content .transaction-page .transaction-table td:nth-child(7) {
+            width: 20%;
+        }
+
         .content .transaction-page .transaction-table th {
-            padding: 11px 16px;
+            padding: 9px 12px;
             border-bottom: 1px solid #D7E2EF;
             background: #F8FBFF;
             color: #496487;
@@ -604,10 +641,10 @@
         }
 
         .content .transaction-page .transaction-table td {
-            padding: 10px 16px;
+            padding: 8px 12px;
             border-bottom: 1px solid #D7E2EF;
             color: #082F59;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 750;
         }
 
@@ -616,36 +653,36 @@
         }
 
         .content .transaction-page .member-cell {
-            gap: 10px;
+            gap: 8px;
         }
 
         .content .transaction-page .member-avatar {
-            width: 34px;
-            height: 34px;
+            width: 28px;
+            height: 28px;
             border: 1px solid #CFE0F5;
             background: #EAF3FF;
             color: #0B5ED7;
-            font-size: 12px;
+            font-size: 11px;
         }
 
         .content .transaction-page .member-cell strong {
             color: #082F59;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 900;
         }
 
         .content .transaction-page .member-cell span {
             color: #496487;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
         }
 
         .content .transaction-page .type-pill,
         .content .transaction-page .direction-pill {
-            min-height: 26px;
-            padding: 0 10px;
+            min-height: 24px;
+            padding: 0 9px;
             border-radius: 999px;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 900;
         }
 
@@ -683,7 +720,7 @@
 
         .content .transaction-page .note-cell {
             color: #496487;
-            line-height: 1.45;
+            line-height: 1.35;
         }
 
         @media (max-width: 900px) {

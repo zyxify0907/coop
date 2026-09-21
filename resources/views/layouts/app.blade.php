@@ -14,9 +14,9 @@
         : ($role === 'staff'
             ? match ($staffType) {
                 'lecturer_member' => 'Pensyarah / Staf Akademik',
-                'clothing_staff' => 'Staff Pengurusan Baju',
-                'share_staff' => 'Staff Mengurus Saham',
-                'coop_manager' => 'Staff Mengurus Pekerja Koperasi',
+                'clothing_staff' => 'Staff Pengurus Baju',
+                'share_staff' => 'Staff Pengurus Saham',
+                'coop_manager' => 'Staff Pengurus Pekerja Koperasi',
                 default => 'Pekerja Koperasi',
             }
             : 'Student / Ahli');
@@ -43,7 +43,7 @@
         ['section' => 'Dashboard', 'label' => 'Dashboard Baju', 'route' => 'admin.dashboard.baju', 'active' => 'admin.dashboard.baju', 'icon' => 'box'],
         ['section' => 'Dashboard', 'label' => 'Dashboard Kehadiran', 'route' => 'admin.attendance.dashboard', 'active' => 'admin.attendance.dashboard', 'icon' => 'clipboard'],
         ['section' => 'Kehadiran Pekerja', 'label' => 'Rekod Kehadiran', 'route' => 'admin.attendance.records', 'active' => 'admin.attendance.records*', 'icon' => 'book'],
-        ['section' => 'Kehadiran Pekerja', 'label' => 'Laporan Attendance', 'route' => 'admin.attendance.reports', 'active' => 'admin.attendance.reports*', 'icon' => 'chart'],
+        ['section' => 'Kehadiran Pekerja', 'label' => 'Elaun Bulanan', 'route' => 'admin.allowances.index', 'active' => 'admin.allowances.*', 'icon' => 'cash'],
         ['section' => 'Kehadiran Pekerja', 'label' => 'Tetapan Attendance', 'route' => 'admin.attendance.settings', 'active' => 'admin.attendance.settings*', 'icon' => 'book'],
         ['section' => 'SAHAM', 'label' => 'Permohonan Student', 'route' => 'admin.permohonan.index', 'params' => ['pemohon' => 'pelajar'], 'active' => 'admin.permohonan.*', 'audience' => 'pelajar', 'icon' => 'clipboard'],
         ['section' => 'SAHAM', 'label' => 'Permohonan Staff', 'route' => 'admin.permohonan.index', 'params' => ['pemohon' => 'staff'], 'active' => 'admin.permohonan.*', 'audience' => 'staff', 'icon' => 'shield'],
@@ -55,7 +55,7 @@
         ['section' => 'Tempahan Baju', 'label' => 'Stok Baju', 'route' => 'admin.baju.index', 'active' => 'admin.baju.index', 'icon' => 'box'],
         ['section' => 'Pengguna', 'label' => 'Senarai Student', 'route' => 'admin.users.students', 'active' => 'admin.users.students', 'icon' => 'users'],
         ['section' => 'Pengguna', 'label' => 'Senarai Staff', 'route' => 'admin.users.staff', 'active' => 'admin.users.staff', 'icon' => 'shield'],
-        ['section' => 'Pengguna', 'label' => 'Akaun Pekerja Koperasi', 'route' => 'admin.users.coop-workers', 'active' => 'admin.users.coop-workers', 'icon' => 'users'],
+        ['section' => 'Pengguna', 'label' => 'Senarai Pekerja Koperasi', 'route' => 'admin.users.coop-workers', 'active' => 'admin.users.coop-workers', 'icon' => 'users'],
         ['section' => 'Pengurusan', 'label' => 'Urus Announcement', 'route' => 'admin.announcements.index', 'active' => 'admin.announcements.*', 'icon' => 'clipboard'],
     ];
 
@@ -97,14 +97,14 @@
 
     $shareStaffManagementDropdown = [
         'label' => 'Pengurusan Saham',
-        'active' => ['admin.dashboard.saham', 'admin.permohonan.*', 'admin.anggota.*', 'admin.saham.*', 'koperasi.transactions.*'],
+        'active' => ['admin.dashboard.saham', 'admin.permohonan.*', 'admin.saham.*', 'koperasi.transactions.*'],
         'children' => [
             ['label' => 'Dashboard Pengurusan Saham', 'route' => 'admin.dashboard.saham', 'active' => 'admin.dashboard.saham'],
             ['label' => 'Permohonan Anggota Pelajar', 'route' => 'admin.permohonan.index', 'params' => ['pemohon' => 'pelajar', 'jenis' => 'anggota'], 'active' => 'admin.permohonan.*'],
             ['label' => 'Permohonan Anggota Staff', 'route' => 'admin.permohonan.index', 'params' => ['pemohon' => 'staff', 'jenis' => 'anggota'], 'active' => 'admin.permohonan.*'],
-            ['label' => 'Anggota Student', 'route' => 'admin.anggota.students', 'active' => 'admin.anggota.students'],
-            ['label' => 'Anggota Staff', 'route' => 'admin.anggota.staff', 'active' => 'admin.anggota.staff'],
-            ['label' => 'Saham', 'route' => 'admin.saham.index', 'active' => 'admin.saham.*'],
+            ['label' => 'Proses Tambah Saham', 'route' => 'admin.permohonan.index', 'params' => ['jenis' => 'saham'], 'active' => 'admin.permohonan.*'],
+            ['label' => 'Pengeluaran / Berhenti / Pindah / Bersara', 'route' => 'admin.permohonan.index', 'params' => ['jenis' => 'berhenti'], 'active' => 'admin.permohonan.*'],
+            ['label' => 'Rumusan Saham', 'route' => 'admin.saham.index', 'params' => ['kategori' => 'rumusan'], 'active' => 'admin.saham.*'],
             ['label' => 'Transaksi Saham', 'route' => 'koperasi.transactions.index', 'params' => ['scope' => 'all'], 'active' => 'koperasi.transactions.*'],
         ],
     ];
@@ -112,19 +112,19 @@
     $coopManagerLinks = [
         ['section' => 'Home', 'label' => 'Home', 'route' => 'coop-manager.dashboard', 'active' => 'coop-manager.dashboard', 'icon' => 'grid'],
         ['section' => 'Saham', 'label' => 'Saham', 'route' => 'coop-manager.dashboard.saham', 'active' => ['coop-manager.dashboard.saham', 'coop-manager.shares', 'coop-manager.permohonan.*', 'student.permohonan.status'], 'icon' => 'chart'],
-        ['section' => 'Pekerja Koperasi', 'label' => 'Akaun Pekerja', 'route' => 'admin.users.coop-workers', 'active' => 'admin.users.coop-workers', 'icon' => 'users'],
+        ['section' => 'Pekerja Koperasi', 'label' => 'Senarai Pekerja Koperasi', 'route' => 'admin.users.coop-workers', 'active' => 'admin.users.coop-workers', 'icon' => 'users'],
         ['section' => 'Kehadiran Pekerja', 'label' => 'Rekod Kehadiran', 'route' => 'admin.attendance.records', 'active' => 'admin.attendance.records*', 'icon' => 'book'],
-        ['section' => 'Kehadiran Pekerja', 'label' => 'Laporan Attendance', 'route' => 'admin.attendance.reports', 'active' => 'admin.attendance.reports*', 'icon' => 'chart'],
+        ['section' => 'Kehadiran Pekerja', 'label' => 'Elaun Bulanan', 'route' => 'admin.allowances.index', 'active' => 'admin.allowances.*', 'icon' => 'cash'],
     ];
 
     $coopManagerManagementDropdown = [
         'label' => 'Pengurusan Koperasi',
-        'active' => ['coop-manager.dashboard.koperasi', 'admin.attendance.dashboard', 'admin.users.coop-workers', 'admin.attendance.records*', 'admin.attendance.reports*'],
+        'active' => ['coop-manager.dashboard.koperasi', 'admin.attendance.dashboard', 'admin.users.coop-workers', 'admin.attendance.records*', 'admin.allowances.*'],
         'children' => [
             ['label' => 'Dashboard Pengurusan Koperasi', 'route' => 'coop-manager.dashboard.koperasi', 'active' => ['coop-manager.dashboard.koperasi', 'admin.attendance.dashboard']],
-            ['label' => 'Akaun Pekerja Koperasi', 'route' => 'admin.users.coop-workers', 'active' => 'admin.users.coop-workers'],
+            ['label' => 'Senarai Pekerja Koperasi', 'route' => 'admin.users.coop-workers', 'active' => 'admin.users.coop-workers'],
             ['label' => 'Rekod Kehadiran', 'route' => 'admin.attendance.records', 'active' => 'admin.attendance.records*'],
-            ['label' => 'Laporan Attendance', 'route' => 'admin.attendance.reports', 'active' => 'admin.attendance.reports*'],
+            ['label' => 'Elaun Bulanan', 'route' => 'admin.allowances.index', 'active' => 'admin.allowances.*'],
         ],
     ];
 

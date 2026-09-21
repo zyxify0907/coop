@@ -26,7 +26,7 @@ class EnsureAttendanceAccess
                     ->first()
                 : null;
 
-            abort_unless($manager, 403, 'Smart Attendance hanya untuk Admin atau Staff Mengurus Pekerja Koperasi.');
+            abort_unless($manager, 403, 'Smart Attendance hanya untuk Admin atau Staff Pengurus Pekerja Koperasi.');
 
             return $next($request);
         }

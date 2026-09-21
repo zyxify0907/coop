@@ -1250,7 +1250,7 @@ class OperationsController extends Controller
                 ->flatMap(fn ($semester) => ['DIT'.$semester.'A', 'DIT'.$semester.'B', 'DDC'.$semester.'A', 'DBF'.$semester.'A']),
             'staffTypes' => collect([
                 'lecturer_member' => 'Pensyarah / Staf Akademik',
-                'clothing_staff' => 'Staff Pengurusan Baju',
+                'clothing_staff' => 'Staff Pengurus Baju',
             ]),
             'students' => Ahli::query()->doesntHave('saham')->orderBy('nama')->get(),
             'summary' => [
@@ -1483,20 +1483,51 @@ class OperationsController extends Controller
         $share = SahamStaff::query()->firstOrNew(['id_pekerja' => $staff->id_pekerja]);
         $oldTotal = (float) ($share->syer ?? 0) + (float) ($share->tambahan_saham ?? 0);
         $jumlahSaham = (float) $validated['jumlah_saham'];
-        $syerAsas = (float) ($share->syer ?? 0);
+        $difference = $jumlahSaham - $oldTotal;
 
-        if (! $share->exists && $jumlahSaham > 0) {
-            $syerAsas = min($jumlahSaham, 10.0);
+        if ($difference > 0) {
+            $application = Permohonan::query()->create([
+                'id_ahli' => null,
+                'jenis' => 'saham',
+                'nama_pemohon' => $staff->nama,
+                'no_matrik' => $staff->no_pekerja,
+                'email' => $staff->email,
+                'no_tel' => $staff->no_tel,
+                'status' => 'dalam_semakan',
+                'data_permohonan' => [
+                    'pemohon_role' => 'staff',
+                    'no_pekerja' => $staff->no_pekerja,
+                    'no_anggota' => $staff->no_anggota ?: $this->staffMemberNumber($staff),
+                    'no_pendaftaran' => $staff->no_pekerja,
+                    'no_kad_pengenalan' => $staff->nric,
+                    'no_kp' => $staff->nric,
+                    'staff_type' => $staff->staff_type,
+                    'jenis_staff' => $staff->staff_type_label,
+                    'amaun_tambahan' => $difference,
+                    'syer_semasa' => $oldTotal,
+                    'tarikh_pengakuan' => now()->toDateString(),
+                    'akuan_saham' => true,
+                    'dicipta_oleh_admin' => true,
+                ],
+                'catatan_pelajar' => 'Permohonan tambahan saham staff direkodkan oleh admin.',
+                'catatan_admin' => 'Sila proses dan luluskan permohonan ini untuk kemaskini rekod saham staff.',
+                'tarikh_permohonan' => now()->toDateString(),
+            ]);
+
+            $this->audit($request, $auth, 'create', 'permohonan_saham_staff', $application, 'Permohonan tambahan saham staff diwujudkan daripada kemaskini saham staff.');
+
+            return redirect()
+                ->route('admin.permohonan.show', $application)
+                ->with('status', 'Tambahan saham staff telah masuk sebagai permohonan. Rekod saham staff akan dikemaskini selepas permohonan diluluskan.');
         }
 
         $share->fill([
-            'syer' => $jumlahSaham < $syerAsas ? $jumlahSaham : $syerAsas,
-            'tambahan_saham' => $jumlahSaham >= $syerAsas ? $jumlahSaham - $syerAsas : 0,
+            'syer' => min($jumlahSaham, (float) ($share->syer ?? 0)),
+            'tambahan_saham' => max(0, $jumlahSaham - (float) ($share->syer ?? 0)),
             'tarikh_kemaskini' => now()->toDateString(),
         ]);
         $share->save();
 
-        $difference = $jumlahSaham - $oldTotal;
         if ($difference !== 0.0) {
             $this->recordShareTransaction(
                 'staff',
@@ -2492,7 +2523,7 @@ class OperationsController extends Controller
         if ($auth['role'] === 'staff' && ($auth['user']->staff_type !== Pekerja::SHARE_MANAGER_STAFF_TYPE || ! $auth['user']->status_aktif)) {
             return redirect()
                 ->route('auth.dashboard')
-                ->with('error', 'Akses modul saham hanya untuk Staff Mengurus Saham.');
+                ->with('error', 'Akses modul saham hanya untuk Staff Pengurus Saham.');
         }
 
         return $auth;

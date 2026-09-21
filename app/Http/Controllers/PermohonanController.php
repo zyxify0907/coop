@@ -1330,7 +1330,9 @@ class PermohonanController extends Controller
             'processed_by_role' => $processedByRole,
             'processed_by_id' => $processedById,
             'notes' => $notes,
-            'transacted_at' => now()->toDateString(),
+            'transacted_at' => optional($reference->tarikh_permohonan)->format('Y-m-d')
+                ?? optional($reference->tarikh_keputusan)->format('Y-m-d')
+                ?? now()->toDateString(),
         ]);
     }
 

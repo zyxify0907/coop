@@ -12,9 +12,9 @@
     $statusLabel = $shareRecord ? 'Aktif' : 'Belum Aktif';
     $staffTypeLabel = match ($staffType) {
         'lecturer_member' => 'Pensyarah / Staf Akademik',
-        'clothing_staff' => 'Staff Pengurusan Baju',
-        'share_staff' => 'Staff Mengurus Saham',
-        'coop_manager' => 'Staff Mengurus Pekerja Koperasi',
+        'clothing_staff' => 'Staff Pengurus Baju',
+        'share_staff' => 'Staff Pengurus Saham',
+        'coop_manager' => 'Staff Pengurus Pekerja Koperasi',
         default => 'Staff',
     };
     $memberNumber = $staffMemberNumber ?? $user->no_anggota ?? 'Belum menjadi anggota';

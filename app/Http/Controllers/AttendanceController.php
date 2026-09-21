@@ -534,7 +534,11 @@ class AttendanceController extends Controller
         $validated = $request->validate([
             'work_start_time' => ['required', 'date_format:H:i'],
             'work_end_time' => ['required', 'date_format:H:i', 'after:work_start_time'],
+            'break_start_time' => ['required', 'date_format:H:i', 'after_or_equal:work_start_time', 'before:work_end_time'],
+            'break_end_time' => ['required', 'date_format:H:i', 'after:break_start_time', 'before_or_equal:work_end_time'],
             'grace_period_minutes' => ['required', 'integer', 'min:0', 'max:180'],
+            'full_day_minutes' => ['required', 'integer', 'min:60', 'max:720'],
+            'half_day_rate_multiplier' => ['required', 'numeric', 'min:0', 'max:1'],
             'checkout_cutoff_time' => ['required', 'date_format:H:i'],
             'working_days' => ['required', 'array', 'min:1'],
             'working_days.*' => ['integer', 'between:1,7'],
@@ -651,7 +655,7 @@ class AttendanceController extends Controller
 
     private function recordStatuses(): array
     {
-        return ['present', 'late', 'early_leave', 'missing_checkout', 'outside_area', 'absent'];
+        return ['present', 'late', 'early_leave', 'missing_checkout', 'outside_area', 'absent', 'leave', 'holiday', 'half_day'];
     }
 
     private function statusLabels(): array
@@ -660,6 +664,7 @@ class AttendanceController extends Controller
             'present' => 'Hadir', 'late' => 'Lewat', 'early_leave' => 'Keluar Awal',
             'missing_checkout' => 'Tiada Check Out', 'working' => 'Sedang Bekerja',
             'not_checked_in' => 'Belum Check In', 'outside_area' => 'Di Luar Kawasan', 'absent' => 'Tidak Hadir',
+            'leave' => 'Cuti', 'holiday' => 'Cuti Umum', 'half_day' => 'Separuh Hari',
         ];
     }
 

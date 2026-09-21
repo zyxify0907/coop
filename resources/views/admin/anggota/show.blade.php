@@ -16,8 +16,7 @@
     $baseShare = (float) (optional($shareRecord)->syer ?? $data['modal_saham'] ?? 0);
     $additionalShare = (float) (optional($shareRecord)->tambahan_saham ?? 0);
     $totalShare = $baseShare + $additionalShare;
-    $grandTotal = (float) $memberFee + $totalShare;
-    $amountFields = ['yuran_anggota', 'modal_saham', 'tambahan_saham', 'jumlah_saham', 'jumlah_bayaran'];
+    $amountFields = ['yuran_anggota', 'modal_saham', 'tambahan_saham', 'jumlah_saham'];
     $initials = collect(explode(' ', $application->nama_pemohon))->filter()->take(2)->map(fn ($part) => strtoupper(substr($part, 0, 1)))->implode('') ?: 'AG';
     $heirFields = ['nama_waris', 'telefon_waris', 'hubungan_waris', 'penama_nama', 'penama_nric', 'penama_hubungan', 'penama_no_tel', 'penama_alamat', 'penama_poskod', 'penama_peratus', 'penama2_nama', 'penama2_nric', 'penama2_hubungan', 'penama2_no_tel', 'penama2_alamat', 'penama2_poskod', 'penama2_peratus'];
     $memberInfo = $isStaffMember ? collect([
@@ -32,7 +31,6 @@
         'modal_saham' => $baseShare,
         'tambahan_saham' => $additionalShare,
         'jumlah_saham' => $totalShare,
-        'jumlah_bayaran' => $grandTotal,
         'alamat' => $data['alamat'] ?? null,
         'agama' => $data['agama'] ?? null,
         'bangsa' => $data['bangsa'] ?? null,
@@ -54,7 +52,6 @@
         'modal_saham' => $baseShare,
         'tambahan_saham' => $additionalShare,
         'jumlah_saham' => $totalShare,
-        'jumlah_bayaran' => $grandTotal,
         'alamat' => $data['alamat'] ?? null,
         'agama' => $data['agama'] ?? null,
         'bangsa' => $data['bangsa'] ?? null,
@@ -108,10 +105,6 @@
         <section>
             <span>Jumlah Saham</span>
             <strong>{{ 'RM '.number_format($totalShare, 2) }}</strong>
-        </section>
-        <section>
-            <span>Jumlah Bayaran</span>
-            <strong>{{ 'RM '.number_format($grandTotal, 2) }}</strong>
         </section>
     </div>
 

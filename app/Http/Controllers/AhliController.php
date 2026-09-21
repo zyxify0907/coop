@@ -166,6 +166,11 @@ class AhliController extends Controller
                 ->whereIn('no_pekerja', $memberType === 'staff' ? $members->getCollection()->pluck('no_matrik')->filter()->values() : [])
                 ->get()
                 ->keyBy('no_pekerja'),
+            'activeAdminNrics' => AdminUser::query()
+                ->where('status_aktif', true)
+                ->whereNotNull('nric')
+                ->pluck('nric')
+                ->all(),
             'filters' => [
                 'search' => $search,
             ],
@@ -279,6 +284,6 @@ class AhliController extends Controller
 
         return redirect()
             ->route('auth.dashboard')
-            ->with('error', 'Akses senarai anggota hanya untuk Admin atau Staff Mengurus Saham.');
+            ->with('error', 'Akses senarai anggota hanya untuk Admin atau Staff Pengurus Saham.');
     }
 }

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['no_anggota', 'no_pekerja', 'nama', 'nric', 'password_hash', 'jawatan', 'staff_type', 'no_tel', 'email', 'kadar_elaun', 'tarikh_mula', 'status_aktif'])]
 class Pekerja extends Model
@@ -42,6 +43,16 @@ class Pekerja extends Model
         return $this->hasOne(SahamStaff::class, 'id_pekerja', 'id_pekerja');
     }
 
+    public function attendanceRecords(): HasMany
+    {
+        return $this->hasMany(AttendanceRecord::class, 'staff_id', 'id_pekerja');
+    }
+
+    public function monthlyAllowances(): HasMany
+    {
+        return $this->hasMany(MonthlyAllowance::class, 'staff_id', 'id_pekerja');
+    }
+
     public function scopeEligibleForShares(Builder $query): Builder
     {
         return $query->whereIn('staff_type', self::SHAREHOLDER_STAFF_TYPES);
@@ -59,11 +70,18 @@ class Pekerja extends Model
 
     public function getStaffTypeLabelAttribute(): string
     {
+        if (filled($this->nric) && AdminUser::query()
+            ->where('nric', $this->nric)
+            ->where('status_aktif', true)
+            ->exists()) {
+            return 'Admin Pengurusan Sistem';
+        }
+
         return match ($this->staff_type) {
             'lecturer_member' => 'Pensyarah / Staf Akademik',
-            'clothing_staff' => 'Staff Pengurusan Baju',
-            self::SHARE_MANAGER_STAFF_TYPE => 'Staff Mengurus Saham',
-            self::COOP_MANAGER_STAFF_TYPE => 'Staff Mengurus Pekerja Koperasi',
+            'clothing_staff' => 'Staff Pengurus Baju',
+            self::SHARE_MANAGER_STAFF_TYPE => 'Staff Pengurus Saham',
+            self::COOP_MANAGER_STAFF_TYPE => 'Staff Pengurus Pekerja Koperasi',
             default => 'Pekerja Koperasi',
         };
     }

@@ -24,6 +24,8 @@ use Illuminate\View\View;
 
 class AdminProfileController extends Controller
 {
+    private const SYSTEM_ADMIN_TYPE = 'system_admin';
+
     public function profile(Request $request): View|RedirectResponse
     {
         if (! $this->isAdmin($request)) {
@@ -160,6 +162,7 @@ class AdminProfileController extends Controller
         $validated = $request->validate([
             'search' => ['nullable', 'string', 'max:100'],
             'staff_type' => ['nullable', Rule::in([
+                self::SYSTEM_ADMIN_TYPE,
                 'lecturer_member',
                 'clothing_staff',
                 Pekerja::SHARE_MANAGER_STAFF_TYPE,
@@ -185,8 +188,15 @@ class AdminProfileController extends Controller
             });
         }
 
+        $activeAdminNrics = AdminUser::query()
+            ->where('status_aktif', true)
+            ->whereNotNull('nric')
+            ->pluck('nric')
+            ->all();
+
         $staffQuery
-            ->when($staffType !== '', fn ($query) => $query->where('staff_type', $staffType));
+            ->when($staffType !== '' && $staffType !== self::SYSTEM_ADMIN_TYPE, fn ($query) => $query->where('staff_type', $staffType))
+            ->when($staffType === self::SYSTEM_ADMIN_TYPE, fn ($query) => $query->whereIn('nric', $activeAdminNrics ?: ['__none__']));
 
         return view('admin.admin_users.staff', [
             'role' => $role,
@@ -197,11 +207,13 @@ class AdminProfileController extends Controller
                 'staff_type' => $staffType,
             ],
             'staffTypeOptions' => [
+                self::SYSTEM_ADMIN_TYPE => 'Admin Pengurusan Sistem',
                 'lecturer_member' => 'Pensyarah / Staf Akademik',
-                'clothing_staff' => 'Staff Pengurusan Baju',
-                Pekerja::SHARE_MANAGER_STAFF_TYPE => 'Staff Mengurus Saham',
-                Pekerja::COOP_MANAGER_STAFF_TYPE => 'Staff Mengurus Pekerja Koperasi',
+                'clothing_staff' => 'Staff Pengurus Baju',
+                Pekerja::SHARE_MANAGER_STAFF_TYPE => 'Staff Pengurus Saham',
+                Pekerja::COOP_MANAGER_STAFF_TYPE => 'Staff Pengurus Pekerja Koperasi',
             ],
+            'activeAdminNrics' => $activeAdminNrics,
             'listTitle' => 'Senarai Staff',
             'listSubtitle' => 'Paparan staff ahli koperasi dan Support Admin.',
             'heroTitle' => 'Manage Staff',
@@ -427,6 +439,9 @@ class AdminProfileController extends Controller
             'profile' => $user,
             'role' => $role,
             'user' => $adminUser,
+            'systemAdminForProfile' => $type === 'staff'
+                && filled($user->nric)
+                && AdminUser::query()->where('nric', $user->nric)->where('status_aktif', true)->exists(),
             'restrictToCoopWorkers' => $this->isCoopManager($request),
         ]);
     }
@@ -465,7 +480,7 @@ class AdminProfileController extends Controller
             $rules['email'][] = Rule::unique('pekerja', 'email')->ignore($id, 'id_pekerja');
             $requestedStaffType = (string) $request->input('staff_type', $user->staff_type);
             $rules['no_pekerja'] = [Rule::requiredIf($requestedStaffType === Pekerja::COOP_WORKER_STAFF_TYPE), 'nullable', 'string', 'max:20', 'regex:/^PBT-\d+$/', Rule::unique('pekerja', 'no_pekerja')->ignore($id, 'id_pekerja')];
-            $rules['staff_type'] = ['required', Rule::in(Pekerja::STAFF_TYPES)];
+            $rules['staff_type'] = ['required', Rule::in([...Pekerja::STAFF_TYPES, self::SYSTEM_ADMIN_TYPE])];
             $rules['kadar_elaun'] = ['nullable', 'numeric', 'min:0'];
             $rules['tarikh_mula'] = ['nullable', 'date'];
             $rules['status_aktif'] = ['nullable', 'boolean'];
@@ -482,6 +497,10 @@ class AdminProfileController extends Controller
             }
         }
 
+        if ($type === 'staff' && ($validated['staff_type'] ?? null) === self::SYSTEM_ADMIN_TYPE) {
+            unset($validated['staff_type'], $validated['no_pekerja'], $validated['kadar_elaun']);
+        }
+
         if ($type === 'staff' && ($validated['staff_type'] ?? null) !== Pekerja::COOP_WORKER_STAFF_TYPE) {
             unset($validated['no_pekerja'], $validated['kadar_elaun']);
         }
@@ -493,6 +512,21 @@ class AdminProfileController extends Controller
         }
 
         $user->save();
+
+        if ($type === 'staff' && (string) $request->input('staff_type') === self::SYSTEM_ADMIN_TYPE) {
+            $admin = $this->createOrUpdateAdminFromStaff($user);
+
+            return redirect()
+                ->route('admin.users.edit', ['type' => 'staff', 'id' => $user->id_pekerja])
+                ->with('status', 'Staff berjaya dijadikan Admin Pengurusan Sistem. Username admin: '.$admin->username);
+        }
+
+        if ($type === 'staff' && filled($user->nric)) {
+            AdminUser::query()
+                ->where('nric', $user->nric)
+                ->where('id_admin', '!=', $request->session()->get('auth_id'))
+                ->update(['status_aktif' => false]);
+        }
 
         if ($type === 'staff' && $user->staff_type === Pekerja::COOP_WORKER_STAFF_TYPE) {
             SahamStaff::query()->where('id_pekerja', $user->id_pekerja)->delete();
@@ -507,6 +541,60 @@ class AdminProfileController extends Controller
         return redirect()
             ->route($redirectRoute)
             ->with('status', 'Profil berjaya dikemaskini.');
+    }
+
+    public function promoteStaffToAdmin(Request $request, int $id): RedirectResponse
+    {
+        if (! $this->isAdmin($request)) {
+            return redirect()->route('login');
+        }
+
+        $staff = Pekerja::query()->find($id);
+
+        abort_if(! $staff, 404);
+
+        $admin = $this->createOrUpdateAdminFromStaff($staff);
+
+        return redirect()
+            ->route('admin.users.edit', ['type' => 'staff', 'id' => $staff->id_pekerja])
+            ->with('status', 'Staff berjaya dijadikan admin. Username admin: '.$admin->username);
+    }
+
+    private function createOrUpdateAdminFromStaff(Pekerja $staff): AdminUser
+    {
+        $admin = filled($staff->nric)
+            ? AdminUser::query()->where('nric', $staff->nric)->first()
+            : null;
+
+        if (! $admin) {
+            $baseUsername = str($staff->email ?: $staff->no_pekerja ?: $staff->nama)
+                ->before('@')
+                ->lower()
+                ->replaceMatches('/[^a-z0-9._-]+/', '')
+                ->trim('._-')
+                ->value() ?: 'admin';
+            $username = $baseUsername;
+            $suffix = 1;
+
+            while (AdminUser::query()->where('username', $username)->exists()) {
+                $username = $baseUsername.$suffix++;
+            }
+
+            $admin = new AdminUser([
+                'username' => $username,
+            ]);
+        }
+
+        $admin->fill([
+            'nama' => $staff->nama,
+            'nric' => $staff->nric,
+            'password_hash' => $staff->password_hash,
+            'peranan' => 'Admin',
+            'status_aktif' => true,
+        ]);
+        $admin->save();
+
+        return $admin;
     }
 
     public function destroy(Request $request, string $type, int $id): JsonResponse|RedirectResponse

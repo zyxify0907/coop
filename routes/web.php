@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminProfileController;
 use App\Http\Controllers\AhliController;
 use App\Http\Controllers\AnnouncementController;
+use App\Http\Controllers\AllowanceController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CooperativeController;
@@ -103,7 +104,6 @@ Route::prefix('coop-staff/attendance')->middleware('attendance.access:worker')->
     Route::post('/corrections', [AttendanceController::class, 'storeCorrection'])->name('corrections.store');
     Route::get('/corrections/{correction}/document', [AttendanceController::class, 'downloadCorrectionDocument'])->name('corrections.document');
 });
-
 Route::prefix('clothing-staff')->middleware('staff.type:strict,clothing_staff')->name('clothing-staff.')->group(function (): void {
     Route::get('/dashboard', [StaffPortalController::class, 'clothingDashboard'])->name('dashboard');
     Route::get('/dashboard-saham', [StaffPortalController::class, 'shareDashboard'])->name('dashboard.saham');
@@ -140,6 +140,7 @@ Route::post('/admin/users/staff', [AdminProfileController::class, 'storeStaff'])
 Route::post('/admin/users/staff/import', [AdminProfileController::class, 'importStaff'])->name('admin.users.staff.import');
 Route::get('/admin/users/{type}/{id}/edit', [AdminProfileController::class, 'edit'])->name('admin.users.edit');
 Route::put('/admin/users/{type}/{id}', [AdminProfileController::class, 'update'])->name('admin.users.update');
+Route::post('/admin/users/staff/{id}/promote-admin', [AdminProfileController::class, 'promoteStaffToAdmin'])->name('admin.users.staff.promote-admin');
 Route::delete('/admin/users/{type}/{id}', [AdminProfileController::class, 'destroy'])->name('admin.users.destroy');
 
 Route::get('/admin/ahli', [AhliController::class, 'index'])->name('admin.ahli.index');
@@ -224,11 +225,19 @@ Route::prefix('admin/attendance')->middleware('attendance.access:admin')->name('
     Route::get('/workers', [AttendanceController::class, 'workers'])->name('workers');
     Route::get('/corrections', [AttendanceController::class, 'correctionsAdmin'])->name('corrections');
     Route::put('/corrections/{correction}', [AttendanceController::class, 'reviewCorrection'])->name('corrections.review');
-    Route::get('/reports', [AttendanceController::class, 'reports'])->name('reports');
-    Route::get('/reports/export', [AttendanceController::class, 'exportReport'])->name('reports.export');
+    Route::get('/reports', fn () => redirect()->route('admin.attendance.records'))->name('reports');
+    Route::get('/reports/export', fn () => redirect()->route('admin.attendance.records'))->name('reports.export');
     Route::get('/settings', [AttendanceController::class, 'settings'])->name('settings');
     Route::put('/settings', [AttendanceController::class, 'updateSettings'])->name('settings.update');
     Route::get('/corrections/{correction}/document', [AttendanceController::class, 'downloadCorrectionDocument'])->name('corrections.document');
+});
+Route::prefix('admin/allowances')->middleware('attendance.access:admin')->name('admin.allowances.')->group(function (): void {
+    Route::get('/', [AllowanceController::class, 'index'])->name('index');
+    Route::get('/pdf', [AllowanceController::class, 'pdf'])->name('pdf');
+    Route::post('/generate', [AllowanceController::class, 'generate'])->name('generate');
+    Route::post('/complete', [AllowanceController::class, 'complete'])->name('complete');
+    Route::put('/{monthlyAllowance}/approve', [AllowanceController::class, 'approve'])->name('approve');
+    Route::put('/{monthlyAllowance}/paid', [AllowanceController::class, 'markPaid'])->name('paid');
 });
 Route::get('/admin/permohonan', [PermohonanController::class, 'adminIndex'])->name('admin.permohonan.index');
 Route::get('/admin/permohonan/{permohonan}/tambah-saham', [PermohonanController::class, 'createShareAddition'])->name('admin.permohonan.saham.create');

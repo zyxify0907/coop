@@ -10,8 +10,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable([
     'staff_id', 'attendance_date', 'check_in_time', 'check_out_time',
     'check_in_latitude', 'check_in_longitude', 'check_out_latitude', 'check_out_longitude',
-    'check_in_gps_verified', 'check_out_gps_verified', 'late_minutes', 'early_leave_minutes',
-    'working_minutes', 'status', 'location_name', 'device_information', 'notes',
+    'check_in_gps_verified', 'check_out_gps_verified', 'break_minutes', 'total_minutes',
+    'late_minutes', 'early_leave_minutes', 'working_minutes', 'daily_rate', 'allowance_amount',
+    'status', 'location_name', 'device_information', 'notes',
 ])]
 class AttendanceRecord extends Model
 {
@@ -27,9 +28,13 @@ class AttendanceRecord extends Model
             'check_out_longitude' => 'decimal:8',
             'check_in_gps_verified' => 'boolean',
             'check_out_gps_verified' => 'boolean',
+            'break_minutes' => 'integer',
+            'total_minutes' => 'integer',
             'late_minutes' => 'integer',
             'early_leave_minutes' => 'integer',
             'working_minutes' => 'integer',
+            'daily_rate' => 'decimal:2',
+            'allowance_amount' => 'decimal:2',
         ];
     }
 

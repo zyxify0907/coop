@@ -94,7 +94,9 @@
                             $profile = $isStaffList ? $staffMembers->get($member->no_matrik) : $member->ahli;
                             $memberSaham = $isStaffList ? optional($profile)->sahamStaff : optional($profile)->saham;
                             $memberNumber = $isStaffList ? ($profile->no_anggota ?? $data['no_anggota'] ?? '-') : ($profile->no_anggota ?? '-');
-                            $typeLabel = $isStaffList ? ($profile->staff_type_label ?? '-') : ($data['program_pengajian'] ?? $profile->program ?? '-');
+                            $typeLabel = $isStaffList
+                                ? (in_array($profile?->nric, $activeAdminNrics ?? [], true) ? 'Admin Pengurusan Sistem' : ($profile->staff_type_label ?? '-'))
+                                : ($data['program_pengajian'] ?? $profile->program ?? '-');
                             $registeredDate = $isStaffList
                                 ? (optional(optional($profile)->tarikh_mula)->format('d/m/Y') ?? (optional($member->tarikh_keputusan)->format('d/m/Y') ?? '-'))
                                 : (optional(optional($profile)->tarikh_daftar)->format('d/m/Y') ?? (optional($member->tarikh_keputusan)->format('d/m/Y') ?? '-'));

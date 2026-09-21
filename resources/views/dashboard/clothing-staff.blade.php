@@ -31,7 +31,7 @@
             </div>
             <div class="portal-home__identity">
                 <span>Peranan</span>
-                <strong>Staff Pengurusan Baju</strong>
+                <strong>Staff Pengurus Baju</strong>
                 <small>Log masuk terakhir: {{ $lastLogin }}</small>
             </div>
         </section>

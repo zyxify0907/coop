@@ -309,8 +309,8 @@ class StaffPortalController extends Controller
             'portalPrefix' => $this->portalPrefix($type),
             'portalTitle' => match ($type) {
                 'lecturer_member' => 'Dashboard Anggota Staf',
-                Pekerja::SHARE_MANAGER_STAFF_TYPE => 'Dashboard Staff Mengurus Saham',
-                Pekerja::COOP_MANAGER_STAFF_TYPE => 'Dashboard Staff Mengurus Pekerja Koperasi',
+                Pekerja::SHARE_MANAGER_STAFF_TYPE => 'Dashboard Staff Pengurus Saham',
+                Pekerja::COOP_MANAGER_STAFF_TYPE => 'Dashboard Staff Pengurus Pekerja Koperasi',
                 default => 'Dashboard Pekerja Koperasi',
             },
             'portalDescription' => match ($type) {

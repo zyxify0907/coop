@@ -15,29 +15,15 @@
         </div>
     </section>
 
-    {{-- Status Message with Auto-Dismiss --}}
     @if (session('status'))
-        <div class="alert alert-success alert-dismissible" role="alert">
-            <div class="alert-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                    <polyline points="22 4 12 14.01 9 11.01"/>
-                </svg>
-            </div>
+        <div class="student-alert success" role="alert">
             <span>{{ session('status') }}</span>
             <button class="alert-close" type="button" aria-label="Close notification">&times;</button>
         </div>
     @endif
 
     @if ($errors->any())
-        <div class="alert alert-danger alert-dismissible" role="alert">
-            <div class="alert-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" y1="8" x2="12" y2="12"/>
-                    <line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-            </div>
+        <div class="student-alert danger" role="alert">
             <span>{{ $errors->first() }}</span>
             <button class="alert-close" type="button" aria-label="Close notification">&times;</button>
         </div>
@@ -94,8 +80,8 @@
         {{-- Panel Header --}}
         <div class="student-list-head">
             <div>
-                <h2><span class="brand-red">Student</span> <span class="brand-blue">Login</span></h2>
-                <p>Senarai student yang boleh login menggunakan No. Matrik atau No. KP dan password automatik.</p>
+                <h2>Senarai Student</h2>
+                <p>Paparan lengkap mengikut maklumat yang tersedia dalam jadual student.</p>
             </div>
             <div class="student-list-actions">
                 <span class="record-badge">
@@ -155,26 +141,25 @@
                     value="{{ $filters['tarikh_masuk'] ?? request('tarikh_masuk') }}">
             </div>
             <div class="student-search-actions">
-                <button class="search-button" type="submit">Cari</button>
+                <button class="student-search-button" type="submit">Cari</button>
                 @if (($search ?? request('search')) || ($filters['program'] ?? request('program')) || ($filters['kelas'] ?? request('kelas')) || ($filters['semester'] ?? request('semester')) || ($filters['tarikh_masuk'] ?? request('tarikh_masuk')))
-                    <a class="reset-button" href="{{ route('admin.users.students') }}">Reset</a>
+                    <a class="student-reset-button" href="{{ route('admin.users.students') }}">Reset</a>
                 @endif
             </div>
         </form>
 
-        {{-- Table --}}
-        <div style="overflow-x: auto; padding: 0 4px;">
-            <table style="width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; min-width: 980px;">
-                <thead style="background: #F8FAFC; border-bottom: 1px solid #E2E8F0;">
+        <div class="table-responsive">
+            <table class="student-table">
+                <thead>
                     <tr>
-                        <th style="padding: 12px 16px; text-align: left; font-weight: 500; color: #475569; letter-spacing: 0.02em; text-transform: uppercase; font-size: 12px;">Nama</th>
-                        <th style="padding: 12px 16px; text-align: left; font-weight: 500; color: #475569; letter-spacing: 0.02em; text-transform: uppercase; font-size: 12px;">No Matrik</th>
-                        <th style="padding: 12px 16px; text-align: left; font-weight: 500; color: #475569; letter-spacing: 0.02em; text-transform: uppercase; font-size: 12px;">No. KP</th>
-                        <th style="padding: 12px 16px; text-align: left; font-weight: 500; color: #475569; letter-spacing: 0.02em; text-transform: uppercase; font-size: 12px;">Program</th>
-                        <th style="padding: 12px 16px; text-align: left; font-weight: 500; color: #475569; letter-spacing: 0.02em; text-transform: uppercase; font-size: 12px;">Kelas</th>
-                        <th style="padding: 12px 16px; text-align: left; font-weight: 500; color: #475569; letter-spacing: 0.02em; text-transform: uppercase; font-size: 12px;">Tarikh Masuk</th>
-                        <th style="padding: 12px 16px; text-align: left; font-weight: 500; color: #475569; letter-spacing: 0.02em; text-transform: uppercase; font-size: 12px; min-width: 118px;">Semester</th>
-                        <th style="padding: 12px 16px; text-align: right; font-weight: 500; color: #475569; letter-spacing: 0.02em; text-transform: uppercase; font-size: 12px; width: 120px;">Tindakan</th>
+                        <th>Nama</th>
+                        <th>No Matrik</th>
+                        <th>No. KP</th>
+                        <th>Program</th>
+                        <th>Kelas</th>
+                        <th>Tarikh Masuk</th>
+                        <th>Semester</th>
+                        <th class="actions-col">Tindakan</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -184,22 +169,29 @@
                                 ? preg_replace('/^sem\s+/i', 'Semester ', $student->semester)
                                 : '-';
                         @endphp
-                        <tr class="student-row" data-student-row="{{ $student->id_ahli }}" style="border-bottom: 1px solid #E2E8F0; transition: background 0.15s, opacity 0.2s ease, transform 0.2s ease; background: white;" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='white'">
-                            <td style="padding: 14px 16px; color: #0F172A; font-weight: 500;">{{ $student->nama }}</td>
-                            <td style="padding: 14px 16px; color: #475569;">
-                                <code style="background: #F1F5F9; padding: 2px 8px; border-radius: 4px; font-size: 13px; color: #334155;">{{ $student->no_matrik }}</code>
+                        <tr class="student-row" data-student-row="{{ $student->id_ahli }}">
+                            <td>
+                                <div class="user-cell">
+                                    <div class="avatar">
+                                        {{ strtoupper(substr($student->nama, 0, 2)) }}
+                                    </div>
+                                    <div>
+                                        <div class="user-name">{{ $student->nama }}</div>
+                                        <div class="user-sub">{{ $student->program ?? 'Pelajar' }}</div>
+                                    </div>
+                                </div>
                             </td>
-                            <td style="padding: 14px 16px; color: #475569; font-family: monospace; letter-spacing: 0.5px;">{{ $student->nric ? substr($student->nric, 0, 6).'****' : '-' }}</td>
-                            <td style="padding: 14px 16px; color: #475569;">{{ $student->program ?? '-' }}</td>
-                            <td style="padding: 14px 16px; color: #475569;">{{ $student->kelas ?? '-' }}</td>
-                            <td style="padding: 14px 16px; color: #475569;">{{ $student->tarikh_daftar ? $student->tarikh_daftar->format('d/m/Y') : '-' }}</td>
-                            <td style="padding: 14px 16px; color: #475569; min-width: 118px;">
-                                <span style="display: inline-flex; align-items: center; white-space: nowrap; background: #eff8ff; color: #175cd3; padding: 2px 10px; border-radius: 100px; font-size: 12px; font-weight: 500;">{{ $semesterLabel }}</span>
+                            <td><code class="badge-code">{{ $student->no_matrik }}</code></td>
+                            <td><span class="mono">{{ $student->nric ? substr($student->nric, 0, 6).'****' : '-' }}</span></td>
+                            <td>{{ $student->program ?? '-' }}</td>
+                            <td>{{ $student->kelas ?? '-' }}</td>
+                            <td>{{ $student->tarikh_daftar ? $student->tarikh_daftar->format('d/m/Y') : '-' }}</td>
+                            <td>
+                                <span class="status-badge is-info">{{ $semesterLabel }}</span>
                             </td>
-                            <td style="padding: 14px 16px; text-align: right;">
+                            <td>
                                 <div class="student-action-buttons">
                                     <a class="student-edit-button" href="{{ route('admin.users.edit', ['type' => 'student', 'id' => $student->id_ahli]) }}">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
                                         Edit
                                     </a>
                                     <form class="student-delete-form" method="POST" action="{{ route('admin.users.destroy', ['type' => 'student', 'id' => $student->id_ahli]) }}" data-student-name="{{ $student->nama }}">
@@ -212,11 +204,10 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" style="padding: 48px 16px; text-align: center; color: #64748B; background: white;">
-                                <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
-                                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                                    <span style="font-size: 15px;">Tiada rekod student.</span>
-                                    <span style="font-size: 13px; color: #94A3B8;">Klik "Tambah Student" untuk mendaftar akaun pelajar baru.</span>
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    <strong>Tiada rekod student.</strong>
+                                    <span>Klik Tambah Student untuk mendaftar akaun pelajar baru.</span>
                                 </div>
                             </td>
                         </tr>
@@ -227,7 +218,7 @@
 
         {{-- Optional Footer with Pagination (if needed) --}}
         @if(method_exists($students, 'links'))
-            <div style="padding: 16px 24px; border-top: 1px solid #E2E8F0; background: #F8FAFC; border-radius: 0 0 16px 16px;">
+            <div class="student-pagination">
                 {{ $students->links() }}
             </div>
         @endif
@@ -796,6 +787,307 @@
             font-size: 13px;
             font-weight: 900;
         }
+        .student-alert{
+            position:fixed;
+            top:20px;
+            right:20px;
+            z-index:1000;
+            display:flex;
+            max-width:min(420px, calc(100vw - 32px));
+            align-items:center;
+            gap:12px;
+            padding:14px 20px;
+            border-radius:14px;
+            border:1px solid transparent;
+            font-weight:800;
+            box-shadow:0 18px 38px rgba(15,23,42,.16);
+        }
+        .student-alert.success{background:var(--success-soft);border-color:#bbf7d0;color:var(--success)}
+        .student-alert.danger{background:var(--danger-soft);border-color:var(--danger-soft);color:var(--danger)}
+        .alert-close{margin-left:auto;border:0;background:none;font-size:22px;cursor:pointer;color:inherit}
+        .table-responsive{overflow-x:auto;padding:0}
+        .student-table{width:100%;border-collapse:separate;border-spacing:0;min-width:1120px}
+        .student-table th{
+            padding:14px 16px;
+            text-align:left;
+            font-size:12px;
+            font-weight:900;
+            color:var(--muted);
+            text-transform:uppercase;
+            letter-spacing:.03em;
+            border-bottom:1px solid var(--line);
+            background:var(--surface-soft);
+            white-space:nowrap;
+        }
+        .student-table td{
+            padding:16px;
+            border-bottom:1px solid var(--line);
+            vertical-align:middle;
+            font-size:14px;
+            color:var(--text);
+        }
+        .student-table tbody tr:hover{background:#f8fafc}
+        .user-cell{display:flex;align-items:center;gap:12px;min-width:220px}
+        .avatar{
+            width:42px;
+            height:42px;
+            border-radius:999px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            color:var(--secondary);
+            background:var(--secondary-soft);
+            border:1px solid #dbeafe;
+            font-size:13px;
+            font-weight:900;
+            flex:0 0 auto;
+        }
+        .user-name{font-weight:900;color:var(--text)}
+        .user-sub{margin-top:3px;font-size:12px;color:var(--muted-2);font-weight:700}
+        .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace}
+        .badge-code{display:inline-flex;white-space:nowrap;background:#f1f5f9;padding:5px 10px;border-radius:8px;color:#334155;font-weight:900}
+        .status-badge{display:inline-flex;min-height:28px;align-items:center;border-radius:999px;padding:0 11px;font-size:12px;font-weight:900;white-space:nowrap}
+        .status-badge.is-info{background:var(--secondary-soft);color:var(--secondary)}
+        .student-action-buttons{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:nowrap}
+        .student-action-buttons form{margin:0}
+        .student-edit-button,.student-delete-button{
+            display:inline-flex;
+            width:76px;
+            min-height:34px;
+            align-items:center;
+            justify-content:center;
+            border-radius:10px;
+            border:0;
+            padding:0;
+            text-decoration:none;
+            font-weight:900;
+            font-size:13px;
+            cursor:pointer;
+            box-shadow:none;
+        }
+        .student-edit-button{background:var(--secondary-soft);color:var(--secondary)}
+        .student-edit-button:hover{background:var(--secondary);color:#fff}
+        .student-delete-button{background:var(--danger-soft);color:var(--danger)}
+        .student-delete-button:hover{background:var(--danger);color:#fff}
+        .empty-state{display:grid;gap:6px;padding:40px 20px;text-align:center;color:var(--muted-2)}
+        .empty-state strong{color:var(--text)}
+        .student-pagination{
+            padding:16px 24px;
+            border-top:1px solid #D7E2EF;
+            background:#F8F9FA;
+        }
+
+        .content:has(> .student-page-hero){
+            background:#F4F7FB;
+        }
+        .content > .student-page-hero,
+        .content > .student-list-panel,
+        .content > .student-import-panel{
+            max-width:none;
+        }
+        .content > .student-page-hero{
+            position:relative;
+            align-items:flex-start;
+            margin-bottom:30px;
+            padding:26px 28px!important;
+            border:1px solid #D7E2EF!important;
+            border-left:6px solid #0b1e36!important;
+            border-radius:12px!important;
+            background:#fff!important;
+            box-shadow:0 12px 28px rgba(11,30,54,.08)!important;
+        }
+        .content > .student-page-hero::before{
+            content:"";
+            position:absolute;
+            top:30px;
+            left:28px;
+            width:42px;
+            height:3px;
+            border-radius:999px;
+            background:#ED1C2E;
+        }
+        .content > .student-page-hero h1{
+            margin:20px 0 0!important;
+            color:#071A33!important;
+            font-size:26px!important;
+            line-height:1.15!important;
+            font-weight:700!important;
+        }
+        .content > .student-page-hero p{
+            margin:8px 0 0!important;
+            color:#263A54!important;
+            font-size:14px!important;
+            line-height:1.45!important;
+            font-weight:600!important;
+        }
+        .content > .student-page-hero .student-page-hero__meta{padding-top:48px}
+        .content > .student-page-hero .student-page-hero__meta span{
+            min-height:32px;
+            border-radius:999px;
+            background:#EAF3FF;
+            color:#0B5ED7;
+            padding:0 14px;
+            font-size:13px;
+        }
+        .content > .student-list-panel,
+        .content > .student-import-panel{
+            border:1px solid #D7E2EF!important;
+            border-radius:12px!important;
+            background:#fff!important;
+            box-shadow:0 8px 20px rgba(8,47,89,.035)!important;
+        }
+        .content .student-list-head{
+            padding:24px 28px;
+            border-bottom:1px solid #D7E2EF;
+            background:#fff;
+        }
+        .content .student-list-head h2{
+            color:#082F59;
+            font-size:24px;
+            line-height:1.2;
+            font-weight:900;
+        }
+        .content .student-list-head h2::before{
+            content:"";
+            display:block;
+            width:34px;
+            height:4px;
+            margin-bottom:10px;
+            border-radius:999px;
+            background:#ED1C2E;
+        }
+        .content .student-list-head p{
+            margin-top:6px;
+            color:#31517D;
+            font-size:15px;
+            font-weight:650;
+        }
+        .content .record-badge{
+            min-height:32px;
+            border:1px solid #BBF7D0;
+            background:#DCFCE7;
+            color:#15803D;
+            padding:0 14px;
+            font-size:13px;
+        }
+        .content .record-badge::before{background:#16A34A}
+        .content .add-student-button,
+        .content .student-search-button,
+        .content .student-reset-button{
+            display:inline-flex;
+            min-height:42px;
+            align-items:center;
+            justify-content:center;
+            border-radius:6px;
+            padding:0 18px;
+            font-size:14px;
+            font-weight:900;
+            text-decoration:none;
+            box-shadow:none;
+        }
+        .content .add-student-button,
+        .content .student-search-button{
+            border:1px solid #0B5ED7;
+            background:#0B5ED7;
+            color:#fff;
+        }
+        .content .student-reset-button{
+            border:1px solid #C8D6E7;
+            background:#fff;
+            color:#102033;
+        }
+        .content .student-search-bar{
+            display:grid;
+            grid-template-columns:minmax(240px,1.6fr) repeat(3,minmax(150px,.8fr)) minmax(160px,.85fr) auto;
+            gap:16px;
+            margin:0;
+            padding:18px 28px 20px;
+            border-bottom:1px solid #D7E2EF;
+            background:#FBFDFF;
+        }
+        .content .student-search-field label{
+            color:#082F59;
+            font-size:13px;
+            font-weight:800;
+            letter-spacing:0;
+            text-transform:uppercase;
+        }
+        .content .student-search-field input,
+        .content .student-search-field select{
+            min-height:42px;
+            border:1px solid #C8D6E7;
+            border-radius:6px;
+            color:#102033;
+            font-size:14px;
+            font-weight:650;
+        }
+        .content .student-table{
+            border-collapse:collapse;
+        }
+        .content .student-table th{
+            min-height:56px;
+            padding:13px 16px;
+            border-bottom:1px solid #D7E2EF;
+            background:#F8F9FA;
+            color:#082F59;
+            font-size:12px;
+            font-weight:900;
+            letter-spacing:.04em;
+        }
+        .content .student-table td{
+            padding:14px 16px;
+            border-bottom:1px solid #DCE5F0;
+            color:#082F59;
+            font-size:13px;
+        }
+        .content .student-table tbody tr:hover{background:#F8FBFF}
+        .content .user-cell{min-width:190px}
+        .content .avatar{
+            width:36px;
+            height:36px;
+            background:#EAF3FF;
+            color:#0B5ED7;
+            border-color:#CFE0F5;
+            font-size:12px;
+        }
+        .content .user-name{
+            color:#082F59;
+            font-size:14px;
+            font-weight:900;
+        }
+        .content .user-sub{
+            color:#526987;
+            font-size:12px;
+        }
+        .content .badge-code{
+            min-height:26px;
+            align-items:center;
+            border-radius:6px;
+            background:#F1F6FC;
+            color:#082F59;
+            padding:0 10px;
+            font-size:12px;
+            font-weight:750;
+        }
+        .content .status-badge{
+            min-height:26px;
+            padding:0 10px;
+            font-size:12px;
+        }
+        .content .student-edit-button,
+        .content .student-delete-button{
+            width:76px;
+            min-height:34px;
+            border-radius:6px;
+        }
+        .content .student-edit-button{
+            background:#E8F0FE;
+            color:#1A73E8;
+        }
+        .content .student-delete-button{
+            background:#FEF2F2;
+            color:#B91C1C;
+        }
         @media (max-width: 640px) {
             .student-page-hero {
                 align-items: flex-start;
@@ -805,36 +1097,29 @@
             .student-page-hero h1 {
                 font-size: 30px;
             }
+            .student-alert{top:12px;right:12px;left:12px;max-width:none}
+            .content > .student-page-hero .student-page-hero__meta{padding-top:0}
+            .content .student-search-bar{grid-template-columns:1fr}
+            .student-list-actions,
+            .add-student-button{width:100%}
         }
     </style>
 
-    {{-- Auto-dismiss alert after 5 seconds --}}
-    @if (session('status'))
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const alert = document.querySelector('.alert-dismissible');
-                if (alert) {
-                    setTimeout(() => {
-                        alert.style.transition = 'opacity 0.5s, transform 0.5s';
-                        alert.style.opacity = '0';
-                        alert.style.transform = 'translateY(-10px)';
-                        setTimeout(() => alert.remove(), 500);
-                    }, 5000);
-
-                    const closeBtn = alert.querySelector('.alert-close');
-                    if (closeBtn) {
-                        closeBtn.addEventListener('click', () => {
-                            alert.style.opacity = '0';
-                            alert.style.transform = 'translateY(-10px)';
-                            setTimeout(() => alert.remove(), 500);
-                        });
-                    }
-                }
-            });
-        </script>
-    @endif
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.student-alert').forEach((alert) => {
+                const closeButton = alert.querySelector('.alert-close');
+                const closeAlert = () => {
+                    alert.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+                    alert.style.opacity = '0';
+                    alert.style.transform = 'translateY(-8px)';
+                    setTimeout(() => alert.remove(), 260);
+                };
+
+                closeButton?.addEventListener('click', closeAlert);
+                setTimeout(closeAlert, 5000);
+            });
+
             const importErrors = document.querySelector('.student-import-errors');
             const importErrorsClose = document.querySelector('.student-import-errors__close');
             const importId = importErrors?.dataset.importId;
@@ -864,7 +1149,7 @@
                     const current = parseInt(badge.textContent, 10);
 
                     if (!Number.isNaN(current)) {
-                        badge.textContent = `${Math.max(current - 1, 0)} rekod`;
+                        badge.textContent = `Total ${Math.max(current - 1, 0)} pelajar`;
                     }
                 });
             };

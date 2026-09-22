@@ -15,6 +15,7 @@
         'update' => $isAdminBaju ? 'admin.baju.update' : 'clothing-staff.baju.update',
         'destroy' => $isAdminBaju ? 'admin.baju.destroy' : 'clothing-staff.baju.destroy',
     ];
+    $bajuDashboardRoute = $isAdminBaju ? 'admin.dashboard.baju' : 'clothing-staff.dashboard.baju';
 @endphp
 
 @if (session('status'))
@@ -30,9 +31,7 @@
         <h1>Tempahan Baju</h1>
         <p>Staff boleh urus senarai baju, stok, harga, gambar dan status tempahan.</p>
     </div>
-    @if ($isClothingStaff)
-        <a class="clothing-dashboard-backlink" href="{{ route('clothing-staff.dashboard.baju') }}">Dashboard Tempahan</a>
-    @endif
+    <a class="clothing-dashboard-backlink" href="{{ route($bajuDashboardRoute) }}">Dashboard Tempahan</a>
 </section>
 
 <section class="panel baju-panel" style="margin-bottom:24px">

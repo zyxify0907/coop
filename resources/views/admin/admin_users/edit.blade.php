@@ -138,14 +138,6 @@
                             @error('staff_type')<div class="field-error">{{ $message }}</div>@enderror
                         </div>
 
-                        @if ($isCoopWorkerProfile)
-                            <div class="field">
-                                <label for="kadar_elaun">Kadar Elaun</label>
-                                <input id="kadar_elaun" name="kadar_elaun" type="number" min="0" step="0.01" value="{{ old('kadar_elaun', $profile->kadar_elaun) }}">
-                                @error('kadar_elaun')<div class="field-error">{{ $message }}</div>@enderror
-                            </div>
-                        @endif
-
                         <div class="field">
                             <label for="tarikh_mula">Tarikh Mula Kerja</label>
                             <input id="tarikh_mula" name="tarikh_mula" type="date" value="{{ old('tarikh_mula', optional($profile->tarikh_mula)->format('Y-m-d')) }}">
@@ -162,6 +154,24 @@
                             </div>
                         @endif
                     @endif
+
+                    @if ($isCoopWorkerProfile)
+                        <div class="field field-section-heading">
+                            <h3>Tetapan Elaun Pekerja</h3>
+                            <p>Gunakan nilai tepat untuk pekerja ini. Contoh: 50.00 jika kadar elaun harian RM50.</p>
+                        </div>
+
+                        <div class="field">
+                            <label for="kadar_elaun">Kadar Elaun</label>
+                            <input id="kadar_elaun" name="kadar_elaun" type="number" min="0" step="0.01" value="{{ old('kadar_elaun', $profile->kadar_elaun) }}">
+                            @error('kadar_elaun')<div class="field-error">{{ $message }}</div>@enderror
+                        </div>
+                    @endif
+
+                    <div class="field field-section-heading">
+                        <h3>Tetapan Password</h3>
+                        <p>Password semasa tidak dipaparkan. Isi password baru hanya jika mahu tukar.</p>
+                    </div>
 
                     <div class="field">
                         <label for="password">Password Baru</label>
@@ -255,6 +265,25 @@
     }
     .field input:focus,.field select:focus{outline:0;border-color:var(--secondary);box-shadow:0 0 0 4px rgba(30,64,175,.10)}
     .field-error{color:var(--danger);font-size:13px;font-weight:800}
+    .field-section-heading{
+        grid-column:1 / -1;
+        gap:6px;
+        margin-top:4px;
+        padding-top:18px;
+        border-top:1px solid var(--line);
+    }
+    .field-section-heading h3{
+        margin:0;
+        color:var(--text);
+        font-size:18px;
+        font-weight:900;
+    }
+    .field-section-heading p{
+        margin:0;
+        color:var(--muted-2);
+        font-size:13px;
+        font-weight:700;
+    }
     .edit-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px;padding-top:22px;border-top:1px solid var(--line)}
     .save-button,.cancel-button{
         display:inline-flex;
@@ -390,6 +419,18 @@
         border-radius:6px;
         color:#102033;
         font-size:14px;
+        font-weight:650;
+    }
+    .content .field-section-heading{
+        border-top-color:#D7E2EF;
+    }
+    .content .field-section-heading h3{
+        color:#082F59;
+        font-size:18px;
+    }
+    .content .field-section-heading p{
+        color:#31517D;
+        font-size:13px;
         font-weight:650;
     }
     .content .save-button,

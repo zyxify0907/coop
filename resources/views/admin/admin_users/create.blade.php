@@ -131,7 +131,18 @@
                         <label for="no_pekerja">No Pekerja</label>
                         <input id="no_pekerja" name="no_pekerja" value="{{ old('no_pekerja') }}" placeholder="PBT-001" @if($selectedStaffType === 'coop_staff') required @else disabled @endif>
                     </div>
+                    @if ($isCoopWorkerCreate)
+                        <div class="field">
+                            <label for="kadar_elaun">Kadar Elaun</label>
+                            <input id="kadar_elaun" name="kadar_elaun" type="number" min="0" step="0.01" value="{{ old('kadar_elaun', 0) }}">
+                        </div>
+                    @endif
                 @endif
+
+                <div class="field field-section-heading">
+                    <h3>Tetapan Password</h3>
+                    <p>{{ $isStudent ? 'Password student dijana automatik oleh sistem.' : 'Isi password jika mahu tetapkan sendiri. Jika kosong, sistem guna staff12345.' }}</p>
+                </div>
 
                 @if ($isStudent)
                     <div class="field auto-password-note">
@@ -231,6 +242,25 @@
         font-weight:700;
     }
     .field input:focus,.field select:focus{outline:0;border-color:var(--secondary);box-shadow:0 0 0 4px rgba(30,64,175,.10)}
+    .field-section-heading{
+        grid-column:1 / -1;
+        gap:6px;
+        margin-top:4px;
+        padding-top:18px;
+        border-top:1px solid var(--line);
+    }
+    .field-section-heading h3{
+        margin:0;
+        color:var(--text);
+        font-size:18px;
+        font-weight:900;
+    }
+    .field-section-heading p{
+        margin:0;
+        color:var(--muted-2);
+        font-size:13px;
+        font-weight:700;
+    }
     .auto-password-box{
         display:flex;
         min-height:46px;
@@ -380,6 +410,18 @@
         border-radius:6px;
         color:#102033;
         font-size:14px;
+        font-weight:650;
+    }
+    .content .field-section-heading{
+        border-top-color:#D7E2EF;
+    }
+    .content .field-section-heading h3{
+        color:#082F59;
+        font-size:18px;
+    }
+    .content .field-section-heading p{
+        color:#31517D;
+        font-size:13px;
         font-weight:650;
     }
     .content .save-button,

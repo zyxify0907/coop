@@ -20,6 +20,10 @@ class EnsureStaffType
         $types = array_values(array_diff($types, ['strict']));
 
         if ($request->session()->get('auth_role') !== 'staff') {
+            if ($request->session()->get('auth_role') === 'admin' && $request->routeIs('clothing-staff.dashboard.baju')) {
+                return redirect()->route('admin.dashboard.baju');
+            }
+
             if ($strict) {
                 abort(403, 'Halaman ini hanya untuk kategori staff yang dibenarkan.');
             }

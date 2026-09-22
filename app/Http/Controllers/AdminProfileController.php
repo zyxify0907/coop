@@ -39,7 +39,11 @@ class AdminProfileController extends Controller
             return redirect()->route('login');
         }
 
-        return view('admin.profile', compact('role', 'user'));
+        $staffProfile = filled($user->nric)
+            ? Pekerja::query()->with('sahamStaff')->where('nric', $user->nric)->first()
+            : null;
+
+        return view('admin.profile', compact('role', 'user', 'staffProfile'));
     }
 
     public function updatePassword(Request $request): RedirectResponse

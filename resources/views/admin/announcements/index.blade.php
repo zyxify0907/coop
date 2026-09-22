@@ -8,14 +8,35 @@
     <div class="announcement-admin">
         <section class="announcement-admin__head">
             <div>
-                <span>ANNOUNCEMENT</span>
                 <h1>Urus Announcement</h1>
                 <p>Announcement ini dipaparkan di page khas, bukan di dashboard.</p>
             </div>
-            <a class="announcement-button" href="{{ route('admin.announcements.create') }}">Tambah Announcement</a>
+            <div class="announcement-admin__meta">
+                <span>Total {{ $announcements->total() }} announcement</span>
+            </div>
         </section>
 
+        @if (session('status'))
+            <div class="announcement-alert success" role="alert">
+                <span>{{ session('status') }}</span>
+                <button class="alert-close" type="button" aria-label="Close notification">&times;</button>
+            </div>
+        @endif
+
         <section class="announcement-table-panel">
+            <div class="announcement-list-head">
+                <div>
+                    <h2>Senarai Announcement</h2>
+                    <p>Urus pengumuman rasmi mengikut kategori, sasaran dan status aktif.</p>
+                </div>
+                <div class="announcement-list-actions">
+                    <span class="record-badge">Total {{ $announcements->total() }} announcement</span>
+                    <a class="announcement-button" href="{{ route('admin.announcements.create') }}">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Tambah Announcement
+                    </a>
+                </div>
+            </div>
             <div class="table-responsive">
                 <table class="announcement-table">
                     <thead>
@@ -32,10 +53,15 @@
                         @forelse ($announcements as $announcement)
                             <tr>
                                 <td>
-                                    <strong>{{ $announcement->title }}</strong>
-                                    <span>{{ \Illuminate\Support\Str::limit($announcement->body, 90) }}</span>
+                                    <div class="announcement-title-cell">
+                                        <div class="announcement-icon">{{ strtoupper(substr($announcement->title, 0, 2)) }}</div>
+                                        <div>
+                                            <strong>{{ $announcement->title }}</strong>
+                                            <span>{{ \Illuminate\Support\Str::limit($announcement->body, 90) }}</span>
+                                        </div>
+                                    </div>
                                 </td>
-                                <td>{{ $announcement->category }}</td>
+                                <td><code class="badge-code">{{ $announcement->category }}</code></td>
                                 <td>{{ $announcement->audience_label }}</td>
                                 <td>{{ $announcement->starts_at?->format('d/m/Y') ?? '-' }} hingga {{ $announcement->ends_at?->format('d/m/Y') ?? '-' }}</td>
                                 <td>
@@ -43,17 +69,24 @@
                                 </td>
                                 <td>
                                     <div class="announcement-actions">
-                                        <a href="{{ route('admin.announcements.edit', $announcement) }}">Edit</a>
+                                        <a class="edit-button" href="{{ route('admin.announcements.edit', $announcement) }}">Edit</a>
                                         <form method="POST" action="{{ route('admin.announcements.destroy', $announcement) }}" onsubmit="return confirm('Padam announcement ini?');">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit">Delete</button>
+                                            <button class="delete-button" type="submit">Delete</button>
                                         </form>
                                     </div>
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="6" class="announcement-empty-cell">Tiada announcement lagi.</td></tr>
+                            <tr>
+                                <td colspan="6">
+                                    <div class="empty-state">
+                                        <strong>Tiada announcement lagi.</strong>
+                                        <span>Klik Tambah Announcement untuk cipta pengumuman baru.</span>
+                                    </div>
+                                </td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -68,25 +101,82 @@
 
 @push('styles')
 <style>
-    .announcement-admin{display:grid;gap:18px}
-    .announcement-admin__head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;padding:28px 30px;border:1px solid var(--line);border-radius:18px;background:#fff;box-shadow:0 14px 34px rgba(15,23,42,.055)}
-    .announcement-admin__head span{color:var(--secondary);font-size:12px;font-weight:900;letter-spacing:.08em}
-    .announcement-admin__head h1{margin:6px 0 0;color:var(--text);font-size:30px;line-height:1.15;font-weight:900}
-    .announcement-admin__head p{margin:8px 0 0;color:var(--muted);font-weight:700}
-    .announcement-button,.announcement-actions a{display:inline-flex;align-items:center;justify-content:center;min-height:42px;border:1px solid #BFD7FF;border-radius:8px;background:var(--secondary);color:#fff;padding:0 16px;text-decoration:none;font-weight:900}
-    .announcement-table-panel{overflow:hidden;border:1px solid var(--line);border-radius:16px;background:#fff}
-    .announcement-table{width:100%;border-collapse:collapse}
-    .announcement-table th{background:#F8FAFC;color:#475569;font-size:12px;font-weight:900;letter-spacing:.04em;text-align:left;text-transform:uppercase}
-    .announcement-table th,.announcement-table td{padding:16px 18px;border-bottom:1px solid var(--line);vertical-align:middle}
-    .announcement-table td strong{display:block;color:var(--text);font-weight:900}
-    .announcement-table td span{display:block;color:var(--muted-2);font-size:13px;font-weight:700}
-    .announcement-status{display:inline-flex;align-items:center;justify-content:center;min-width:100px;border-radius:999px;padding:7px 12px;font-size:13px;font-weight:900}
+    .page-heading{display:none}
+    .announcement-admin{display:grid;gap:24px}
+    .announcement-admin__head{
+        position:relative;
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:18px;
+        padding:26px 28px;
+        border:1px solid #D7E2EF;
+        border-left:6px solid #0b1e36;
+        border-radius:12px;
+        background:#fff;
+        box-shadow:0 12px 28px rgba(11,30,54,.08);
+    }
+    .announcement-admin__head::before{content:"";position:absolute;top:30px;left:28px;width:42px;height:3px;border-radius:999px;background:#ED1C2E}
+    .announcement-admin__head h1{margin:20px 0 0;color:#071A33;font-size:26px;line-height:1.15;font-weight:700}
+    .announcement-admin__head p{margin:8px 0 0;color:#263A54;font-size:14px;line-height:1.45;font-weight:600}
+    .announcement-admin__meta{padding-top:48px}
+    .announcement-admin__meta span,.record-badge{display:inline-flex;min-height:32px;align-items:center;justify-content:center;border-radius:999px;background:#EAF3FF;color:#0B5ED7;padding:0 14px;font-size:13px;font-weight:900}
+    .record-badge{border:1px solid #BBF7D0;background:#DCFCE7;color:#15803D}
+    .record-badge::before{content:'';width:8px;height:8px;margin-right:8px;border-radius:999px;background:#16A34A}
+    .announcement-alert{position:fixed;top:20px;right:20px;z-index:1000;display:flex;max-width:min(420px, calc(100vw - 32px));align-items:center;gap:12px;padding:14px 20px;border-radius:14px;border:1px solid transparent;font-weight:800;box-shadow:0 18px 38px rgba(15,23,42,.16)}
+    .announcement-alert.success{background:var(--success-soft);border-color:#bbf7d0;color:var(--success)}
+    .alert-close{margin-left:auto;border:0;background:none;font-size:22px;cursor:pointer;color:inherit}
+    .announcement-table-panel{overflow:hidden;border:1px solid #D7E2EF;border-radius:12px;background:#fff;box-shadow:0 8px 20px rgba(8,47,89,.035)}
+    .announcement-list-head{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;padding:24px 28px;border-bottom:1px solid #D7E2EF;background:#fff}
+    .announcement-list-head h2{margin:0;color:#082F59;font-size:24px;line-height:1.2;font-weight:900}
+    .announcement-list-head h2::before{content:"";display:block;width:34px;height:4px;margin-bottom:10px;border-radius:999px;background:#ED1C2E}
+    .announcement-list-head p{margin:6px 0 0;color:#31517D;font-size:15px;font-weight:650}
+    .announcement-list-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .announcement-button{display:inline-flex;min-height:42px;align-items:center;justify-content:center;gap:8px;border:1px solid #0B5ED7;border-radius:6px;background:#0B5ED7;color:#fff;padding:0 16px;text-decoration:none;font-size:14px;font-weight:900}
+    .table-responsive{overflow-x:auto;padding:0}
+    .announcement-table{width:100%;min-width:980px;border-collapse:collapse}
+    .announcement-table th{padding:13px 16px;border-bottom:1px solid #D7E2EF;background:#F8F9FA;color:#082F59;font-size:12px;font-weight:900;letter-spacing:.04em;text-align:left;text-transform:uppercase;white-space:nowrap}
+    .announcement-table td{padding:14px 16px;border-bottom:1px solid #DCE5F0;color:#082F59;font-size:13px;vertical-align:middle}
+    .announcement-table tbody tr:hover{background:#F8FBFF}
+    .announcement-title-cell{display:flex;align-items:center;gap:12px;min-width:260px}
+    .announcement-icon{display:flex;width:36px;height:36px;flex:0 0 auto;align-items:center;justify-content:center;border:1px solid #CFE0F5;border-radius:999px;background:#EAF3FF;color:#0B5ED7;font-size:12px;font-weight:900}
+    .announcement-table td strong{display:block;color:#082F59;font-size:14px;font-weight:900}
+    .announcement-table td span{display:block;margin-top:3px;color:#526987;font-size:12px;font-weight:700}
+    .badge-code{display:inline-flex;min-height:26px;align-items:center;white-space:nowrap;border-radius:6px;background:#F1F6FC;color:#082F59;padding:0 10px;font-size:12px;font-weight:750}
+    .announcement-status{display:inline-flex;min-width:100px;min-height:26px;align-items:center;justify-content:center;border-radius:999px;padding:0 10px;font-size:12px;font-weight:900}
     .announcement-status.active{background:var(--success-soft);color:var(--success)}
     .announcement-status.inactive{background:var(--danger-soft);color:var(--danger)}
-    .announcement-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .announcement-actions a{background:#fff;color:var(--secondary)}
-    .announcement-actions button{min-height:42px;border:0;border-radius:8px;background:var(--danger-soft);color:var(--danger);padding:0 16px;font-weight:900}
-    .announcement-empty-cell{text-align:center;color:var(--muted);font-weight:800}
-    @media (max-width:720px){.announcement-admin__head{align-items:stretch;flex-direction:column}.announcement-button{width:100%}}
+    .announcement-actions{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:nowrap}
+    .announcement-actions form{margin:0}
+    .edit-button,.delete-button{display:inline-flex;width:76px;min-height:34px;align-items:center;justify-content:center;border:0;border-radius:6px;text-decoration:none;font-weight:900;font-size:13px;cursor:pointer}
+    .edit-button{background:#E8F0FE;color:#1A73E8}
+    .delete-button{background:#FEF2F2;color:#B91C1C}
+    .empty-state{display:grid;gap:6px;padding:40px 20px;text-align:center;color:var(--muted-2)}
+    .empty-state strong{color:var(--text)}
+    .content:has(> .announcement-admin){background:#F4F7FB}
+    .content > .announcement-admin{max-width:none}
+    @media (max-width:720px){
+        .announcement-admin__head{align-items:stretch;flex-direction:column}
+        .announcement-admin__meta{padding-top:0}
+        .announcement-list-head{align-items:flex-start;padding:22px}
+        .announcement-list-actions,.announcement-button{width:100%}
+        .announcement-alert{top:12px;right:12px;left:12px;max-width:none}
+    }
 </style>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.announcement-alert').forEach((alert) => {
+            const closeButton = alert.querySelector('.alert-close');
+            const closeAlert = () => {
+                alert.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateY(-8px)';
+                setTimeout(() => alert.remove(), 260);
+            };
+
+            closeButton?.addEventListener('click', closeAlert);
+            setTimeout(closeAlert, 5000);
+        });
+    });
+</script>
 @endpush

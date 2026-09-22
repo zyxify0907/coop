@@ -33,47 +33,60 @@
 
     <div class="student-profile-page">
         <section class="profile-hero-card" aria-label="Profil Pelajar">
-            <div class="profile-identity">
-                <span class="profile-avatar">{{ $profileInitial }}</span>
-                <div>
-                    <span class="profile-kicker">Profil Pelajar</span>
-                    <h1>{{ $user->nama }}</h1>
-                    <p>{{ $user->no_matrik }} &middot; {{ $user->program ?? 'Program belum ditetapkan' }} &middot; {{ $user->kelas ?? 'Kelas belum ditetapkan' }}</p>
+            <div class="profile-hero-main">
+                <span class="profile-watermark">KOPERASI</span>
+                <div class="profile-identity">
+                    <span class="profile-avatar" aria-label="{{ $profileInitial }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="12" cy="7" r="4"/>
+                            <path d="M5 21v-2a7 7 0 0 1 14 0v2"/>
+                        </svg>
+                    </span>
+                    <div>
+                        <span class="profile-kicker">Profil Pelajar</span>
+                        <h1>{{ $user->nama }}</h1>
+                        <p>{{ $user->no_matrik }} &middot; {{ $user->program ?? 'Program belum ditetapkan' }} &middot; {{ $user->kelas ?? 'Kelas belum ditetapkan' }}</p>
+                        <span class="profile-status profile-status--inline">
+                            {{ $user->status_aktif ? 'Aktif' : 'Tidak Aktif' }}
+                        </span>
+                    </div>
                 </div>
             </div>
-            <span class="profile-status">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                {{ $memberStatus }}
-            </span>
+            <div class="profile-hero-divider" aria-hidden="true"></div>
+            <div class="profile-hero-side">
+                <span>STATUS PENGGUNA</span>
+                <strong>Pelajar / {{ $memberStatus }}</strong>
+                <small>No. Anggota: {{ $memberNumber }}</small>
+            </div>
         </section>
 
         <section class="profile-summary-grid" aria-label="Ringkasan profil">
             <article class="profile-summary profile-summary--green">
-                <span class="summary-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg></span>
                 <div>
                     <span>Status Akaun</span>
                     <strong>{{ $user->status_aktif ? 'Aktif' : 'Tidak Aktif' }}</strong>
+                    <small>Akaun anda dalam keadaan aktif.</small>
                 </div>
             </article>
             <article class="profile-summary profile-summary--blue">
-                <span class="summary-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="14" x="3" y="5" rx="2"/><path d="M7 10h4"/><path d="M7 14h3"/><path d="M15 10h2"/><path d="M15 14h2"/></svg></span>
                 <div>
                     <span>No Anggota Pelajar</span>
                     <strong>{{ $memberNumber }}</strong>
+                    <small>Nombor keahlian anda.</small>
                 </div>
             </article>
             <article class="profile-summary profile-summary--amber">
-                <span class="summary-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.66 3.13 3 7 3s7-1.34 7-3V6"/><path d="M5 12v6c0 1.66 3.13 3 7 3s7-1.34 7-3v-6"/></svg></span>
                 <div>
                     <span>Jumlah Saham</span>
                     <strong>RM {{ number_format($totalShare, 2) }}</strong>
+                    <small>Jumlah saham terkini anda.</small>
                 </div>
             </article>
             <article class="profile-summary profile-summary--purple">
-                <span class="summary-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/></svg></span>
                 <div>
                     <span>Tarikh Daftar</span>
                     <strong>{{ optional($user->tarikh_daftar)->format('d/m/Y') ?? '-' }}</strong>
+                    <small>Tarikh anda berdaftar.</small>
                 </div>
             </article>
         </section>
@@ -82,7 +95,6 @@
             <div class="profile-main">
                 <section class="profile-panel">
                     <div class="panel-section-head">
-                        <span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg></span>
                         <div>
                             <h2>Kemaskini Maklumat</h2>
                             <p>Kemaskini maklumat hubungan yang digunakan untuk urusan koperasi.</p>
@@ -132,7 +144,6 @@
 
                 <section class="profile-panel" id="kata-laluan">
                     <div class="panel-section-head">
-                        <span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
                         <div>
                             <h2>Tukar Kata Laluan</h2>
                             <p>Kemaskini kata laluan akaun untuk keselamatan login.</p>
@@ -190,7 +201,6 @@
             <aside class="profile-side">
                 <section class="profile-panel profile-activity-panel">
                     <div class="panel-section-head">
-                        <span class="section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
                         <div>
                             <h2>Aktiviti Terkini</h2>
                             <p>Ringkasan permohonan, transaksi dan tempahan.</p>
@@ -203,7 +213,6 @@
                                 $applicationClass = $activityStatusClass($application->status);
                             @endphp
                             <div class="profile-activity__item {{ $applicationClass }}">
-                                <span class="activity-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/></svg></span>
                                 <div>
                                     <strong>Permohonan {{ ucwords(str_replace('_', ' ', $application->jenis)) }}</strong>
                                     <span>{{ $applicationStatus }} &middot; {{ optional($application->tarikh_permohonan)->format('d/m/Y') ?? '-' }}</span>
@@ -215,7 +224,6 @@
 
                         @foreach ($recentTransactions as $transaction)
                             <div class="profile-activity__item is-transaction">
-                                <span class="activity-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h11v11"/><path d="M17 7 6 18"/><path d="M17 17H6V6"/></svg></span>
                                 <div>
                                     <strong>Transaksi saham RM {{ number_format((float) $transaction->amount, 2) }}</strong>
                                     <span>{{ strtoupper($transaction->direction ?? '-') }} &middot; {{ optional($transaction->transacted_at)->format('d/m/Y') ?? '-' }}</span>
@@ -229,7 +237,6 @@
                                 $orderClass = $activityStatusClass($order->status ?? 'baru');
                             @endphp
                             <div class="profile-activity__item {{ $orderClass }}">
-                                <span class="activity-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2l-4 4-4-4-4.38 1.46A2 2 0 0 0 2.25 5.9L4 22h16l1.75-16.1a2 2 0 0 0-1.37-2.44Z"/><path d="M12 6v16"/></svg></span>
                                 <div>
                                     <strong>Tempahan baju</strong>
                                     <span>{{ $orderStatus }} &middot; {{ isset($order->tarikh_tempahan) ? \Carbon\Carbon::parse($order->tarikh_tempahan)->format('d/m/Y') : '-' }}</span>
@@ -858,6 +865,356 @@
             left: -42px;
             width: 38px;
             height: 38px;
+        }
+    }
+
+    .student-profile-page {
+        gap: 18px;
+    }
+
+    .student-profile-page .profile-hero-card {
+        display: grid;
+        grid-template-columns: minmax(0, 2fr) minmax(320px, .9fr);
+        gap: 0;
+        min-height: 178px;
+        padding: 0;
+        border: 1px solid var(--profile-border);
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: 0 10px 28px rgba(8, 47, 89, .08);
+    }
+
+    .student-profile-page .profile-hero-card::before,
+    .student-profile-page .profile-hero-card::after {
+        content: none;
+    }
+
+    .profile-hero-main {
+        position: relative;
+        display: flex;
+        align-items: center;
+        min-width: 0;
+        padding: 34px 42px;
+        border-radius: 12px 0 0 12px;
+        background: var(--profile-navy);
+        clip-path: polygon(0 0, calc(100% - 64px) 0, 100% 100%, 0 100%);
+        overflow: hidden;
+        z-index: 2;
+    }
+
+    .profile-hero-main::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+            radial-gradient(circle at 18% 20%, rgba(255,255,255,.08), transparent 30%),
+            linear-gradient(135deg, rgba(255,255,255,.08), transparent 42%);
+        pointer-events: none;
+    }
+
+    .profile-hero-main::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        background: var(--profile-red);
+        clip-path: polygon(calc(100% - 74px) 0, calc(100% - 64px) 0, 100% 100%, calc(100% - 10px) 100%);
+        pointer-events: none;
+    }
+
+    .profile-watermark {
+        position: absolute;
+        left: 26px;
+        bottom: -4px;
+        color: rgba(255, 255, 255, .055);
+        font-size: 34px;
+        font-weight: 900;
+        letter-spacing: .02em;
+        pointer-events: none;
+    }
+
+    .profile-hero-main .profile-identity {
+        position: relative;
+        z-index: 2;
+        gap: 26px;
+    }
+
+    .profile-hero-main .profile-avatar {
+        width: 94px;
+        height: 94px;
+        border: 3px solid rgba(255,255,255,.34);
+        background: #DCEBFF;
+        color: var(--profile-navy);
+        font-size: 34px;
+        box-shadow: 0 10px 24px rgba(0,0,0,.16);
+    }
+
+    .profile-hero-main .profile-avatar svg {
+        width: 54px;
+        height: 54px;
+    }
+
+    .profile-hero-main .profile-kicker {
+        min-height: 30px;
+        margin-bottom: 10px;
+        padding: 0 12px;
+        border-radius: 6px;
+        background: rgba(234, 242, 255, .18);
+        color: #DCEBFF;
+        font-size: 13px;
+    }
+
+    .profile-hero-main .profile-identity h1 {
+        font-size: clamp(27px, 2.35vw, 38px);
+        line-height: 1.05;
+    }
+
+    .profile-hero-main .profile-identity p {
+        margin-top: 10px;
+        font-size: clamp(15px, 1.22vw, 18px);
+    }
+
+    .profile-status--inline {
+        width: auto;
+        min-height: 28px;
+        margin-top: 12px;
+        gap: 7px;
+        border-radius: 999px;
+        background: #18B877;
+        color: #fff;
+        padding: 0 12px;
+        font-size: 13px;
+    }
+
+    .profile-status--inline::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.72);
+    }
+
+    .profile-hero-divider {
+        display: none;
+    }
+
+    .profile-hero-divider::before {
+        content: none;
+    }
+
+    .profile-hero-side {
+        display: grid;
+        align-content: center;
+        justify-items: start;
+        margin-left: 0;
+        padding: 34px 38px 34px 76px;
+        border-radius: 0 12px 12px 0;
+        background: #fff;
+        z-index: 1;
+    }
+
+    .profile-hero-side span {
+        color: var(--profile-navy);
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: .16em;
+    }
+
+    .profile-hero-side strong {
+        margin-top: 8px;
+        color: var(--profile-navy);
+        font-size: 20px;
+        line-height: 1.2;
+        font-weight: 900;
+    }
+
+    .profile-hero-side small {
+        margin-top: 8px;
+        color: var(--profile-blue);
+        font-size: 14px;
+        font-weight: 900;
+    }
+
+    .student-profile-page .profile-summary {
+        min-height: 114px;
+        padding: 22px 26px;
+        border-left: 1px solid var(--profile-border);
+        border-top: 5px solid var(--summary-color);
+        border-radius: 8px;
+        box-shadow: 0 8px 18px rgba(8, 47, 89, .045);
+    }
+
+    .profile-summary--purple {
+        --summary-color: var(--profile-navy);
+    }
+
+    .student-profile-page .profile-summary strong {
+        margin-top: 7px;
+        font-size: clamp(26px, 2.25vw, 32px);
+        color: #061A3A;
+    }
+
+    .student-profile-page .profile-summary small {
+        display: block;
+        margin-top: 7px;
+        color: var(--profile-muted);
+        font-size: 14px;
+        font-weight: 650;
+    }
+
+    .student-profile-page .profile-layout {
+        grid-template-columns: minmax(0, 1.9fr) minmax(380px, 1fr);
+        gap: 18px;
+        align-items: stretch;
+    }
+
+    .student-profile-page .profile-panel {
+        border-radius: 10px;
+        box-shadow: 0 8px 18px rgba(8, 47, 89, .045);
+    }
+
+    .student-profile-page .panel-section-head {
+        display: block;
+        padding: 22px 24px 0;
+    }
+
+    .student-profile-page .panel-section-head h2 {
+        padding: 0 0 0 16px;
+        font-size: 22px;
+    }
+
+    .student-profile-page .panel-section-head h2::after {
+        top: 0;
+        bottom: auto;
+        left: 0;
+        width: 4px;
+        height: 28px;
+        border-radius: 999px;
+    }
+
+    .student-profile-page .panel-section-head p {
+        margin: 7px 0 0 16px;
+    }
+
+    .student-profile-page .profile-form {
+        padding: 20px 24px 24px;
+    }
+
+    .student-profile-page .profile-form input {
+        min-height: 38px;
+        border-radius: 5px;
+        font-size: 14px;
+        font-weight: 650;
+    }
+
+    .student-profile-page .profile-button {
+        min-width: 160px;
+        border-color: var(--profile-blue);
+        border-radius: 6px;
+        background: var(--profile-blue);
+        box-shadow: 0 8px 16px rgba(11, 94, 215, .14);
+    }
+
+    .student-profile-page .profile-button:hover,
+    .student-profile-page .profile-button:focus-visible {
+        border-color: #084FB5;
+        background: #084FB5;
+    }
+
+    .student-profile-page .profile-button > svg {
+        display: none;
+    }
+
+    .student-profile-page .profile-activity {
+        margin: 20px 24px 24px;
+        padding-left: 22px;
+    }
+
+    .student-profile-page .profile-activity::before {
+        top: 14px;
+        bottom: 14px;
+        left: 4px;
+        width: 1px;
+        background: #C8D6E7;
+    }
+
+    .student-profile-page .profile-activity__item {
+        min-height: auto;
+        padding: 0 0 18px;
+        border-bottom: 1px solid var(--profile-border);
+    }
+
+    .student-profile-page .profile-activity__item + .profile-activity__item {
+        padding-top: 18px;
+    }
+
+    .student-profile-page .profile-activity__item::before {
+        content: "";
+        position: absolute;
+        top: 6px;
+        left: -23px;
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        background: var(--profile-navy);
+        box-shadow: 0 0 0 4px #fff;
+    }
+
+    .student-profile-page .profile-activity__item + .profile-activity__item::before {
+        top: 24px;
+    }
+
+    .student-profile-page .profile-activity__item strong {
+        font-size: 14px;
+    }
+
+    .student-profile-page .profile-activity__item span,
+    .student-profile-page .profile-empty {
+        font-size: 13px;
+    }
+
+    @media (max-width: 1180px) {
+        .student-profile-page .profile-hero-card {
+            grid-template-columns: 1fr;
+        }
+
+        .profile-hero-main {
+            border-radius: 12px 12px 0 0;
+            clip-path: none;
+        }
+
+        .profile-hero-main::after {
+            top: auto;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 6px;
+            transform: none;
+        }
+
+        .profile-hero-side {
+            margin-left: 0;
+            padding: 28px 34px;
+            border-radius: 0 0 12px 12px;
+        }
+    }
+
+    @media (max-width: 720px) {
+        .profile-hero-main {
+            padding: 26px 24px;
+        }
+
+        .profile-hero-main .profile-identity {
+            flex-direction: column;
+        }
+
+        .profile-hero-side {
+            padding: 24px;
+        }
+
+        .student-profile-page .profile-summary-grid,
+        .student-profile-page .profile-form-grid {
+            grid-template-columns: 1fr;
         }
     }
 </style>

@@ -6,7 +6,7 @@
 
 @php
     $showWorkerFields = $showWorkerFields ?? false;
-    $emptyColspan = $showWorkerFields ? 10 : 7;
+    $emptyColspan = $showWorkerFields ? 9 : 7;
 @endphp
 
 @section('content')
@@ -120,7 +120,6 @@
                         <th>No Telefon</th>
                         <th>Tarikh Masuk</th>
                         @if ($showWorkerFields)
-                            <th>Elaun</th>
                             <th>Status</th>
                         @endif
                         <th class="actions-col">Tindakan</th>
@@ -154,7 +153,6 @@
                             <td>{{ $member->no_tel ?? '-' }}</td>
                             <td>{{ optional($member->tarikh_mula)->format('d/m/Y') ?? '-' }}</td>
                             @if ($showWorkerFields)
-                                <td>RM {{ number_format((float) $member->kadar_elaun, 2) }}</td>
                                 <td>
                                     <span class="status-badge {{ $member->status_aktif ? 'is-active' : 'is-inactive' }}">
                                         {{ $member->status_aktif ? 'Aktif' : 'Tidak Aktif' }}
@@ -496,7 +494,7 @@
         color:var(--text);
     }
     .table-responsive{overflow-x:auto;padding:0}
-    .staff-table{width:100%;border-collapse:separate;border-spacing:0;min-width:{{ $showWorkerFields ? '1120px' : '860px' }}}
+    .staff-table{width:100%;border-collapse:separate;border-spacing:0;min-width:{{ $showWorkerFields ? '1040px' : '860px' }}}
     .staff-table th{
         padding:14px 16px;
         text-align:left;

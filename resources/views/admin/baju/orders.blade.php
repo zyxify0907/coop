@@ -13,6 +13,7 @@
         'update' => $isAdminBaju ? 'admin.baju.orders.update' : 'clothing-staff.orders.update',
         'destroy' => $isAdminBaju ? 'admin.baju.orders.destroy' : 'clothing-staff.orders.destroy',
     ];
+    $ordersDashboardRoute = $isAdminBaju ? 'admin.dashboard.baju' : 'clothing-staff.dashboard.baju';
     $normalizedStatus = fn ($status, $pickupDate = null) => filled($pickupDate)
         ? 'sudah_ambil'
         : match (strtolower((string) $status)) {
@@ -37,7 +38,7 @@
             <h1>Senarai Tempahan Baju</h1>
             <p>Urus status pesanan, tarikh siap dan pengambilan.</p>
         </div>
-        <a class="clothing-dashboard-backlink" href="{{ route('clothing-staff.dashboard.baju') }}">Dashboard Tempahan</a>
+        <a class="clothing-dashboard-backlink" href="{{ route($ordersDashboardRoute) }}">Dashboard Tempahan</a>
     </section>
 @endif
 

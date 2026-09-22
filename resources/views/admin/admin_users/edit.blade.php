@@ -272,9 +272,146 @@
     .save-button:hover{background:var(--secondary-hover)}
     .cancel-button{background:var(--secondary-soft);color:var(--secondary)}
     .cancel-button:hover{background:#dbeafe;color:var(--secondary)}
+
+    .content:has(> .edit-user-hero){
+        background:#F4F7FB;
+    }
+    .content > .edit-user-hero,
+    .content > .edit-user-layout{
+        max-width:none;
+    }
+    .content > .edit-user-hero{
+        position:relative;
+        align-items:flex-start;
+        margin-bottom:30px;
+        padding:26px 28px!important;
+        border:1px solid #D7E2EF!important;
+        border-left:6px solid #0B1E36!important;
+        border-radius:12px!important;
+        background:#fff!important;
+        box-shadow:0 12px 28px rgba(11,30,54,.08)!important;
+    }
+    .content > .edit-user-hero::before{
+        content:"";
+        position:absolute;
+        top:30px;
+        left:28px;
+        width:42px;
+        height:3px;
+        border-radius:999px;
+        background:#ED1C2E;
+    }
+    .content > .edit-user-hero .hero-kicker{
+        margin-top:16px;
+        min-height:20px;
+        padding:0;
+        border-radius:0;
+        background:transparent;
+        color:#0D6EFD;
+        font-size:11px;
+        letter-spacing:.05em;
+    }
+    .content > .edit-user-hero h1{
+        margin:10px 0 0!important;
+        color:#071A33!important;
+        font-size:26px!important;
+        line-height:1.15!important;
+        font-weight:700!important;
+    }
+    .content > .edit-user-hero p{
+        margin:8px 0 0!important;
+        color:#263A54!important;
+        font-size:14px!important;
+        line-height:1.45!important;
+        font-weight:600!important;
+    }
+    .content > .edit-user-hero .hero-back{
+        margin-top:48px;
+        min-height:36px;
+        border:1px solid #B9CBE4;
+        border-radius:6px;
+        background:#fff;
+        color:#0B5ED7;
+        box-shadow:none;
+    }
+    .content .edit-form-panel{
+        border:1px solid #D7E2EF!important;
+        border-radius:12px!important;
+        background:#fff!important;
+        box-shadow:0 8px 20px rgba(8,47,89,.035)!important;
+    }
+    .content .form-panel-head{
+        padding:24px 28px;
+        border-bottom:1px solid #D7E2EF;
+        background:#fff;
+    }
+    .content .form-panel-head h2{
+        color:#082F59;
+        font-size:24px;
+        line-height:1.2;
+        font-weight:900;
+    }
+    .content .form-panel-head h2::before{
+        content:"";
+        display:block;
+        width:34px;
+        height:4px;
+        margin-bottom:10px;
+        border-radius:999px;
+        background:#ED1C2E;
+    }
+    .content .form-panel-head p{
+        margin-top:6px;
+        color:#31517D;
+        font-size:15px;
+        font-weight:650;
+    }
+    .content .form-badge{
+        min-height:32px;
+        border-radius:999px;
+        background:#DCFCE7;
+        color:#15803D;
+        padding:0 14px;
+        font-size:13px;
+    }
+    .content .edit-form-panel form{
+        padding:28px;
+    }
+    .content .field label{
+        color:#082F59;
+        font-size:13px;
+        font-weight:800;
+        letter-spacing:0;
+    }
+    .content .field input,
+    .content .field select{
+        min-height:42px;
+        border:1px solid #C8D6E7;
+        border-radius:6px;
+        color:#102033;
+        font-size:14px;
+        font-weight:650;
+    }
+    .content .save-button,
+    .content .cancel-button{
+        min-height:42px;
+        border-radius:6px;
+        font-size:14px;
+        box-shadow:none;
+    }
+    .content .save-button{
+        background:#0B5ED7;
+        color:#fff;
+    }
+    .content .cancel-button{
+        background:#E8F0FE;
+        color:#1A73E8;
+    }
+
     @media (max-width: 640px){
         .edit-user-hero{align-items:flex-start;flex-direction:column;padding:24px}
         .edit-user-hero h1{font-size:30px}
+        .content > .edit-user-hero .hero-back{margin-top:0}
         .edit-form-grid{grid-template-columns:1fr}
         .form-panel-head{flex-direction:column;padding:22px}
         .edit-form-panel form{padding:22px}

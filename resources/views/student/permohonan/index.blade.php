@@ -40,8 +40,9 @@
 @endphp
 
 @section('content')
-    <section class="student-hero">
+    <section class="student-hero student-application-hero" style="background:#fff!important;background-image:none!important;">
         <div>
+            <span>PERMOHONAN DIGITAL</span>
             <h2>Borang Permohonan Digital</h2>
             <p>{{ $typeConfig['description'] }}</p>
         </div>
@@ -100,6 +101,7 @@
         <section class="panel panel-pad application-form">
             <div class="application-form__header">
                 <div>
+                    <span class="application-form__kicker">PERMOHONAN</span>
                     <h2 style="margin:0">{{ $typeConfig['label'] }}</h2>
                     <p style="margin:6px 0 0;color:var(--muted)">Maklumat asas diambil daripada profil semasa.</p>
                 </div>
@@ -1035,47 +1037,80 @@
         .content > .student-hero,
         .content > .application-type-panel,
         .content > .application-shell{
-            width:min(100% - 48px,1760px)!important;
-            max-width:1760px!important;
+            width:min(100% - 48px,1400px)!important;
+            max-width:1400px!important;
             margin-inline:auto!important
         }
-        .student-hero{
-            min-height:112px!important;
-            margin-bottom:18px!important;
+        .content > .student-application-hero{
+            width:min(100% - 48px,1400px)!important;
+            max-width:1400px!important;
+            background:#fff!important;
+            background-color:#fff!important;
+            background-image:none!important;
+        }
+        .student-application-hero{
+            position:relative!important;
+            display:flex!important;
+            align-items:center!important;
+            justify-content:space-between!important;
+            gap:20px!important;
+            min-height:0!important;
+            margin-bottom:20px!important;
             padding:24px 28px!important;
             border:1px solid #D8E2EF!important;
             border-left:5px solid #082F59!important;
             border-radius:12px!important;
+            background:#fff!important;
+            background-image:none!important;
             box-shadow:0 8px 22px rgba(8,47,89,.035)!important
         }
-        .student-hero::before{
+        .student-application-hero::before{
+            content:none!important
+        }
+        .student-application-hero > div:first-child > span{
+            position:relative;
+            display:inline-flex;
+            align-items:center;
+            color:#1D5FD1;
+            font-size:12px;
+            font-weight:900;
+            letter-spacing:.08em;
+            text-transform:uppercase
+        }
+        .student-application-hero > div:first-child > span::before{
             content:"";
-            display:block;
             width:34px;
             height:4px;
-            margin-right:-34px;
+            margin-right:12px;
             background:#ED1C2E
         }
-        .student-hero h2{
-            margin:0!important;
+        .student-application-hero h2{
+            margin:8px 0 0!important;
             color:#071A34!important;
-            font-size:clamp(24px,1.8vw,31px)!important;
-            line-height:1.15!important;
+            font-size:32px!important;
+            line-height:1.12!important;
             font-weight:900!important
         }
-        .student-hero p{
+        .student-application-hero p{
             margin:8px 0 0!important;
-            color:#31517D!important;
+            color:#253B57!important;
             font-size:15px!important;
-            font-weight:700!important
+            font-weight:800!important
+        }
+        .student-application-hero .student-actions{
+            flex:0 0 auto!important;
+            margin-left:auto!important;
+            display:flex!important;
+            align-items:center!important;
+            justify-content:flex-end!important
         }
         .student-share-backlink{
-            min-height:44px!important;
+            min-height:38px!important;
             padding:0 18px!important;
             border-color:#BFD7FF!important;
             border-radius:8px!important;
             color:#174EA6!important;
-            font-size:15px!important
+            font-size:13px!important
         }
         .application-type-panel{
             margin-bottom:18px!important;
@@ -1427,7 +1462,9 @@
             .content > .student-hero,
             .content > .application-type-panel,
             .content > .application-shell{width:100%!important}
-            .student-hero{align-items:flex-start!important;min-height:0!important;padding:20px!important}
+            .student-application-hero{align-items:flex-start!important;min-height:0!important;padding:22px!important;flex-direction:column!important}
+            .student-application-hero h2{font-size:30px!important}
+            .student-application-hero .student-actions{width:100%!important;margin-left:0!important;justify-content:flex-start!important}
             .application-menu,
             .application-grid,
             .section-block__grid{grid-template-columns:1fr!important}

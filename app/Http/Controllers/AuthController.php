@@ -739,19 +739,6 @@ class AuthController extends Controller
             return ['ahli', $student];
         }
 
-        $staff = Pekerja::query()
-            ->where(function ($query) use ($identifier): void {
-                $query->where('nric', $identifier)
-                    ->orWhere('email', $identifier)
-                    ->orWhere('no_pekerja', $identifier);
-            })
-            ->where('status_aktif', true)
-            ->first();
-
-        if ($staff) {
-            return ['staff', $staff];
-        }
-
         $admin = AdminUser::query()
             ->where(function ($query) use ($identifier): void {
                 $query->where('nric', $identifier)
@@ -762,6 +749,30 @@ class AuthController extends Controller
 
         if ($admin) {
             return ['admin', $admin];
+        }
+
+        $staff = Pekerja::query()
+            ->where(function ($query) use ($identifier): void {
+                $query->where('nric', $identifier)
+                    ->orWhere('email', $identifier)
+                    ->orWhere('no_pekerja', $identifier);
+            })
+            ->where('status_aktif', true)
+            ->first();
+
+        if ($staff) {
+            if (filled($staff->nric)) {
+                $staffAdmin = AdminUser::query()
+                    ->where('nric', $staff->nric)
+                    ->where('status_aktif', true)
+                    ->first();
+
+                if ($staffAdmin) {
+                    return ['admin', $staffAdmin];
+                }
+            }
+
+            return ['staff', $staff];
         }
 
         return [null, null];
@@ -861,6 +872,21 @@ class AuthController extends Controller
 
         if (! $user) {
             return null;
+        }
+
+        if ($role === 'staff' && filled($user->nric ?? null)) {
+            $admin = AdminUser::query()
+                ->where('nric', $user->nric)
+                ->where('status_aktif', true)
+                ->first();
+
+            if ($admin) {
+                return [
+                    'role' => 'admin',
+                    'id' => $admin->getKey(),
+                    'staff_type' => null,
+                ];
+            }
         }
 
         return [

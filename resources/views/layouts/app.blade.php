@@ -157,7 +157,16 @@
         'clothing_staff' => [
             $clothingStaffLinks[0],
             ['section' => 'Saham', 'label' => 'Saham', 'route' => 'clothing-staff.dashboard.saham', 'active' => ['clothing-staff.dashboard.saham', 'clothing-staff.permohonan.*', 'student.permohonan.status', 'koperasi.transactions.*'], 'icon' => 'chart'],
-            ['section' => 'Tempahan', 'label' => 'Tempahan', 'route' => 'clothing-staff.dashboard.baju', 'active' => ['clothing-staff.dashboard.baju', 'clothing-staff.baju.*', 'clothing-staff.orders.*'], 'icon' => 'box'],
+            [
+                'section' => 'Tempahan',
+                'label' => 'Tempahan',
+                'active' => ['clothing-staff.dashboard.baju', 'clothing-staff.baju.*', 'clothing-staff.orders.*'],
+                'icon' => 'box',
+                'children' => [
+                    ['label' => 'Stok Baju', 'route' => 'clothing-staff.baju.index', 'active' => 'clothing-staff.baju.*'],
+                    ['label' => 'Senarai Tempahan', 'route' => 'clothing-staff.orders.index', 'active' => 'clothing-staff.orders.*'],
+                ],
+            ],
         ],
         'share_staff' => [
             $shareStaffLinks[0],
@@ -1306,6 +1315,7 @@
         .template-hero,
         .student-hero,
         .coop-hero,
+        .admin-hero,
         .applications-hero,
         .student-page-hero,
         .staff-page-hero,
@@ -1313,24 +1323,37 @@
         .edit-user-hero,
         .anggota-hero,
         .baju-hero,
+        .admin-baju-hero,
+        .baju-orders-hero,
         .baju-edit-hero,
         .withdrawal-hero,
         .share-add-hero,
         .application-detail-hero,
+        .detail-hero,
         .staff-hero,
-        .share-head { margin-bottom: 24px !important; padding: 22px 24px !important; min-height: 0 !important; border: 1px solid var(--line) !important; border-left: 4px solid var(--primary) !important; border-radius: 10px !important; background: var(--primary-soft) !important; box-shadow: none !important; }
+        .share-head,
+        .attendance-head,
+        .announcement-hero,
+        .announcement-admin__head,
+        .announcement-form__head,
+        .notification-hero,
+        .coop-header { margin-bottom: 24px !important; padding: 30px 34px !important; min-height: 150px !important; border: 1px solid #C9D8EA !important; border-left: 8px solid #082F59 !important; border-radius: 14px !important; background: #fff !important; box-shadow: 0 18px 42px rgba(15, 23, 42, .06) !important; }
         .template-kicker,
         .coop-kicker,
         .hero-kicker,
         .baju-edit-hero > div > span { min-height: 24px; padding: 0 8px; border-radius: 4px; background: var(--secondary-soft); color: var(--secondary); font-size: 10px; font-weight: 600; letter-spacing: .06em; }
-        .template-hero h1, .template-hero h2, .student-hero h2, .coop-hero h1,
+        .template-hero h1, .template-hero h2, .student-hero h2, .coop-hero h1, .admin-hero h1,
         .applications-hero h1, .student-page-hero h1, .staff-page-hero h1, .create-user-hero h1, .edit-user-hero h1,
-        .anggota-hero h1, .anggota-hero h2, .baju-hero h1, .baju-edit-hero h1, .withdrawal-hero h1, .share-add-hero h1,
-        .application-detail-hero h1, .staff-hero h1, .staff-hero h2, .share-head h1 { font-size: 28px !important; line-height: 1.25 !important; font-weight: 700 !important; }
-        .template-hero p, .student-hero p, .coop-hero p,
+        .anggota-hero h1, .anggota-hero h2, .baju-hero h1, .admin-baju-hero h2, .baju-orders-hero h1, .baju-edit-hero h1, .withdrawal-hero h1, .share-add-hero h1,
+        .application-detail-hero h1, .detail-hero h1, .staff-hero h1, .staff-hero h2, .share-head h1,
+        .attendance-head h1, .announcement-hero h1, .announcement-admin__head h1, .announcement-form__head h1,
+        .notification-hero h1, .coop-header h1 { font-size: 32px !important; line-height: 1.12 !important; font-weight: 900 !important; letter-spacing: 0 !important; color: #061B34 !important; }
+        .template-hero p, .student-hero p, .coop-hero p, .admin-hero p,
         .applications-hero p, .student-page-hero p, .staff-page-hero p, .create-user-hero p, .edit-user-hero p,
-        .anggota-hero p, .baju-hero p, .baju-edit-hero p, .withdrawal-hero p, .share-add-hero p,
-        .application-detail-hero p, .staff-hero p, .share-head p { color: var(--muted) !important; font-weight: 500 !important; }
+        .anggota-hero p, .baju-hero p, .admin-baju-hero p, .baju-orders-hero p, .baju-edit-hero p, .withdrawal-hero p, .share-add-hero p,
+        .application-detail-hero p, .detail-hero p, .staff-hero p, .share-head p,
+        .attendance-head p, .announcement-hero p, .announcement-admin__head p, .announcement-form__head p,
+        .notification-hero p, .coop-header p { color: #003B75 !important; font-weight: 800 !important; }
         .hero-meta, .template-hero__meta, .student-hero__meta, .staff-hero__meta, .admin-hero__meta,
         .applications-hero .hero-meta, .share-add-hero .hero-meta, .withdrawal-hero .hero-meta { font-weight: 600 !important; color: var(--muted) !important; }
         .hero-meta strong, .template-hero__meta strong, .student-hero__meta strong, .staff-hero__meta strong, .admin-hero__meta strong { font-size: 13px !important; color: var(--text) !important; }
@@ -1535,6 +1558,7 @@
             .template-hero,
             .student-hero,
             .coop-hero,
+            .admin-hero,
             .applications-hero,
             .student-page-hero,
             .staff-page-hero,
@@ -1542,16 +1566,27 @@
             .edit-user-hero,
             .anggota-hero,
             .baju-hero,
+            .admin-baju-hero,
+            .baju-orders-hero,
             .baju-edit-hero,
             .withdrawal-hero,
             .share-add-hero,
             .application-detail-hero,
+            .detail-hero,
             .staff-hero,
-            .share-head { padding: 18px !important; margin-bottom: 18px !important; }
-            .template-hero h1, .template-hero h2, .student-hero h2, .coop-hero h1,
+            .share-head,
+            .attendance-head,
+            .announcement-hero,
+            .announcement-admin__head,
+            .announcement-form__head,
+            .notification-hero,
+            .coop-header { min-height: 0 !important; padding: 22px !important; margin-bottom: 18px !important; }
+            .template-hero h1, .template-hero h2, .student-hero h2, .coop-hero h1, .admin-hero h1,
             .applications-hero h1, .student-page-hero h1, .staff-page-hero h1, .create-user-hero h1, .edit-user-hero h1,
-            .anggota-hero h1, .anggota-hero h2, .baju-hero h1, .baju-edit-hero h1, .withdrawal-hero h1, .share-add-hero h1,
-            .application-detail-hero h1, .staff-hero h1, .staff-hero h2, .share-head h1 { font-size: 24px !important; }
+            .anggota-hero h1, .anggota-hero h2, .baju-hero h1, .admin-baju-hero h2, .baju-orders-hero h1, .baju-edit-hero h1, .withdrawal-hero h1, .share-add-hero h1,
+            .application-detail-hero h1, .detail-hero h1, .staff-hero h1, .staff-hero h2, .share-head h1,
+            .attendance-head h1, .announcement-hero h1, .announcement-admin__head h1, .announcement-form__head h1,
+            .notification-hero h1, .coop-header h1 { font-size: 26px !important; }
             .table-wrap > table,
             .table-container > table,
             .table-responsive > table,

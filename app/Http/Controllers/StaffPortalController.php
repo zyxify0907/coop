@@ -92,6 +92,69 @@ class StaffPortalController extends Controller
         $orders = Schema::hasTable('tempahan') ? DB::table('tempahan') : null;
         $items = Schema::hasTable('item_baju') ? DB::table('item_baju') : null;
         $orderDate = Schema::hasTable('tempahan') && Schema::hasColumn('tempahan', 'tarikh_tempahan') ? 'tarikh_tempahan' : 'created_at';
+        $popularSizes = collect(['S', 'M', 'L', 'XL', 'XXL'])->map(fn ($size) => [
+            'label' => $size,
+            'value' => 0,
+        ])->keyBy('label');
+
+        if ($orders) {
+            $sizeQuery = null;
+
+            if (Schema::hasColumn('tempahan', 'saiz') || Schema::hasColumn('tempahan', 'size')) {
+                $sizeColumn = Schema::hasColumn('tempahan', 'saiz') ? 'tempahan.saiz' : 'tempahan.size';
+                $quantityColumn = Schema::hasColumn('tempahan', 'kuantiti')
+                    ? 'tempahan.kuantiti'
+                    : (Schema::hasColumn('tempahan', 'quantity') ? 'tempahan.quantity' : null);
+                $valueExpression = $quantityColumn ? "COALESCE(SUM({$quantityColumn}), 0)" : 'COUNT(*)';
+
+                $sizeQuery = DB::table('tempahan')
+                    ->selectRaw("UPPER(COALESCE({$sizeColumn}, 'LAIN')) as label, {$valueExpression} as value")
+                    ->groupBy('label');
+            } elseif (
+                Schema::hasTable('item_tempahan')
+                && Schema::hasTable('item_baju')
+                && Schema::hasColumn('item_tempahan', 'id_tempahan')
+                && Schema::hasColumn('item_tempahan', 'id_item')
+                && Schema::hasColumn('item_baju', 'saiz')
+            ) {
+                $tempahanKey = Schema::hasColumn('tempahan', 'id_tempahan') ? 'id_tempahan' : (Schema::hasColumn('tempahan', 'tempahan_id') ? 'tempahan_id' : null);
+                $quantityColumn = Schema::hasColumn('item_tempahan', 'kuantiti')
+                    ? 'item_tempahan.kuantiti'
+                    : (Schema::hasColumn('item_tempahan', 'quantity') ? 'item_tempahan.quantity' : null);
+                $valueExpression = $quantityColumn ? "COALESCE(SUM({$quantityColumn}), 0)" : 'COUNT(*)';
+
+                if ($tempahanKey) {
+                    $sizeQuery = DB::table('tempahan')
+                        ->join('item_tempahan', "tempahan.{$tempahanKey}", '=', 'item_tempahan.id_tempahan')
+                        ->leftJoin('item_baju', 'item_tempahan.id_item', '=', 'item_baju.id_item')
+                        ->selectRaw("UPPER(COALESCE(item_baju.saiz, 'LAIN')) as label, {$valueExpression} as value")
+                        ->groupBy('label');
+                }
+            }
+
+            $sizeQuery?->get()->each(function ($row) use ($popularSizes): void {
+                $label = strtoupper((string) $row->label);
+                $popularSizes->put($label, [
+                    'label' => $label,
+                    'value' => (int) $row->value,
+                ]);
+            });
+        }
+
+        $stockByItem = $items
+            ? DB::table('item_baju')
+                ->selectRaw('nama_item as label, COALESCE(SUM(stok_tertinggal), 0) as value, SUM(CASE WHEN stok_tertinggal <= 5 THEN 1 ELSE 0 END) as low_count')
+                ->groupBy('nama_item')
+                ->orderByDesc('value')
+                ->limit(8)
+                ->get()
+                ->map(fn ($item) => [
+                    'label' => $item->label ?? 'Item Baju',
+                    'value' => (int) $item->value,
+                    'low_count' => (int) $item->low_count,
+                ])
+                ->all()
+            : [];
 
         return view('admin.dashboards.baju', [
             'role' => 'staff',
@@ -118,6 +181,8 @@ class StaffPortalController extends Controller
                     ['label' => 'Stok Semasa', 'value' => $items ? (int) (clone $items)->sum('stok_tertinggal') : 0],
                     ['label' => 'Stok Rendah', 'value' => $items ? (clone $items)->where('stok_tertinggal', '<=', 5)->count() : 0],
                 ],
+                'stockByItem' => $stockByItem,
+                'popularSizes' => $popularSizes->values()->all(),
             ],
             'recentOrders' => $orders
                 ? DB::table('tempahan')

@@ -116,6 +116,11 @@ class AttendanceController extends Controller
         $lateMessage = $record->status === 'late' ? ' Anda lewat '.$this->duration($record->late_minutes).'.' : '';
         $this->audit($request, 'check_in', $record, 'Check In direkodkan.'.$lateMessage, ['gps_distance_meter' => round((float) $gps['distance'], 2)]);
         $this->notifyWorker($staff, 'Check In berjaya', 'Kehadiran anda direkodkan pada '.now()->timezone('Asia/Kuala_Lumpur')->format('h:i A').'.'.$lateMessage, route('coop-staff.attendance.index'));
+        $this->notifyCoopManagers(
+            'Check In pekerja',
+            $staff->nama.' telah check in pada '.now()->timezone('Asia/Kuala_Lumpur')->format('h:i A').'.'.$lateMessage,
+            route('admin.attendance.live')
+        );
 
         return back()->with('status', 'Check In berjaya direkodkan.'.$lateMessage);
     }
@@ -282,6 +287,20 @@ class AttendanceController extends Controller
         $workers = Pekerja::query()->where('staff_type', 'coop_staff')->where('status_aktif', true)->orderBy('nama')->get();
         $records = AttendanceRecord::query()->with('staff')->whereDate('attendance_date', $today)->get()->keyBy('staff_id');
         $recentRecords = AttendanceRecord::query()->with('staff')->latest('attendance_date')->latest()->limit(8)->get();
+        $liveAttendance = $workers->map(function (Pekerja $worker) use ($records, $setting): array {
+            $record = $records->get($worker->id_pekerja);
+            $displayStatus = $this->attendance->displayStatus($record, $setting);
+
+            return [
+                'worker' => $worker,
+                'record' => $record,
+                'status' => $displayStatus,
+                'label' => $displayStatus === 'working'
+                    ? 'Sedang Bekerja'
+                    : ($this->statusLabels()[$displayStatus] ?? ucfirst(str_replace('_', ' ', $displayStatus))),
+            ];
+        });
+        $todaySummary = $this->todaySummary($workers, $records, $setting);
         $pendingCorrections = Schema::hasTable('attendance_corrections')
             ? AttendanceCorrection::query()->with('staff')->where('status', 'pending')->latest()->limit(6)->get()
             : collect();
@@ -291,20 +310,26 @@ class AttendanceController extends Controller
             'user' => $admin,
             'setting' => $setting,
             'summary' => [
-                ...$this->todaySummary($workers, $records, $setting),
+                ...$todaySummary,
+                'checked_in' => $records->filter(fn ($record) => filled($record->check_in_time))->count(),
+                'not_checked_in' => $workers->filter(fn ($worker) => ! $records->has($worker->id_pekerja))->count(),
+                'working' => $liveAttendance->where('status', 'working')->count(),
+                'checked_out' => $records->filter(fn ($record) => filled($record->check_out_time))->count(),
+                'explicit_absent' => $records->where('status', 'absent')->count(),
                 'corrections' => Schema::hasTable('attendance_corrections')
                     ? AttendanceCorrection::query()->where('status', 'pending')->count()
                     : 0,
                 'early_leave' => AttendanceRecord::query()->whereDate('attendance_date', $today)->where('early_leave_minutes', '>', 0)->count(),
             ],
+            'liveAttendance' => $liveAttendance->sortBy(fn ($row) => $row['record']?->check_in_time ? 0 : 1)->values(),
             'recentRecords' => $recentRecords,
             'pendingCorrections' => $pendingCorrections,
             'charts' => [
                 'today' => [
-                    ['label' => 'Hadir', 'value' => $this->todaySummary($workers, $records, $setting)['present']],
-                    ['label' => 'Lewat', 'value' => $this->todaySummary($workers, $records, $setting)['late']],
-                    ['label' => 'Belum Check Out', 'value' => $this->todaySummary($workers, $records, $setting)['not_checked_out']],
-                    ['label' => 'Tidak Hadir', 'value' => $this->todaySummary($workers, $records, $setting)['absent']],
+                    ['label' => 'Hadir', 'value' => $todaySummary['present']],
+                    ['label' => 'Lewat', 'value' => $todaySummary['late']],
+                    ['label' => 'Belum Check Out', 'value' => $todaySummary['not_checked_out']],
+                    ['label' => 'Tidak Hadir', 'value' => $todaySummary['absent']],
                 ],
                 'issues' => [
                     ['label' => 'Pembetulan', 'value' => Schema::hasTable('attendance_corrections') ? AttendanceCorrection::query()->where('status', 'pending')->count() : 0],
@@ -738,6 +763,20 @@ class AttendanceController extends Controller
         }
 
         CooperativeNotification::query()->create(['recipient_role' => 'staff', 'recipient_id' => $staff->id_pekerja, 'title' => $title, 'message' => $message, 'link' => $link]);
+    }
+
+    private function notifyCoopManagers(string $title, string $message, string $link): void
+    {
+        Pekerja::query()
+            ->where('staff_type', Pekerja::COOP_MANAGER_STAFF_TYPE)
+            ->where('status_aktif', true)
+            ->each(fn (Pekerja $manager) => CooperativeNotification::query()->create([
+                'recipient_role' => 'staff',
+                'recipient_id' => $manager->id_pekerja,
+                'title' => $title,
+                'message' => $message,
+                'link' => $link,
+            ]));
     }
 
     private function notifyAdmins(string $title, string $message, string $link): void

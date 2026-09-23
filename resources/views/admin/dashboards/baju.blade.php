@@ -47,7 +47,7 @@
             <div><span>Jumlah Tempahan</span><strong>{{ number_format($summary['total_orders']) }}</strong><small>Semua rekod</small></div>
             <div><span>Tempahan Baru</span><strong>{{ number_format($summary['new_orders']) }}</strong><small>Menunggu proses</small></div>
             <div><span>Stok Semasa</span><strong>{{ number_format($summary['stock_total']) }}</strong><small>{{ number_format($summary['low_stock']) }} stok rendah</small></div>
-            <div><span>Jumlah Bayaran</span><strong>RM {{ number_format($summary['sales_total'], 2) }}</strong><small>Daripada tempahan</small></div>
+            <div><span>Belum Ambil</span><strong>{{ number_format($summary['pickup_orders']) }}</strong><small>Menunggu pengambilan</small></div>
         </section>
 
         <section class="module-grid">
@@ -56,8 +56,8 @@
                 @include('admin.dashboards.partials.donut-chart', ['items' => $charts['orders'], 'money' => false])
             </article>
             <article class="module-panel">
-                <header><div><span>CARTA</span><h2>Ringkasan Stok Baju</h2></div></header>
-                @include('admin.dashboards.partials.bar-chart', ['items' => $charts['stock'], 'money' => false])
+                <header><div><span>CARTA</span><h2>Stok Baju Mengikut Item</h2></div></header>
+                @include('admin.dashboards.partials.stock-item-chart', ['items' => $charts['stockByItem']])
             </article>
         </section>
 
@@ -77,17 +77,8 @@
             </article>
 
             <article class="module-panel">
-                <header><div><span>STOCK</span><h2>Stok Rendah</h2></div><a href="{{ $stockRoute }}">Urus Stok</a></header>
-                <div class="module-list">
-                    @forelse ($lowStockItems as $item)
-                        <div class="module-row">
-                            <div><strong>{{ $item->nama_item ?? 'Item Baju' }}</strong><small>Saiz {{ $item->saiz ?? '-' }}</small></div>
-                            <span>{{ number_format((int) ($item->stok_tertinggal ?? 0)) }}</span>
-                        </div>
-                    @empty
-                        <div class="module-empty">Tiada stok rendah.</div>
-                    @endforelse
-                </div>
+                <header><div><span>SIZE</span><h2>Saiz Paling Banyak Ditempah</h2></div><a href="{{ $ordersRoute }}">Lihat Semua</a></header>
+                @include('admin.dashboards.partials.bar-chart', ['items' => $charts['popularSizes'], 'money' => false])
             </article>
         </section>
     </div>

@@ -124,7 +124,7 @@
                 </div>
             </article>
 
-            <article class="module-panel">
+            <article class="module-panel module-panel--applications">
                 <header>
                     <div><span>PERMOHONAN</span><h2>Status Permohonan Saham</h2></div>
                     <a href="{{ route('student.permohonan.status') }}">Semak</a>
@@ -217,8 +217,11 @@
     .student-vertical-chart__bar:nth-child(3) .student-vertical-chart__track span{background:#E89A00;color:#E89A00}
     .student-vertical-chart__bar .student-vertical-chart__track span.is-empty{background:transparent}
     .student-vertical-chart__bar p{align-self:start;min-height:30px;margin:0;color:#253B57;font-size:12px;font-weight:900;line-height:1.25}
+    .student-share-dashboard .module-panel--applications{min-height:360px;align-self:stretch}
+    .student-share-dashboard .module-panel--applications .module-list{flex:none}
     .student-share-dashboard .module-list{display:grid;gap:8px;flex:1}
     .student-share-dashboard .module-row{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:58px;padding:13px 14px;border:1px solid #D8E2EF;border-radius:10px;background:#F8FBFF;color:#082F59;text-decoration:none}
+    .student-share-dashboard .module-panel--applications .module-row{min-height:74px;padding:16px 18px;background:#fff;border-left:4px solid #082F59;box-shadow:0 6px 16px rgba(8,47,89,.035)}
     .student-share-dashboard .module-row:hover{border-color:#BFD7FF;background:#fff}
     .student-share-dashboard .module-row strong{display:block;color:#071A34;font-size:14px;font-weight:900}
     .student-share-dashboard .module-row small{display:block;margin-top:4px;color:#5F7189;font-size:12px;font-weight:800}

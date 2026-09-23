@@ -89,7 +89,7 @@
                 </div>
             </article>
 
-            <article class="module-panel">
+            <article class="module-panel module-panel--applications">
                 <header>
                     <div><span>PERMOHONAN</span><h2>Status Permohonan Saham</h2></div>
                     <a href="{{ route($portalPrefix.'.permohonan.index') }}">Semak</a>
@@ -156,6 +156,9 @@
     .staff-vertical-chart__bar:nth-child(3) .staff-vertical-chart__track span{background:#E89A00;color:#E89A00;box-shadow:0 10px 22px rgba(232,154,0,.18)}
     .staff-vertical-chart__bar .staff-vertical-chart__track span.is-empty{background:transparent;box-shadow:none}
     .staff-vertical-chart__bar p{align-self:start;min-height:30px;margin:0;color:#334155;font-size:13px;font-weight:900;line-height:1.25}
+    .module-panel--applications{min-height:360px;align-self:stretch}
+    .module-panel--applications .module-list{flex:none}
+    .module-panel--applications .module-row{min-height:74px;padding:16px 18px;background:#fff;border-left:4px solid #082F59;box-shadow:0 6px 16px rgba(8,47,89,.035)}
     @media (max-width:1280px){.staff-share-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
     @media (max-width:900px){.staff-share-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.staff-share-actions{grid-template-columns:1fr}.staff-vertical-chart{grid-template-columns:48px minmax(0,1fr)}}
     @media (max-width:640px){.staff-share-metrics{grid-template-columns:1fr}.staff-vertical-chart{grid-template-columns:42px minmax(0,1fr);gap:8px}.staff-vertical-chart__plot{gap:8px;padding-inline:2px}.staff-vertical-chart__axis{font-size:11px}.staff-vertical-chart__bar p{font-size:11px;line-height:1.2}.staff-vertical-chart__bar strong{font-size:11px}.staff-vertical-chart__track span{width:34px}}

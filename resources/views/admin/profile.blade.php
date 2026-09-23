@@ -67,7 +67,7 @@
             </article>
         </section>
 
-        <section class="profile-layout profile-layout--single">
+        <section class="profile-layout">
             <div class="profile-main">
                 <section class="panel profile-panel">
                     <div class="panel-section-head">
@@ -128,6 +128,47 @@
                     </form>
                 </section>
             </div>
+
+            <aside class="profile-side">
+                <section class="panel profile-panel profile-activity-panel">
+                    <div class="panel-section-head">
+                        <div>
+                            <h2>Aktiviti Terkini</h2>
+                            <p>Ringkasan tindakan admin dalam sistem.</p>
+                        </div>
+                    </div>
+                    <div class="admin-list">
+                        @forelse ($recentActivities as $activity)
+                            <div class="admin-list__item">
+                                <strong>{{ ucfirst(str_replace('_', ' ', $activity->module)) }}</strong>
+                                <span>{{ ucfirst(str_replace('_', ' ', $activity->action)) }} &middot; {{ $activity->created_at?->format('d/m/Y H:i') }}</span>
+                                <small>{{ $activity->description ?? 'Aktiviti sistem direkodkan.' }}</small>
+                            </div>
+                        @empty
+                            <div class="admin-empty">Tiada aktiviti terkini.</div>
+                        @endforelse
+                    </div>
+                </section>
+
+                <section class="panel profile-panel">
+                    <div class="panel-section-head">
+                        <div>
+                            <h2>Senarai Login</h2>
+                            <p>Rekod sesi log masuk admin.</p>
+                        </div>
+                    </div>
+                    <div class="admin-list admin-list--login">
+                        @foreach ($loginEntries as $login)
+                            <div class="admin-list__item">
+                                <strong>{{ $login['title'] }}</strong>
+                                <span>{{ $login['time'] }}</span>
+                                <small>{{ $login['detail'] }} &middot; IP: {{ $login['ip'] }}</small>
+                            </div>
+                        @endforeach
+                    </div>
+                </section>
+
+            </aside>
         </section>
     </div>
 @endsection
@@ -650,11 +691,17 @@
     }
 
     .admin-profile-page .profile-layout {
-        display: block;
+        display: grid;
+        grid-template-columns: minmax(0, 1.45fr) minmax(320px, .82fr);
+        gap: 16px;
+        align-items: start;
     }
 
-    .admin-profile-page .profile-main {
+    .admin-profile-page .profile-main,
+    .admin-profile-page .profile-side {
+        display: grid;
         gap: 16px;
+        align-content: start;
     }
 
     .admin-profile-page .profile-panel {
@@ -727,8 +774,105 @@
         box-shadow: 0 8px 16px rgba(11, 94, 215, .14);
     }
 
+    .admin-profile-page .admin-list {
+        position: relative;
+        display: grid;
+        gap: 0;
+        margin: 18px 22px 22px;
+        padding-left: 22px;
+    }
+
+    .admin-profile-page .admin-list::before {
+        content: "";
+        position: absolute;
+        top: 10px;
+        bottom: 10px;
+        left: 4px;
+        width: 1px;
+        background: #C8D6E7;
+    }
+
+    .admin-profile-page .admin-list__item,
+    .admin-profile-page .admin-empty {
+        position: relative;
+        padding: 0 0 16px;
+        border-bottom: 1px solid var(--profile-border);
+    }
+
+    .admin-profile-page .admin-list__item + .admin-list__item {
+        padding-top: 16px;
+    }
+
+    .admin-profile-page .admin-list__item:last-child,
+    .admin-profile-page .admin-empty:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .admin-profile-page .admin-list__item::before {
+        content: "";
+        position: absolute;
+        top: 6px;
+        left: -23px;
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        background: var(--profile-navy);
+        box-shadow: 0 0 0 4px #fff;
+    }
+
+    .admin-profile-page .admin-list__item + .admin-list__item::before {
+        top: 22px;
+    }
+
+    .admin-profile-page .admin-list__item strong,
+    .admin-profile-page .admin-management strong {
+        display: block;
+        color: var(--profile-navy);
+        font-size: 14px;
+        line-height: 1.25;
+        font-weight: 900;
+    }
+
+    .admin-profile-page .admin-list__item span,
+    .admin-profile-page .admin-list__item small,
+    .admin-profile-page .admin-empty,
+    .admin-profile-page .admin-management span {
+        display: block;
+        margin-top: 5px;
+        color: var(--profile-muted);
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .admin-profile-page .admin-management {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        padding: 18px 22px 22px;
+    }
+
+    .admin-profile-page .admin-management a {
+        min-height: 78px;
+        padding: 14px;
+        border: 1px solid var(--profile-border);
+        border-radius: 8px;
+        background: #F8FBFF;
+        text-decoration: none;
+        transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+    }
+
+    .admin-profile-page .admin-management a:hover,
+    .admin-profile-page .admin-management a:focus-visible {
+        border-color: #AFC4DF;
+        box-shadow: 0 8px 16px rgba(8, 47, 89, .08);
+        outline: none;
+        transform: translateY(-1px);
+    }
+
     @media (max-width: 1180px) {
-        .admin-profile-page .profile-hero-card {
+        .admin-profile-page .profile-hero-card,
+        .admin-profile-page .profile-layout {
             grid-template-columns: 1fr;
         }
 
@@ -775,7 +919,8 @@
         }
 
         .admin-profile-page .profile-summary-grid,
-        .admin-profile-page .profile-form-grid {
+        .admin-profile-page .profile-form-grid,
+        .admin-profile-page .admin-management {
             grid-template-columns: 1fr;
         }
 

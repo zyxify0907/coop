@@ -90,14 +90,6 @@
     </section>
 
     <div class="application-shell {{ $activeType === 'anggota' ? 'membership-form-layout' : '' }}">
-        @if ($activeType === 'anggota')
-            <aside class="membership-section-nav" aria-label="Navigasi seksyen permohonan anggota">
-                <a class="active" href="#membership-applicant"><span>1</span>Maklumat Pemohon</a>
-                <a href="#membership-account"><span>2</span>Akaun dan Kadar Permohonan Keanggotaan</a>
-                <a href="#membership-nominee"><span>3</span>Pelantikan Penama / Waris</a>
-            </aside>
-        @endif
-
         <section class="panel panel-pad application-form">
             <div class="application-form__header">
                 <div>
@@ -1204,58 +1196,7 @@
             font-weight:800!important
         }
         .membership-form-layout{
-            display:grid!important;
-            grid-template-columns:250px minmax(0,1fr)!important;
-            gap:24px!important;
-            align-items:start!important
-        }
-        .membership-section-nav{
-            position:sticky;
-            top:112px;
-            display:grid;
-            gap:10px;
-            padding:12px;
-            border:1px solid #D8E2EF;
-            border-radius:12px;
-            background:#fff;
-            box-shadow:0 8px 22px rgba(8,47,89,.025)
-        }
-        .membership-section-nav a{
-            display:grid;
-            grid-template-columns:36px minmax(0,1fr);
-            align-items:center;
-            gap:12px;
-            min-height:58px;
-            padding:10px 12px;
-            border:1px solid #D8E2EF;
-            border-radius:10px;
-            background:#fff;
-            color:#082F59;
-            font-size:14px;
-            font-weight:850;
-            line-height:1.25;
-            text-decoration:none
-        }
-        .membership-section-nav a.active,
-        .membership-section-nav a:hover{
-            border-color:#BFD7FF;
-            background:#F2F7FF
-        }
-        .membership-section-nav span{
-            display:grid;
-            place-items:center;
-            width:34px;
-            height:34px;
-            border-radius:999px;
-            background:#fff;
-            border:1px solid #BFD7FF;
-            color:#082F59;
-            font-weight:900
-        }
-        .membership-section-nav a.active span{
-            background:#082F59;
-            border-color:#082F59;
-            color:#fff
+            display:block!important
         }
         .application-form{
             padding:0!important;
@@ -1267,6 +1208,74 @@
         }
         .membership-form-layout .application-form__header{
             display:none!important
+        }
+        .application-shell:not(.membership-form-layout) .application-form{
+            padding:0!important;
+            border:1px solid #D8E2EF!important;
+            border-radius:12px!important;
+            background:#fff!important;
+            box-shadow:0 8px 22px rgba(8,47,89,.035)!important;
+            overflow:hidden!important
+        }
+        .application-shell:not(.membership-form-layout) .application-form__header{
+            position:relative!important;
+            display:flex!important;
+            align-items:center!important;
+            justify-content:space-between!important;
+            gap:18px!important;
+            min-height:118px!important;
+            margin:0!important;
+            padding:24px 28px 24px 32px!important;
+            border-left:6px solid #082F59!important;
+            border-bottom:1px solid #D8E2EF!important;
+            background:#fff!important
+        }
+        .application-shell:not(.membership-form-layout) .application-form__header::before{
+            content:"";
+            position:absolute;
+            top:24px;
+            left:18px;
+            width:4px;
+            height:34px;
+            border-radius:999px;
+            background:#ED1C2E
+        }
+        .application-shell:not(.membership-form-layout) .application-form__kicker{
+            display:inline-flex!important;
+            margin:0 0 8px!important;
+            color:#082F59!important;
+            font-size:12px!important;
+            font-weight:900!important;
+            letter-spacing:.08em!important;
+            text-transform:uppercase!important
+        }
+        .application-shell:not(.membership-form-layout) .application-form__header h2{
+            margin:0!important;
+            color:#061A3A!important;
+            font-size:clamp(24px,2vw,30px)!important;
+            line-height:1.15!important;
+            font-weight:900!important;
+            letter-spacing:0!important
+        }
+        .application-shell:not(.membership-form-layout) .application-form__header p{
+            margin:8px 0 0!important;
+            color:#31517D!important;
+            font-size:15px!important;
+            font-weight:650!important
+        }
+        .application-shell:not(.membership-form-layout) .application-form__header .badge{
+            flex:0 0 auto!important;
+            min-height:32px!important;
+            align-self:flex-start!important;
+            border-radius:999px!important;
+            background:#DDF7E8!important;
+            color:#087A45!important;
+            padding:0 14px!important;
+            font-size:12px!important;
+            font-weight:900!important
+        }
+        .application-shell:not(.membership-form-layout) .application-form .application-grid{
+            padding:24px 28px 28px!important
         }
         .application-grid{
             display:grid!important;
@@ -1450,18 +1459,28 @@
         }
         @media (max-width:1000px){
             .membership-form-layout{grid-template-columns:1fr!important}
-            .membership-section-nav{
-                position:relative;
-                top:auto;
-                grid-template-columns:repeat(3,minmax(220px,1fr));
-                overflow-x:auto
-            }
             .application-menu{grid-template-columns:repeat(2,minmax(0,1fr))!important}
         }
         @media (max-width:720px){
             .content > .student-hero,
             .content > .application-type-panel,
             .content > .application-shell{width:100%!important}
+            .application-shell:not(.membership-form-layout) .application-form__header{
+                align-items:flex-start!important;
+                flex-direction:column!important;
+                min-height:0!important;
+                padding:22px 20px 22px 28px!important
+            }
+            .application-shell:not(.membership-form-layout) .application-form__header::before{
+                left:14px!important;
+                top:22px!important
+            }
+            .application-shell:not(.membership-form-layout) .application-form__header .badge{
+                align-self:flex-start!important
+            }
+            .application-shell:not(.membership-form-layout) .application-form .application-grid{
+                padding:20px!important
+            }
             .student-application-hero{align-items:flex-start!important;min-height:0!important;padding:22px!important;flex-direction:column!important}
             .student-application-hero h2{font-size:30px!important}
             .student-application-hero .student-actions{width:100%!important;margin-left:0!important;justify-content:flex-start!important}
@@ -1469,7 +1488,6 @@
             .application-grid,
             .section-block__grid{grid-template-columns:1fr!important}
             .application-menu__item{grid-template-columns:44px minmax(0,1fr) auto!important;min-height:86px!important;padding:14px!important}
-            .membership-section-nav{grid-template-columns:repeat(3,220px)}
             .application-grid > .field-block:last-child,
             .application-grid > .field-block:last-child .button{width:100%!important}
         }
@@ -1480,36 +1498,6 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const membershipForm = document.querySelector('.membership-form-layout form');
-            const sectionLinks = Array.from(document.querySelectorAll('.membership-section-nav a'));
-            const sections = sectionLinks
-                .map((link) => document.querySelector(link.getAttribute('href')))
-                .filter(Boolean);
-
-            sectionLinks.forEach((link) => {
-                link.addEventListener('click', () => {
-                    sectionLinks.forEach((item) => item.classList.remove('active'));
-                    link.classList.add('active');
-                });
-            });
-
-            if ('IntersectionObserver' in window && sections.length) {
-                const observer = new IntersectionObserver((entries) => {
-                    entries.forEach((entry) => {
-                        if (!entry.isIntersecting) {
-                            return;
-                        }
-
-                        const activeLink = sectionLinks.find((link) => link.getAttribute('href') === `#${entry.target.id}`);
-
-                        if (activeLink) {
-                            sectionLinks.forEach((item) => item.classList.remove('active'));
-                            activeLink.classList.add('active');
-                        }
-                    });
-                }, { rootMargin: '-120px 0px -60% 0px', threshold: 0.01 });
-
-                sections.forEach((section) => observer.observe(section));
-            }
 
             if (membershipForm) {
                 membershipForm.addEventListener('invalid', (event) => {

@@ -48,6 +48,42 @@ class OperationsController extends Controller
         $membershipPending = Permohonan::query()->where('jenis', 'anggota')->whereIn('status', $pendingStatuses)->count();
         $shareAdditionPending = Permohonan::query()->where('jenis', 'saham')->whereIn('status', $pendingStatuses)->count();
         $shareExitPending = Permohonan::query()->whereIn('jenis', ['berhenti', 'pengeluaran', 'pindah', 'bersara'])->whereIn('status', $pendingStatuses)->count();
+        $currentYear = now()->year;
+        $yearRange = collect(range($currentYear - 4, $currentYear));
+        $yearlyShareMovement = Schema::hasTable('share_transactions')
+            ? ShareTransaction::query()
+                ->selectRaw("YEAR(transacted_at) as year_no, COALESCE(SUM(CASE WHEN UPPER(direction) = 'DEBIT' THEN -amount ELSE amount END), 0) as total")
+                ->whereBetween(DB::raw('YEAR(transacted_at)'), [$yearRange->first(), $yearRange->last()])
+                ->groupBy('year_no')
+                ->pluck('total', 'year_no')
+            : collect();
+        $studentYearCounts = Ahli::query()
+            ->selectRaw('YEAR(tarikh_daftar) as year_no, COUNT(*) as total')
+            ->whereNotNull('tarikh_daftar')
+            ->whereBetween(DB::raw('YEAR(tarikh_daftar)'), [$yearRange->first(), $yearRange->last()])
+            ->groupBy('year_no')
+            ->pluck('total', 'year_no');
+        $staffYearCounts = Pekerja::query()
+            ->whereIn('staff_type', Pekerja::SHAREHOLDER_STAFF_TYPES)
+            ->selectRaw('YEAR(tarikh_mula) as year_no, COUNT(*) as total')
+            ->whereNotNull('tarikh_mula')
+            ->whereBetween(DB::raw('YEAR(tarikh_mula)'), [$yearRange->first(), $yearRange->last()])
+            ->groupBy('year_no')
+            ->pluck('total', 'year_no');
+        $studentBeforeRangeCount = Ahli::query()
+            ->whereNotNull('tarikh_daftar')
+            ->whereYear('tarikh_daftar', '<', $yearRange->first())
+            ->count();
+        $staffBeforeRangeCount = Pekerja::query()
+            ->whereIn('staff_type', Pekerja::SHAREHOLDER_STAFF_TYPES)
+            ->whereNotNull('tarikh_mula')
+            ->whereYear('tarikh_mula', '<', $yearRange->first())
+            ->count();
+        $studentWithoutRegisterDateCount = Ahli::query()->whereNull('tarikh_daftar')->count();
+        $staffWithoutStartDateCount = Pekerja::query()
+            ->whereIn('staff_type', Pekerja::SHAREHOLDER_STAFF_TYPES)
+            ->whereNull('tarikh_mula')
+            ->count();
 
         return view('admin.dashboards.saham', [
             ...$auth,
@@ -73,6 +109,30 @@ class OperationsController extends Controller
                     ['label' => 'Tambah Saham', 'value' => $shareAdditionPending],
                     ['label' => 'Berhenti / Pindah', 'value' => $shareExitPending],
                 ],
+                'annualTrend' => $yearRange
+                    ->map(fn (int $year) => [
+                        'label' => (string) $year,
+                        'value' => (float) ($yearlyShareMovement->get($year) ?? 0),
+                    ])
+                    ->values()
+                    ->all(),
+                'yearlyMembers' => $yearRange
+                    ->map(function (int $year) use ($studentYearCounts, $staffYearCounts, $studentBeforeRangeCount, $staffBeforeRangeCount, $studentWithoutRegisterDateCount, $staffWithoutStartDateCount, $currentYear) {
+                        $studentsUntilYear = $studentBeforeRangeCount + $studentYearCounts
+                            ->filter(fn ($total, $studentYear) => (int) $studentYear <= $year)
+                            ->sum();
+                        $knownStaffUntilYear = $staffYearCounts
+                            ->filter(fn ($total, $staffYear) => (int) $staffYear <= $year)
+                            ->sum();
+
+                        return [
+                            'label' => (string) $year,
+                            'pelajar' => (int) ($studentsUntilYear + ($year === $currentYear ? $studentWithoutRegisterDateCount : 0)),
+                            'staff' => (int) ($staffBeforeRangeCount + $knownStaffUntilYear + ($year === $currentYear ? $staffWithoutStartDateCount : 0)),
+                        ];
+                    })
+                    ->values()
+                    ->all(),
             ],
             'pendingMembershipApplications' => Permohonan::query()
                 ->where('jenis', 'anggota')
@@ -109,6 +169,80 @@ class OperationsController extends Controller
         $orders = Schema::hasTable('tempahan') ? DB::table('tempahan') : null;
         $items = Schema::hasTable('item_baju') ? DB::table('item_baju') : null;
         $orderDate = Schema::hasTable('tempahan') && Schema::hasColumn('tempahan', 'tarikh_tempahan') ? 'tarikh_tempahan' : 'created_at';
+        $popularSizes = collect(['S', 'M', 'L', 'XL', 'XXL'])->map(fn (string $size) => [
+            'label' => $size,
+            'value' => 0,
+        ])->keyBy('label');
+        if ($orders) {
+            $sizeQuery = null;
+
+            if (Schema::hasColumn('tempahan', 'saiz') || Schema::hasColumn('tempahan', 'size')) {
+                $sizeColumn = Schema::hasColumn('tempahan', 'saiz') ? 'tempahan.saiz' : 'tempahan.size';
+                $quantityColumn = Schema::hasColumn('tempahan', 'kuantiti')
+                    ? 'tempahan.kuantiti'
+                    : (Schema::hasColumn('tempahan', 'quantity') ? 'tempahan.quantity' : null);
+                $valueExpression = $quantityColumn ? "COALESCE(SUM({$quantityColumn}), 0)" : 'COUNT(*)';
+
+                $sizeQuery = DB::table('tempahan')
+                    ->selectRaw("UPPER(COALESCE({$sizeColumn}, 'LAIN')) as label, {$valueExpression} as value")
+                    ->groupBy('label');
+            } elseif (
+                Schema::hasTable('item_tempahan')
+                && Schema::hasTable('item_baju')
+                && Schema::hasColumn('item_tempahan', 'id_tempahan')
+                && Schema::hasColumn('item_tempahan', 'id_item')
+                && Schema::hasColumn('item_baju', 'saiz')
+            ) {
+                $tempahanKey = Schema::hasColumn('tempahan', 'id_tempahan') ? 'id_tempahan' : (Schema::hasColumn('tempahan', 'tempahan_id') ? 'tempahan_id' : null);
+                $quantityColumn = Schema::hasColumn('item_tempahan', 'kuantiti')
+                    ? 'item_tempahan.kuantiti'
+                    : (Schema::hasColumn('item_tempahan', 'quantity') ? 'item_tempahan.quantity' : null);
+                $valueExpression = $quantityColumn ? "COALESCE(SUM({$quantityColumn}), 0)" : 'COUNT(*)';
+
+                if ($tempahanKey) {
+                    $sizeQuery = DB::table('tempahan')
+                        ->join('item_tempahan', "tempahan.{$tempahanKey}", '=', 'item_tempahan.id_tempahan')
+                        ->leftJoin('item_baju', 'item_tempahan.id_item', '=', 'item_baju.id_item')
+                        ->selectRaw("UPPER(COALESCE(item_baju.saiz, 'LAIN')) as label, {$valueExpression} as value")
+                        ->groupBy('label');
+                }
+            } elseif (
+                Schema::hasTable('stok')
+                && Schema::hasColumn('tempahan', 'item_id')
+                && Schema::hasColumn('stok', 'item_id')
+                && Schema::hasColumn('stok', 'nama_item')
+            ) {
+                $quantityColumn = Schema::hasColumn('tempahan', 'quantity') ? 'tempahan.quantity' : null;
+                $valueExpression = $quantityColumn ? "COALESCE(SUM({$quantityColumn}), 0)" : 'COUNT(*)';
+
+                $sizeQuery = DB::table('tempahan')
+                    ->leftJoin('stok', 'tempahan.item_id', '=', 'stok.item_id')
+                    ->selectRaw("UPPER(COALESCE(stok.nama_item, 'LAIN')) as label, {$valueExpression} as value")
+                    ->groupBy('label');
+            }
+
+            $sizeQuery?->get()->each(function ($row) use ($popularSizes): void {
+                $label = strtoupper((string) $row->label);
+                $popularSizes->put($label, [
+                    'label' => $label,
+                    'value' => (int) $row->value,
+                ]);
+            });
+        }
+        $stockByItem = $items
+            ? DB::table('item_baju')
+                ->selectRaw('nama_item as label, COALESCE(SUM(stok_tertinggal), 0) as value, SUM(CASE WHEN stok_tertinggal <= 5 THEN 1 ELSE 0 END) as low_count')
+                ->groupBy('nama_item')
+                ->orderByDesc('value')
+                ->limit(8)
+                ->get()
+                ->map(fn ($item) => [
+                    'label' => $item->label ?? 'Item Baju',
+                    'value' => (int) $item->value,
+                    'low_count' => (int) $item->low_count,
+                ])
+                ->all()
+            : [];
 
         return view('admin.dashboards.baju', [
             ...$auth,
@@ -131,6 +265,8 @@ class OperationsController extends Controller
                     ['label' => 'Stok Semasa', 'value' => $items ? (int) (clone $items)->sum('stok_tertinggal') : 0],
                     ['label' => 'Stok Rendah', 'value' => $items ? (clone $items)->where('stok_tertinggal', '<=', 5)->count() : 0],
                 ],
+                'stockByItem' => $stockByItem,
+                'popularSizes' => $popularSizes->values()->all(),
             ],
             'recentOrders' => $orders
                 ? DB::table('tempahan')

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AdminUser;
 use App\Models\Ahli;
 use App\Models\AhliImport;
+use App\Models\AuditLog;
 use App\Models\Pekerja;
 use App\Models\Permohonan;
 use App\Models\Saham;
@@ -43,7 +44,25 @@ class AdminProfileController extends Controller
             ? Pekerja::query()->with('sahamStaff')->where('nric', $user->nric)->first()
             : null;
 
-        return view('admin.profile', compact('role', 'user', 'staffProfile'));
+        $recentActivities = Schema::hasTable('audit_logs')
+            ? AuditLog::query()
+                ->where('actor_role', 'admin')
+                ->where('actor_id', $user->getKey())
+                ->latest()
+                ->limit(5)
+                ->get()
+            : collect();
+
+        $loginEntries = collect([
+            [
+                'title' => 'Log masuk semasa',
+                'detail' => 'Sesi admin aktif',
+                'time' => $request->session()->get('last_login_at') ?: '-',
+                'ip' => $request->ip(),
+            ],
+        ]);
+
+        return view('admin.profile', compact('role', 'user', 'staffProfile', 'recentActivities', 'loginEntries'));
     }
 
     public function updatePassword(Request $request): RedirectResponse

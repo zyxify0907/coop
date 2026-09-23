@@ -26,20 +26,6 @@
                 </span>
             </a>
 
-            <button class="public-menu-button" type="button" aria-controls="login-main-menu" aria-expanded="false" data-menu-toggle>
-                <span class="public-menu-button__bar"></span>
-                <span class="public-menu-button__bar"></span>
-                <span class="public-menu-button__bar"></span>
-                <span class="sr-only">Buka menu navigasi</span>
-            </button>
-
-            <div class="public-menu" id="login-main-menu" data-public-menu>
-                <a href="{{ url('/') }}">Utama</a>
-                <a href="{{ url('/#perkhidmatan') }}">Perkhidmatan</a>
-                <a href="{{ url('/#tentang') }}">Tentang Kami</a>
-                <a href="{{ url('/#bantuan') }}">Bantuan</a>
-                <a class="public-login-link is-login-active" href="{{ route('login') }}">Log Masuk</a>
-            </div>
         </nav>
     </header>
 

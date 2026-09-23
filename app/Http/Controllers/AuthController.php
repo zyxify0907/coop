@@ -106,12 +106,8 @@ class AuthController extends Controller
 
     public function register(Request $request): RedirectResponse
     {
-        $role = $request->string('role')->toString();
-
-        abort_unless(in_array($role, ['student', 'staff'], true), 422);
-
         $baseRules = [
-            'role' => ['required', Rule::in(['student', 'staff'])],
+            'role' => ['required', Rule::in(['student'])],
             'nama' => ['required', 'string', 'max:100'],
             'nric' => ['required', 'string', 'max:20'],
             'email' => ['nullable', 'email', 'max:100'],
@@ -119,54 +115,31 @@ class AuthController extends Controller
             'password' => ['required', 'string', 'min:6', 'confirmed'],
         ];
 
-        $rules = $role === 'student'
-            ? $baseRules + [
-                'no_matrik' => ['required', 'string', 'max:20', 'unique:ahli,no_matrik'],
-                'nric' => ['required', 'string', 'max:20', 'unique:ahli,nric', 'unique:pekerja,nric', 'unique:admin,nric'],
-                'email' => ['nullable', 'email', 'max:100', 'unique:ahli,email', 'unique:pekerja,email'],
-                'kelas' => ['nullable', Rule::in($this->studentClassOptions())],
-            ]
-            : $baseRules + [
-                'nric' => ['required', 'string', 'max:20', 'unique:pekerja,nric', 'unique:ahli,nric', 'unique:admin,nric'],
-                'email' => ['nullable', 'email', 'max:100', 'unique:pekerja,email', 'unique:ahli,email'],
-                'staff_type' => ['required', Rule::in(['lecturer_member', 'coop_staff', 'clothing_staff'])],
-            ];
+        $rules = $baseRules + [
+            'no_matrik' => ['required', 'string', 'max:20', 'unique:ahli,no_matrik'],
+            'nric' => ['required', 'string', 'max:20', 'unique:ahli,nric', 'unique:pekerja,nric', 'unique:admin,nric'],
+            'email' => ['nullable', 'email', 'max:100', 'unique:ahli,email', 'unique:pekerja,email'],
+            'kelas' => ['nullable', Rule::in($this->studentClassOptions())],
+        ];
 
         $validated = $request->validate($rules);
 
-        if ($role === 'student') {
-            $academic = $this->academicFromClass($validated['kelas'] ?? null);
-            $user = Ahli::query()->create([
-                'no_matrik' => strtoupper(trim($validated['no_matrik'])),
-                'nama' => $validated['nama'],
-                'nric' => preg_replace('/\D+/', '', $validated['nric']) ?: $validated['nric'],
-                'email' => $validated['email'] ?? null,
-                'no_tel' => $validated['no_tel'] ?? null,
-                'kelas' => $validated['kelas'] ?? null,
-                'semester' => $academic['semester'] ?? null,
-                'program' => $academic['program'] ?? null,
-                'password_hash' => Hash::make($validated['password']),
-                'tarikh_daftar' => now()->toDateString(),
-                'status_aktif' => true,
-            ]);
-
-            return $this->completeRegistrationLogin($request, 'ahli', $user);
-        }
-
-        $user = Pekerja::query()->create([
-            'no_pekerja' => $this->nextStaffNumber(),
+        $academic = $this->academicFromClass($validated['kelas'] ?? null);
+        $user = Ahli::query()->create([
+            'no_matrik' => strtoupper(trim($validated['no_matrik'])),
             'nama' => $validated['nama'],
             'nric' => preg_replace('/\D+/', '', $validated['nric']) ?: $validated['nric'],
             'email' => $validated['email'] ?? null,
             'no_tel' => $validated['no_tel'] ?? null,
-            'staff_type' => $validated['staff_type'],
-            'kadar_elaun' => 0,
-            'tarikh_mula' => now()->toDateString(),
+            'kelas' => $validated['kelas'] ?? null,
+            'semester' => $academic['semester'] ?? null,
+            'program' => $academic['program'] ?? null,
             'password_hash' => Hash::make($validated['password']),
+            'tarikh_daftar' => now()->toDateString(),
             'status_aktif' => true,
         ]);
 
-        return $this->completeRegistrationLogin($request, 'staff', $user);
+        return $this->completeRegistrationLogin($request, 'ahli', $user);
     }
 
     public function dashboard(Request $request): View|RedirectResponse

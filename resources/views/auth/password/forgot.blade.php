@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    @include('components.coopbest-public-style')
     <style>
         :root {
             --cb-navy: #082F59;
@@ -37,8 +38,7 @@
         .forgot-shell {
             position: relative;
             isolation: isolate;
-            height: 100dvh;
-            min-height: 680px;
+            min-height: calc(100dvh - 136px);
             display: grid;
             grid-template-columns: minmax(0, 46%) minmax(0, 54%);
             width: 100%;
@@ -55,7 +55,7 @@
             clip-path: polygon(0 0, 100% 0, 74% 100%, 0 100%);
         }
 
-        .forgot-bg--soft { z-index: 0; width: 51%; background: var(--cb-soft); }
+        .forgot-bg--soft { z-index: 0; width: 51%; background: var(--cb-white); }
         .forgot-bg--red { z-index: 1; width: 46.7%; background: var(--cb-red); }
         .forgot-bg--navy { z-index: 2; width: 46%; background: var(--cb-navy); }
 
@@ -66,7 +66,7 @@
             display: flex;
             align-items: flex-start;
             min-width: 0;
-            min-height: 100dvh;
+            min-height: calc(100dvh - 136px);
             padding: clamp(120px, 16vh, 150px) clamp(46px, 4.5vw, 74px) clamp(46px, 4.5vw, 74px);
             color: var(--cb-white);
             overflow: hidden;
@@ -191,7 +191,7 @@
             display: grid;
             grid-template-rows: auto minmax(0, 1fr) auto;
             min-width: 0;
-            min-height: 100dvh;
+            min-height: calc(100dvh - 136px);
             grid-column: 2;
             padding: clamp(28px, 4vh, 46px) clamp(48px, 3vw, 60px) clamp(20px, 3vh, 32px);
         }
@@ -456,16 +456,16 @@
         }
 
         .forgot-footer {
-            position: relative;
-            z-index: 2;
-            align-self: end;
-            justify-self: center;
-            color: #294569;
-            font-size: clamp(13px, .95vw, 16px);
-            font-weight: 500;
-            text-align: center;
-            padding-top: 20px;
+            display: none;
         }
+
+        .forgot-auth-page .public-nav { width: min(var(--cb-container), calc(100% - 96px)); }
+        .forgot-auth-page .public-menu { gap: 0; margin-left: auto; }
+        .forgot-auth-page .public-login-link { min-height: 44px; gap: 8px; padding: 0 18px; background: #fff; color: var(--cb-blue) !important; border-color: #BFD7FF; border-radius: 8px; box-shadow: 0 8px 18px rgba(11,94,215,.08); }
+        .forgot-auth-page .public-login-link::before { content: "←"; color: var(--cb-red); font-weight: 900; }
+        .forgot-auth-page .public-login-link:hover,
+        .forgot-auth-page .public-login-link:focus-visible { background: #F7FAFF; color: var(--cb-navy) !important; border-color: var(--cb-navy); }
+        @media (max-width: 900px) { .forgot-auth-page .public-menu { position: static; display: flex; padding: 0; border: 0; box-shadow: none; background: transparent; }.forgot-auth-page .public-login-link { margin-top: 0; padding: 0 14px; font-size: 13px; white-space: nowrap; } }
 
         @media (max-width: 1360px) {
             .forgot-shell { grid-template-columns: minmax(0, 46%) minmax(0, 54%); }
@@ -495,7 +495,7 @@
         @media (max-width: 860px) {
             body { overflow-y: auto; }
             .forgot-shell {
-                min-height: 100dvh;
+                min-height: calc(100dvh - 126px);
                 display: block;
             }
 
@@ -572,8 +572,8 @@
         }
 
         @media (min-width: 1025px) and (min-height: 760px) {
-            body { overflow-y: hidden; }
-            .forgot-shell { height: 100dvh; min-height: 0; }
+            body { overflow-y: auto; }
+            .forgot-shell { min-height: calc(100dvh - 136px); }
         }
 
         @media (max-height: 820px) and (min-width: 1025px) {
@@ -587,8 +587,24 @@
         }
     </style>
 </head>
-<body>
+<body class="forgot-auth-page">
     @include('components.flash-notification')
+
+    <header class="public-header">
+        <nav class="public-nav" aria-label="Navigasi lupa kata laluan">
+            <a class="public-brand" href="{{ url('/') }}" aria-label="CoopBest utama">
+                <img class="public-brand__logo" src="{{ asset('images/koperasi-logo.svg?v=3') }}" alt="Logo CoopBest">
+                <span class="public-brand__divider" aria-hidden="true"></span>
+                <span class="public-brand__copy">
+                    <span class="public-brand__name"><span>Coop</span>Best</span>
+                    <span class="public-brand__sub">Koperasi Politeknik Besut</span>
+                </span>
+            </a>
+            <div class="public-menu">
+                <a class="public-login-link" href="{{ route('login') }}">Kembali ke Log Masuk</a>
+            </div>
+        </nav>
+    </header>
 
     <main class="forgot-shell">
         <span class="forgot-bg forgot-bg--soft" aria-hidden="true"></span>
@@ -599,15 +615,6 @@
             <img class="forgot-watermark" src="{{ asset('images/koperasi-logo.svg?v=3') }}" alt="" aria-hidden="true">
 
             <div class="forgot-brand-content">
-                <div class="forgot-brand">
-                    <img class="forgot-brand__logo" src="{{ asset('images/koperasi-logo.svg?v=3') }}" alt="Koperasi Politeknik Besut">
-                    <span class="forgot-brand__divider" aria-hidden="true"></span>
-                    <div class="forgot-brand__wordmark">
-                        <strong><span>Coop</span>Best</strong>
-                        <small>Koperasi Politeknik Besut</small>
-                    </div>
-                </div>
-
                 <div class="forgot-copy">
                     <span class="forgot-copy__mark" aria-hidden="true"></span>
                     <h1>Pulihkan Akses Anda</h1>
@@ -618,11 +625,6 @@
         </section>
 
         <section class="forgot-form-panel" aria-label="Borang lupa kata laluan">
-            <a class="forgot-back-link" href="{{ route('login') }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
-                Kembali ke Log Masuk
-            </a>
-
             <div class="forgot-form-wrap">
                 <div class="forgot-form-head">
                     <h1>Lupa Kata Laluan</h1>
@@ -698,6 +700,10 @@
             <footer class="forgot-footer">&copy; 2026 Koperasi Politeknik Besut. Hak Cipta Terpelihara.</footer>
         </section>
     </main>
+
+    <footer class="public-footer">
+        <p>&copy; 2026 Koperasi Politeknik Besut. Hak Cipta Terpelihara.</p>
+    </footer>
 
     <script>
         document.querySelectorAll('[data-password-toggle]').forEach(function (button) {

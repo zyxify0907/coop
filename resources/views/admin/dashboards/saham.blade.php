@@ -33,6 +33,21 @@
             </article>
         </section>
 
+        <section class="module-grid">
+            <article class="module-panel">
+                <header>
+                    <div><span>TREND TAHUNAN</span><h2>Trend Saham Mengikut Tahun</h2></div>
+                </header>
+                @include('admin.dashboards.partials.line-chart', ['items' => $charts['annualTrend']])
+            </article>
+            <article class="module-panel">
+                <header>
+                    <div><span>ANGGOTA</span><h2>Pelajar dan Staff Mengikut Tahun</h2></div>
+                </header>
+                @include('admin.dashboards.partials.grouped-bar-chart', ['items' => $charts['yearlyMembers']])
+            </article>
+        </section>
+
         <section class="module-action-layout">
             <div class="module-action-stack">
             <article class="module-panel">

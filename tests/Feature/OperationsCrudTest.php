@@ -11,47 +11,27 @@ use App\Models\SahamStaff;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class OperationsCrudTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_admin_can_update_and_delete_vendor(): void
+    public function test_vendor_module_is_not_registered_or_migrated(): void
     {
-        $admin = $this->admin();
-        $vendorId = DB::table('vendor')->insertGetId([
-            'nama_vendor' => 'Vendor Lama',
-            'no_akaun' => '111',
-            'bank' => 'BSN',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $this->assertFalse(Route::has('admin.vendors.index'));
+        $this->assertFalse(Route::has('admin.pembayaran.index'));
+        $this->assertFalse(Schema::hasTable('vendor'));
+        $this->assertFalse(Schema::hasTable('pembayaran'));
+    }
 
-        $this
-            ->withSession(['auth_role' => 'admin', 'auth_id' => $admin->id_admin])
-            ->put(route('admin.vendors.update', $vendorId), [
-                'nama_vendor' => 'Vendor Baru',
-                'no_akaun' => '222',
-                'bank' => 'CIMB',
-            ])
-            ->assertRedirect(route('admin.vendors.index'));
-
-        $this->assertDatabaseHas('vendor', [
-            'vendor_id' => $vendorId,
-            'nama_vendor' => 'Vendor Baru',
-            'no_akaun' => '222',
-            'bank' => 'CIMB',
-        ]);
-
-        $this
-            ->withSession(['auth_role' => 'admin', 'auth_id' => $admin->id_admin])
-            ->delete(route('admin.vendors.destroy', $vendorId))
-            ->assertRedirect(route('admin.vendors.index'));
-
-        $this->assertDatabaseMissing('vendor', [
-            'vendor_id' => $vendorId,
-        ]);
+    public function test_sales_module_is_not_registered_or_migrated(): void
+    {
+        $this->assertFalse(Route::has('staff.jualan.index'));
+        $this->assertFalse(Route::has('staff.jualan.store'));
+        $this->assertFalse(Schema::hasTable('jualan'));
     }
 
     public function test_admin_can_delete_saham_record(): void

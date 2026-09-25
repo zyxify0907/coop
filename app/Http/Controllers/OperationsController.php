@@ -72,6 +72,7 @@ class OperationsController extends Controller
             ->whereBetween(DB::raw('YEAR(tarikh_mula)'), [$yearRange->first(), $yearRange->last()])
             ->groupBy('year_no')
             ->pluck('total', 'year_no');
+
         return view('admin.dashboards.saham', [
             ...$auth,
             'summary' => [
@@ -237,7 +238,6 @@ class OperationsController extends Controller
                 'completed_orders' => $orders ? (clone $orders)->whereIn(DB::raw('LOWER(status)'), ['sudah_ambil', 'sudah ambil', 'diambil', 'siap diambil', 'selesai'])->count() : 0,
                 'stock_total' => $items ? (int) (clone $items)->sum('stok_tertinggal') : 0,
                 'low_stock' => $items ? (clone $items)->where('stok_tertinggal', '<=', 5)->count() : 0,
-                'sales_total' => $orders && Schema::hasColumn('tempahan', 'jumlah_total') ? (float) (clone $orders)->sum('jumlah_total') : 0.0,
             ],
             'charts' => [
                 'orders' => [
@@ -758,191 +758,10 @@ class OperationsController extends Controller
         try {
             DB::table('stok')->where($this->stockKeyColumn(), $id)->delete();
         } catch (QueryException) {
-            return back()->withErrors(['delete' => 'Stok tidak boleh dipadam kerana masih mempunyai rekod jualan atau tempahan.']);
+            return back()->withErrors(['delete' => 'Stok tidak boleh dipadam kerana masih mempunyai rekod tempahan.']);
         }
 
         return redirect()->route('staff.stok.index')->with('status', 'Item stok berjaya dipadam.');
-    }
-
-    public function jualan(Request $request): View|RedirectResponse
-    {
-        $auth = $this->requireRole($request, ['admin', 'staff']);
-
-        if ($auth instanceof RedirectResponse) {
-            return $auth;
-        }
-
-        return view('staff.jualan.index', [
-            ...$auth,
-            'items' => $this->stockQuery()->orderBy('nama_item')->get(),
-            'sales' => $this->salesQuery()->paginate(20),
-        ]);
-    }
-
-    public function storeJualan(Request $request): RedirectResponse
-    {
-        $auth = $this->requireRole($request, ['admin', 'staff']);
-
-        if ($auth instanceof RedirectResponse) {
-            return $auth;
-        }
-
-        $validated = $request->validate([
-            'item_id' => ['required', 'integer'],
-            'quantity' => ['required', 'integer', 'min:1'],
-            'tarikh' => ['required', 'date'],
-        ]);
-
-        $stockKey = $this->stockKeyColumn();
-        $stockQty = $this->stockQuantityColumn();
-        $stockPrice = $this->stockPriceColumn();
-
-        DB::transaction(function () use ($validated): void {
-            $stockKey = $this->stockKeyColumn();
-            $stockQty = $this->stockQuantityColumn();
-            $stockPrice = $this->stockPriceColumn();
-            $item = DB::table('stok')->where($stockKey, $validated['item_id'])->lockForUpdate()->first();
-
-            abort_if(! $item, 404);
-
-            if ($item->{$stockQty} < $validated['quantity']) {
-                abort(422, 'Kuantiti jualan melebihi stok semasa.');
-            }
-
-            $jumlah = (float) $item->{$stockPrice} * (int) $validated['quantity'];
-
-            DB::table('jualan')->insert([
-                $this->salesStockColumn() => $item->{$stockKey},
-                $this->salesQuantityColumn() => $validated['quantity'],
-                ...($this->hasColumn('jualan', 'harga_seunit') ? ['harga_seunit' => $item->{$stockPrice}] : []),
-                'jumlah' => $jumlah,
-                $this->salesDateColumn() => $validated['tarikh'],
-                ...($this->hasColumn('jualan', 'created_at') ? ['created_at' => now(), 'updated_at' => now()] : []),
-            ]);
-
-            DB::table('stok')->where($stockKey, $item->{$stockKey})->decrement($stockQty, $validated['quantity']);
-        });
-
-        return redirect()->route('staff.jualan.index')->with('status', 'Jualan berjaya direkod.');
-    }
-
-    public function vendors(Request $request): View|RedirectResponse
-    {
-        $auth = $this->requireRole($request, ['staff']);
-
-        if ($auth instanceof RedirectResponse) {
-            return $auth;
-        }
-
-        return view('admin.vendors.index', [
-            ...$auth,
-            'vendors' => $this->vendorsQuery()->paginate(20),
-        ]);
-    }
-
-    public function storeVendor(Request $request): RedirectResponse
-    {
-        $auth = $this->requireRole($request, ['admin']);
-
-        if ($auth instanceof RedirectResponse) {
-            return $auth;
-        }
-
-        $validated = $request->validate([
-            'nama_vendor' => ['required', 'string', 'max:255'],
-        ]);
-
-        DB::table('vendor')->insert([
-            'nama_vendor' => $validated['nama_vendor'],
-            ...($this->hasColumn('vendor', 'no_akaun') ? ['no_akaun' => '-'] : []),
-            ...($this->hasColumn('vendor', 'bank') ? ['bank' => '-'] : []),
-            ...($this->hasColumn('vendor', 'created_at') ? ['created_at' => now(), 'updated_at' => now()] : []),
-        ]);
-
-        return redirect()->route('admin.vendors.index')->with('status', 'Vendor berjaya ditambah.');
-    }
-
-    public function updateVendor(Request $request, int $id): RedirectResponse
-    {
-        $auth = $this->requireRole($request, ['admin']);
-
-        if ($auth instanceof RedirectResponse) {
-            return $auth;
-        }
-
-        $validated = $request->validate([
-            'nama_vendor' => ['required', 'string', 'max:255'],
-        ]);
-
-        DB::table('vendor')->where($this->vendorKeyColumn(), $id)->update([
-            'nama_vendor' => $validated['nama_vendor'],
-            ...($this->hasColumn('vendor', 'no_akaun') ? ['no_akaun' => '-'] : []),
-            ...($this->hasColumn('vendor', 'bank') ? ['bank' => '-'] : []),
-            ...($this->hasColumn('vendor', 'updated_at') ? ['updated_at' => now()] : []),
-        ]);
-
-        return redirect()->route('admin.vendors.index')->with('status', 'Vendor berjaya dikemaskini.');
-    }
-
-    public function destroyVendor(Request $request, int $id): RedirectResponse
-    {
-        $auth = $this->requireRole($request, ['admin']);
-
-        if ($auth instanceof RedirectResponse) {
-            return $auth;
-        }
-
-        try {
-            DB::table('vendor')->where($this->vendorKeyColumn(), $id)->delete();
-        } catch (QueryException) {
-            return back()->withErrors(['delete' => 'Vendor tidak boleh dipadam kerana masih mempunyai rekod bayaran.']);
-        }
-
-        return redirect()->route('admin.vendors.index')->with('status', 'Vendor berjaya dipadam.');
-    }
-
-    public function payments(Request $request): View|RedirectResponse
-    {
-        $auth = $this->requireRole($request, ['admin']);
-
-        if ($auth instanceof RedirectResponse) {
-            return $auth;
-        }
-
-        return view('admin.pembayaran.index', [
-            ...$auth,
-            'vendors' => $this->vendorsQuery()->get(),
-            'payments' => $this->paymentsQuery()->paginate(20),
-        ]);
-    }
-
-    public function storePayment(Request $request): RedirectResponse
-    {
-        $auth = $this->requireRole($request, ['admin']);
-
-        if ($auth instanceof RedirectResponse) {
-            return $auth;
-        }
-
-        $validated = $request->validate([
-            'vendor_id' => ['required', 'integer'],
-            'jumlah_jualan' => ['required', 'numeric', 'min:0'],
-            'komisen' => ['required', 'numeric', 'min:0'],
-        ]);
-
-        $table = $this->paymentTable();
-        $bayaranAkhir = max(0, (float) $validated['jumlah_jualan'] - (float) $validated['komisen']);
-        DB::table($table)->insert([
-            $this->paymentVendorColumn() => $validated['vendor_id'],
-            'jumlah_jualan' => $validated['jumlah_jualan'],
-            $this->paymentCommissionColumn() => $validated['komisen'],
-            $this->paymentFinalColumn() => $bayaranAkhir,
-            ...($this->hasColumn($table, 'tarikh_bayar') ? ['tarikh_bayar' => now()->toDateString()] : []),
-            ...($this->hasColumn($table, 'status') ? ['status' => 'Selesai'] : []),
-            ...($this->hasColumn($table, 'created_at') ? ['created_at' => now(), 'updated_at' => now()] : []),
-        ]);
-
-        return redirect()->route('admin.pembayaran.index')->with('status', 'Pembayaran vendor berjaya direkod.');
     }
 
     public function adminBaju(Request $request): View|RedirectResponse
@@ -1722,12 +1541,9 @@ class OperationsController extends Controller
                 'students' => Ahli::query()->count(),
                 'staff' => Pekerja::query()->count(),
                 'stock_value' => DB::table('stok')->selectRaw("COALESCE(SUM({$this->stockQuantityColumn()} * {$this->stockPriceColumn()}), 0) as total")->value('total'),
-                'sales_total' => DB::table('jualan')->sum('jumlah'),
                 'orders_pending' => DB::table('tempahan')->whereIn(DB::raw('LOWER(status)'), ['baru', 'pending', 'belum_ambil', 'belum ambil'])->count(),
-                'vendor_payments' => Schema::hasTable($this->paymentTable()) ? DB::table($this->paymentTable())->sum($this->paymentFinalColumn()) : 0,
                 'shares_total' => Saham::query()->sum('syer'),
             ],
-            'recentSales' => $this->salesQuery()->limit(8)->get(),
         ]);
     }
 
@@ -1864,66 +1680,6 @@ class OperationsController extends Controller
             ->values();
     }
 
-    private function salesQuery(): Builder
-    {
-        return DB::table('jualan')
-            ->leftJoin('stok', "jualan.{$this->salesStockColumn()}", '=', "stok.{$this->stockKeyColumn()}")
-            ->select([
-                "{$this->salesDateColumn()} as tarikh",
-                'stok.nama_item',
-                "{$this->salesQuantityColumn()} as quantity",
-                'jualan.jumlah',
-            ])
-            ->orderByDesc($this->salesDateColumn());
-    }
-
-    private function vendorsQuery(): Builder
-    {
-        $vendorKey = $this->vendorKeyColumn();
-        $paymentTable = $this->paymentTable();
-        $paymentVendor = $this->paymentVendorColumn();
-
-        $query = DB::table('vendor')
-            ->select([
-                "{$vendorKey} as vendor_id",
-                'nama_vendor',
-            ])
-            ->orderBy('nama_vendor');
-
-        if (Schema::hasTable($paymentTable)) {
-            $query->selectSub(
-                DB::table($paymentTable)
-                    ->selectRaw('COUNT(*)')
-                    ->whereColumn("{$paymentTable}.{$paymentVendor}", "vendor.{$vendorKey}"),
-                'pembayaran_count'
-            );
-        } else {
-            $query->selectRaw('0 as pembayaran_count');
-        }
-
-        return $query;
-    }
-
-    private function paymentsQuery(): Builder
-    {
-        $table = $this->paymentTable();
-
-        if (! Schema::hasTable($table)) {
-            return DB::table('vendor')->whereRaw('1 = 0')->selectRaw('NULL as nama_vendor, 0 as jumlah_jualan, 0 as komisen, 0 as bayaran_akhir, NULL as created_at');
-        }
-
-        return DB::table($table)
-            ->leftJoin('vendor', "{$table}.{$this->paymentVendorColumn()}", '=', "vendor.{$this->vendorKeyColumn()}")
-            ->select([
-                'vendor.nama_vendor',
-                "{$table}.jumlah_jualan",
-                "{$table}.{$this->paymentCommissionColumn()} as komisen",
-                "{$table}.{$this->paymentFinalColumn()} as bayaran_akhir",
-                DB::raw($this->hasColumn($table, 'created_at') ? "{$table}.created_at" : "{$table}.tarikh_bayar as created_at"),
-            ])
-            ->orderByDesc($this->hasColumn($table, 'created_at') ? "{$table}.created_at" : "{$table}.tarikh_bayar");
-    }
-
     private function stockKeyColumn(): string
     {
         return $this->hasColumn('stok', 'item_id') ? 'item_id' : 'id_stok';
@@ -1942,46 +1698,6 @@ class OperationsController extends Controller
     private function orderKeyColumn(): string
     {
         return $this->hasColumn('tempahan', 'tempahan_id') ? 'tempahan_id' : 'id_tempahan';
-    }
-
-    private function salesStockColumn(): string
-    {
-        return $this->hasColumn('jualan', 'item_id') ? 'item_id' : 'id_stok';
-    }
-
-    private function salesQuantityColumn(): string
-    {
-        return $this->hasColumn('jualan', 'quantity') ? 'quantity' : 'kuantiti';
-    }
-
-    private function salesDateColumn(): string
-    {
-        return $this->hasColumn('jualan', 'tarikh') ? 'tarikh' : 'tarikh_jualan';
-    }
-
-    private function vendorKeyColumn(): string
-    {
-        return $this->hasColumn('vendor', 'vendor_id') ? 'vendor_id' : 'id_vendor';
-    }
-
-    private function paymentTable(): string
-    {
-        return Schema::hasTable('pembayaran') ? 'pembayaran' : 'pembayaran_vendor';
-    }
-
-    private function paymentVendorColumn(): string
-    {
-        return $this->hasColumn($this->paymentTable(), 'vendor_id') ? 'vendor_id' : 'id_vendor';
-    }
-
-    private function paymentCommissionColumn(): string
-    {
-        return $this->hasColumn($this->paymentTable(), 'komisen') ? 'komisen' : 'komisen_dipotong';
-    }
-
-    private function paymentFinalColumn(): string
-    {
-        return $this->hasColumn($this->paymentTable(), 'bayaran_akhir') ? 'bayaran_akhir' : 'jumlah_bayaran';
     }
 
     private function hasColumn(string $table, string $column): bool

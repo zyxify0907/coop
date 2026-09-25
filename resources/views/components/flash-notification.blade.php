@@ -94,7 +94,6 @@
     .system-notice.is-closing { opacity: 0; transform: translateY(-8px); transition: opacity 160ms ease, transform 160ms ease; }
 
     .content > :is(.alert, .staff-alert),
-    .content .vendor-wrap > .alert-box,
     .login-card > .alert,
     .reset-card > .alert { display: none !important; }
 

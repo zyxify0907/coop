@@ -10,8 +10,7 @@
         <table>
             <tr><th>Import Ahli</th><td>CSV/XLSX perlu mengandungi Nama, No Matrik dan Semester. No Matrik duplikat akan dilangkau.</td></tr>
             <tr><th>Tempahan</th><td>Student membuat tempahan, staff mengurus baju dan mengemaskini status sehingga selesai.</td></tr>
-            <tr><th>Stok</th><td>Jualan akan mengurangkan kuantiti stok secara automatik.</td></tr>
-            <tr><th>Pembayaran Vendor</th><td>Bayaran akhir dikira sebagai jumlah jualan tolak komisen.</td></tr>
+            <tr><th>Stok</th><td>Kuantiti stok dikemas kini melalui pengurusan stok dan tempahan baju.</td></tr>
             <tr><th>Saham</th><td>Admin mengurus SYER dan YURAN untuk setiap ahli.</td></tr>
         </table>
     </section>

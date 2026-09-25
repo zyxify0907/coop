@@ -71,32 +71,6 @@ return new class extends Migration
             $table->foreign('no_matrik')->references('no_matrik')->on('ahli')->cascadeOnDelete();
         });
 
-        Schema::create('jualan', function (Blueprint $table): void {
-            $table->id('jualan_id');
-            $table->foreignId('item_id')->constrained('stok', 'item_id')->cascadeOnDelete();
-            $table->unsignedInteger('quantity');
-            $table->decimal('jumlah', 10, 2);
-            $table->date('tarikh');
-            $table->timestamps();
-        });
-
-        Schema::create('vendor', function (Blueprint $table): void {
-            $table->id('vendor_id');
-            $table->string('nama_vendor');
-            $table->string('no_akaun');
-            $table->string('bank');
-            $table->timestamps();
-        });
-
-        Schema::create('pembayaran', function (Blueprint $table): void {
-            $table->id('payment_id');
-            $table->foreignId('vendor_id')->constrained('vendor', 'vendor_id')->cascadeOnDelete();
-            $table->decimal('jumlah_jualan', 10, 2);
-            $table->decimal('komisen', 10, 2)->default(0);
-            $table->decimal('bayaran_akhir', 10, 2);
-            $table->timestamps();
-        });
-
         Schema::create('saham', function (Blueprint $table): void {
             $table->id('id_saham');
             $table->foreignId('id_ahli')->constrained('ahli', 'id_ahli')->cascadeOnDelete();
@@ -111,9 +85,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('saham');
-        Schema::dropIfExists('pembayaran');
-        Schema::dropIfExists('vendor');
-        Schema::dropIfExists('jualan');
         Schema::dropIfExists('tempahan');
         Schema::dropIfExists('stok');
         Schema::dropIfExists('admin');

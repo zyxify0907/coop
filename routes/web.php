@@ -2,8 +2,8 @@
 
 use App\Http\Controllers\AdminProfileController;
 use App\Http\Controllers\AhliController;
-use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AllowanceController;
+use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CooperativeController;
@@ -165,8 +165,6 @@ Route::middleware('staff.type:strict,clothing_staff')->group(function (): void {
     Route::post('/staff/stok', [OperationsController::class, 'storeStok'])->name('staff.stok.store');
     Route::put('/staff/stok/{id}', [OperationsController::class, 'updateStok'])->name('staff.stok.update');
     Route::delete('/staff/stok/{id}', [OperationsController::class, 'destroyStok'])->name('staff.stok.destroy');
-    Route::get('/staff/jualan', [OperationsController::class, 'jualan'])->name('staff.jualan.index');
-    Route::post('/staff/jualan', [OperationsController::class, 'storeJualan'])->name('staff.jualan.store');
     Route::get('/staff/workflow', [CooperativeController::class, 'staffWorkflow'])->name('staff.workflow.index');
 });
 
@@ -184,12 +182,6 @@ Route::delete('/admin/tempahan-baju/tempahan/{id}', [OperationsController::class
 Route::get('/admin/dashboard/saham', [OperationsController::class, 'shareDashboard'])->name('admin.dashboard.saham');
 Route::get('/admin/dashboard/baju', [OperationsController::class, 'clothingDashboard'])->name('admin.dashboard.baju');
 
-Route::get('/admin/vendors', [OperationsController::class, 'vendors'])->name('admin.vendors.index');
-Route::post('/admin/vendors', [OperationsController::class, 'storeVendor'])->name('admin.vendors.store');
-Route::put('/admin/vendors/{id}', [OperationsController::class, 'updateVendor'])->name('admin.vendors.update');
-Route::delete('/admin/vendors/{id}', [OperationsController::class, 'destroyVendor'])->name('admin.vendors.destroy');
-Route::get('/admin/pembayaran', [OperationsController::class, 'payments'])->name('admin.pembayaran.index');
-Route::post('/admin/pembayaran', [OperationsController::class, 'storePayment'])->name('admin.pembayaran.store');
 Route::get('/admin/saham', [OperationsController::class, 'saham'])->name('admin.saham.index');
 Route::get('/admin/saham/export/csv', [OperationsController::class, 'exportSahamCsv'])->name('admin.saham.export.csv');
 Route::post('/admin/saham', [OperationsController::class, 'storeSaham'])->name('admin.saham.store');

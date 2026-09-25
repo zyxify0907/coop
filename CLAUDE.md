@@ -14,7 +14,7 @@ CoopBest is a Laravel cooperative management system.
 ## Product Roles
 
 - Admin manages ahli, staff, imports, vendors, pembayaran, saham, and reports.
-- Staff manages tempahan, stok, and jualan.
+- Staff manages tempahan and stok.
 - Student / ahli views profile, saham/yuran, and creates tempahan.
 
 ## UI Direction

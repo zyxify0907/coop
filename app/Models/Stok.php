@@ -23,11 +23,6 @@ class Stok extends Model
         return $this->hasMany(Tempahan::class, 'item_id', 'item_id');
     }
 
-    public function jualan(): HasMany
-    {
-        return $this->hasMany(Jualan::class, 'item_id', 'item_id');
-    }
-
     protected function casts(): array
     {
         return [

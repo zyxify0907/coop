@@ -106,13 +106,9 @@ CREATE TABLE IF NOT EXISTS ahli_imports (
 
 DROP VIEW IF EXISTS v_status_tempahan;
 DROP VIEW IF EXISTS v_top5_pemegang_saham;
-DROP VIEW IF EXISTS v_laporan_pembayaran_vendor;
 DROP VIEW IF EXISTS v_laporan_saham_ahli;
 DROP VIEW IF EXISTS v_laporan_stok_semasa;
-DROP VIEW IF EXISTS v_laporan_jualan_harian;
-DROP PROCEDURE IF EXISTS kira_bayaran_vendor;
 DROP PROCEDURE IF EXISTS import_ahli;
-DROP TRIGGER IF EXISTS trg_update_stok_sales;
 DROP TRIGGER IF EXISTS trg_update_tempahan_total;
 DROP TRIGGER IF EXISTS trg_create_saham_new_ahli;
 
@@ -132,12 +128,7 @@ DROP TABLE IF EXISTS admin;
 DROP TABLE IF EXISTS tugasan;
 DROP TABLE IF EXISTS elaun;
 DROP TABLE IF EXISTS kehadiran;
-DROP TABLE IF EXISTS jualan;
 DROP TABLE IF EXISTS stok;
-DROP TABLE IF EXISTS pembayaran_vendor;
-DROP TABLE IF EXISTS item_serahan;
-DROP TABLE IF EXISTS serahan;
-DROP TABLE IF EXISTS vendor;
 DROP TABLE IF EXISTS pembayaran_ahli;
 DROP TABLE IF EXISTS saham;
 DROP TABLE IF EXISTS item_tempahan;
@@ -285,78 +276,6 @@ CREATE TABLE pembayaran_ahli (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
--- 2.9 TABLE: vendor
--- ============================================================
-CREATE TABLE vendor (
-    id_vendor INT PRIMARY KEY AUTO_INCREMENT,
-    nama_vendor VARCHAR(100) NOT NULL,
-    no_akaun VARCHAR(30),
-    bank VARCHAR(50),
-    no_tel VARCHAR(15),
-    email VARCHAR(100),
-    alamat TEXT,
-    komisen_peratus DECIMAL(5,2) DEFAULT 20.00,
-    status_aktif TINYINT(1) DEFAULT 1,
-    INDEX idx_nama_vendor (nama_vendor),
-    INDEX idx_status_aktif (status_aktif)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ============================================================
--- 2.10 TABLE: serahan
--- ============================================================
-CREATE TABLE serahan (
-    id_serahan INT PRIMARY KEY AUTO_INCREMENT,
-    id_vendor INT NOT NULL,
-    tarikh_serahan DATE DEFAULT NULL,
-    jumlah_kasar DECIMAL(10,2) DEFAULT 0.00,
-    komisen DECIMAL(10,2) DEFAULT 0.00,
-    tuntutan_bersih DECIMAL(10,2) DEFAULT 0.00,
-    status VARCHAR(20) DEFAULT 'Pending',
-    tarikh_lulus DATE,
-    diluluskan_oleh INT,
-    FOREIGN KEY (id_vendor) REFERENCES vendor(id_vendor) ON DELETE CASCADE,
-    INDEX idx_vendor (id_vendor),
-    INDEX idx_status (status),
-    INDEX idx_tarikh_serahan (tarikh_serahan)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ============================================================
--- 2.11 TABLE: item_serahan
--- ============================================================
-CREATE TABLE item_serahan (
-    id_item_serahan INT PRIMARY KEY AUTO_INCREMENT,
-    id_serahan INT NOT NULL,
-    nama_item VARCHAR(100) NOT NULL,
-    harga_seunit DECIMAL(10,2) NOT NULL,
-    kuantiti INT NOT NULL,
-    jumlah DECIMAL(10,2) NOT NULL,
-    FOREIGN KEY (id_serahan) REFERENCES serahan(id_serahan) ON DELETE CASCADE,
-    INDEX idx_serahan (id_serahan)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ============================================================
--- 2.12 TABLE: pembayaran_vendor
--- ============================================================
-CREATE TABLE pembayaran_vendor (
-    id_payment INT PRIMARY KEY AUTO_INCREMENT,
-    id_vendor INT NOT NULL,
-    id_serahan INT,
-    jumlah_jualan DECIMAL(10,2) DEFAULT 0.00,
-    komisen_dipotong DECIMAL(10,2) DEFAULT 0.00,
-    refund DECIMAL(10,2) DEFAULT 0.00,
-    jumlah_bayaran DECIMAL(10,2) DEFAULT 0.00,
-    tarikh_bayar DATE DEFAULT NULL,
-    no_resit VARCHAR(50) UNIQUE,
-    status VARCHAR(20) DEFAULT 'Pending',
-    FOREIGN KEY (id_vendor) REFERENCES vendor(id_vendor) ON DELETE CASCADE,
-    FOREIGN KEY (id_serahan) REFERENCES serahan(id_serahan) ON DELETE SET NULL,
-    INDEX idx_vendor (id_vendor),
-    INDEX idx_serahan (id_serahan),
-    INDEX idx_tarikh_bayar (tarikh_bayar),
-    INDEX idx_status (status)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ============================================================
 -- 2.13 TABLE: stok
 -- ============================================================
 CREATE TABLE stok (
@@ -371,25 +290,6 @@ CREATE TABLE stok (
     INDEX idx_nama_item (nama_item),
     INDEX idx_kategori (kategori),
     INDEX idx_kuantiti_semasa (kuantiti_semasa)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ============================================================
--- 2.14 TABLE: jualan
--- ============================================================
-CREATE TABLE jualan (
-    id_jualan INT PRIMARY KEY AUTO_INCREMENT,
-    id_stok INT NOT NULL,
-    tarikh_jualan DATE DEFAULT NULL,
-    kuantiti INT NOT NULL,
-    harga_seunit DECIMAL(10,2) NOT NULL,
-    jumlah DECIMAL(10,2) NOT NULL,
-    kaedah_bayaran VARCHAR(20),
-    id_pekerja INT,
-    FOREIGN KEY (id_stok) REFERENCES stok(id_stok) ON DELETE CASCADE,
-    FOREIGN KEY (id_pekerja) REFERENCES pekerja(id_pekerja) ON DELETE SET NULL,
-    INDEX idx_stok (id_stok),
-    INDEX idx_pekerja (id_pekerja),
-    INDEX idx_tarikh_jualan (tarikh_jualan)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
@@ -514,28 +414,6 @@ INSERT INTO item_baju (id_kategori, nama_item, saiz, harga, stok_tertinggal) VAL
 (2, 'Baju Korporat PBT', 'XXL', 65.00, 15);
 
 -- ============================================================
--- 3.4 VENDOR
--- ============================================================
-INSERT INTO vendor (nama_vendor, no_akaun, bank, no_tel, komisen_peratus, status_aktif) VALUES
-('CHE ISMAIL BIN CHE NAF (SAFWAN)', '1199541100223383', 'BSN', '019-1234567', 20.00, 1),
-('ANG Kim Lin Sdn Bhd (PEPSI)', '8006771347', 'CIMB', '019-2345678', 20.00, 1),
-('AYUSRI ENTERPRISE (KACANG)', '3820617917', 'PUBLIC BANK', '019-3456789', 20.00, 1),
-('NUR IZZATI AKMA BT AZMAN (CUPCAKE FIRA)', '7622015733', 'CIMB', '019-4567890', 20.00, 1),
-('DIK MEK KITCHEN (NS LEMOK)', '163064290447', 'MAYBANK', '019-5678901', 20.00, 1),
-('FIQ ENTERPRISE (BCP)', '8006786690', 'CIMB', '019-6789012', 20.00, 1),
-('NIK ROHAYA BT ABDULLAH (AL FAQEH)', '164070538336', 'MAYBANK', '019-7890123', 20.00, 1),
-('NUR ANIEZUL HUDA (SPAGHETI)', '1100541000175596', 'BSN', '019-8901234', 20.00, 1),
-('ANR BAKERY', '1111029000323997', 'BSN', '019-9012345', 20.00, 1),
-('SURIYANI BINTI HASSAN (ROHAYUDEN/DEEN)', '1111029000012684', 'BSN', '019-0123456', 20.00, 1),
-('K.T.KRIM TRADING (AISKRIM)', NULL, NULL, '019-1122334', 20.00, 1),
-('AYKN PRINTING', '563046362633', 'MAYBANK', '019-2233445', 20.00, 1),
-('AINNUR MILLENNIUM RESOURCES (AIR MINERAL)', '1111841100082695', 'BSN', '019-3344556', 20.00, 1),
-('IMIEMAJU ENTERPRISE (CHOCOJAR)', '13030001518716', 'BANK MUAMALAT', '019-4455667', 12.50, 1),
-('ZABANA MOHAMMAD (KULIT POPIA)', '13030012756728', 'BANK MUAMALAT', '019-5566778', 24.00, 1),
-('NAJWA (KEK BATIK)', '7653040458', 'CIMB', '019-6677889', 22.86, 1),
-('ROTI SAMUDRA', '6925188719', 'PUBLIC BANK', '019-7788990', 20.00, 1);
-
--- ============================================================
 -- 3.5 AHLI (SAMPLE STUDENTS)
 -- ============================================================
 INSERT INTO ahli (no_matrik, nama, semester, program, no_tel, email, baki_ewallet, status_aktif) VALUES
@@ -581,47 +459,6 @@ INSERT INTO stok (nama_item, kategori, harga_beli, harga_jual, kuantiti_semasa, 
 ('Kacang Goreng', 'Snek', 1.50, 2.50, 40, 10),
 ('Air Mineral 500ml', 'Minuman', 0.80, 1.50, 100, 20),
 ('Pepsi 330ml', 'Minuman', 1.20, 2.00, 60, 15);
-
--- ============================================================
--- 3.9 SERAHAN (Vendor Submissions)
--- ============================================================
-INSERT INTO serahan (id_vendor, tarikh_serahan, jumlah_kasar, komisen, tuntutan_bersih, status, tarikh_lulus) VALUES
-(5, '2025-11-15', 1127.00, 225.40, 901.60, 'Selesai', '2025-11-21'),
-(14, '2025-11-15', 64.00, 8.00, 56.00, 'Selesai', '2025-11-21'),
-(15, '2025-11-15', 247.80, 59.60, 188.20, 'Selesai', '2025-11-21'),
-(16, '2025-11-15', 105.00, 24.00, 81.00, 'Selesai', '2025-11-21');
-
--- ============================================================
--- 3.10 ITEM_SERAHAN
--- ============================================================
-INSERT INTO item_serahan (id_serahan, nama_item, harga_seunit, kuantiti, jumlah) VALUES
-(1, 'Nasi Lemak', 3.00, 200, 600.00),
-(1, 'Ramen', 6.00, 50, 300.00),
-(1, 'Sandwich Telur', 3.00, 75, 225.00),
-(2, 'Chocojar', 8.00, 8, 64.00),
-(3, 'Kulit Popia', 4.00, 30, 120.00),
-(3, 'Refund Minggu Lepas', 0.00, 0, 0.00),
-(4, 'Kek Batik', 15.00, 7, 105.00);
-
--- ============================================================
--- 3.11 PEMBAYARAN_VENDOR
--- ============================================================
-INSERT INTO pembayaran_vendor (id_vendor, id_serahan, jumlah_jualan, komisen_dipotong, refund, jumlah_bayaran, tarikh_bayar, no_resit, status) VALUES
-(5, 1, 1127.00, 225.40, 0.00, 901.60, '2025-11-21', 'PV-20251121-001', 'Selesai'),
-(14, 2, 64.00, 8.00, 0.00, 56.00, '2025-11-21', 'PV-20251121-002', 'Selesai'),
-(15, 3, 247.80, 59.60, 50.20, 188.20, '2025-11-21', 'PV-20251121-003', 'Selesai'),
-(16, 4, 105.00, 24.00, 15.00, 81.00, '2025-11-21', 'PV-20251121-004', 'Selesai');
-
--- ============================================================
--- 3.12 JUALAN (Sample Daily Sales)
--- ============================================================
-INSERT INTO jualan (id_stok, tarikh_jualan, kuantiti, harga_seunit, jumlah, kaedah_bayaran, id_pekerja) VALUES
-(1, '2025-11-15', 15, 3.00, 45.00, 'Tunai', 1),
-(2, '2025-11-15', 10, 6.00, 60.00, 'E-Wallet', 2),
-(3, '2025-11-15', 12, 3.00, 36.00, 'Tunai', 1),
-(1, '2025-11-16', 20, 3.00, 60.00, 'Tunai', 3),
-(2, '2025-11-16', 8, 6.00, 48.00, 'E-Wallet', 2),
-(4, '2025-11-16', 15, 2.50, 37.50, 'Tunai', 4);
 
 -- ============================================================
 -- 3.13 KEHADIRAN
@@ -678,14 +515,13 @@ INSERT INTO elaun (id_pekerja, id_kehadiran, jumlah_elaun, tarikh_tuntutan, stat
 INSERT INTO tugasan (id_pekerja, id_ahli, tajuk, penerangan, tarikh_mula, tarikh_tamat, status, keutamaan) VALUES
 (1, NULL, 'Proses Tempahan Baju', 'Memproses tempahan baju pelajar yang pending', '2025-11-15', '2025-11-20', 'Dalam Proses', 'Tinggi'),
 (2, NULL, 'Kemaskini Stok', 'Mengemaskini stok barang di kedai', '2025-11-16', '2025-11-17', 'Baru', 'Sederhana'),
-(3, NULL, 'Laporan Jualan', 'Menyediakan laporan jualan mingguan', '2025-11-18', '2025-11-20', 'Baru', 'Tinggi');
+(3, NULL, 'Semakan Stok', 'Menyemak baki stok semasa', '2025-11-18', '2025-11-20', 'Baru', 'Tinggi');
 
 -- ============================================================
 -- 3.19 LOG_SISTEM
 -- ============================================================
 INSERT INTO log_sistem (id_admin, tindakan, butiran, tarikh, ip_address) VALUES
 (1, 'Import Data Ahli', 'Berjaya mengimport 7 rekod ahli baru', '2025-11-15 10:30:00', '192.168.1.100'),
-(1, 'Pembayaran Vendor', 'Pembayaran kepada DIK MEK KITCHEN sebanyak RM901.60', '2025-11-21 15:00:00', '192.168.1.100'),
 (2, 'Kemaskini Stok', 'Stok Nasi Lemak dikemaskini: 50 unit', '2025-11-15 09:00:00', '192.168.1.101');
 
 -- ============================================================
@@ -711,65 +547,6 @@ UPDATE admin SET nric = CONCAT('80010101', LPAD(id_admin, 4, '0')), password_has
 -- ============================================================
 -- 4.0 STORED PROCEDURES
 -- ============================================================
-
--- ============================================================
--- 4.1 PROCEDURE: Kira Bayaran Vendor
--- ============================================================
-DELIMITER //
-
-CREATE PROCEDURE kira_bayaran_vendor(
-    IN p_id_vendor INT,
-    IN p_jumlah_jualan DECIMAL(10,2),
-    IN p_refund DECIMAL(10,2)
-)
-BEGIN
-    DECLARE v_komisen_peratus DECIMAL(5,2);
-    DECLARE v_komisen DECIMAL(10,2);
-    DECLARE v_jumlah_bayaran DECIMAL(10,2);
-    DECLARE v_no_resit VARCHAR(50);
-    
-    -- Get vendor commission percentage
-    SELECT komisen_peratus INTO v_komisen_peratus
-    FROM vendor
-    WHERE id_vendor = p_id_vendor;
-    
-    -- Calculate commission
-    SET v_komisen = p_jumlah_jualan * (v_komisen_peratus / 100);
-    
-    -- Calculate final payment
-    SET v_jumlah_bayaran = p_jumlah_jualan - v_komisen - p_refund;
-    
-    -- Generate receipt number
-    SET v_no_resit = CONCAT('PV-', DATE_FORMAT(CURRENT_DATE, '%Y%m%d'), '-', LPAD(FLOOR(RAND() * 1000), 3, '0'));
-    
-    -- Insert payment record
-    INSERT INTO pembayaran_vendor (
-        id_vendor, 
-        jumlah_jualan, 
-        komisen_dipotong, 
-        refund, 
-        jumlah_bayaran, 
-        tarikh_bayar, 
-        no_resit, 
-        status
-    ) VALUES (
-        p_id_vendor,
-        p_jumlah_jualan,
-        v_komisen,
-        p_refund,
-        v_jumlah_bayaran,
-        CURRENT_DATE,
-        v_no_resit,
-        'Selesai'
-    );
-    
-    -- Log the action
-    INSERT INTO log_sistem (id_admin, tindakan, butiran, tarikh) 
-    VALUES (1, 'Pembayaran Vendor', CONCAT('Bayaran kepada vendor ID ', p_id_vendor, ' sebanyak RM', v_jumlah_bayaran), NOW());
-    
-END //
-
-DELIMITER ;
 
 -- ============================================================
 -- 4.3 PROCEDURE: Import Data Ahli
@@ -799,19 +576,6 @@ DELIMITER ;
 -- ============================================================
 -- 5.0 VIEWS
 -- ============================================================
-
--- ============================================================
--- 5.1 VIEW: Laporan Jualan Harian
--- ============================================================
-CREATE VIEW v_laporan_jualan_harian AS
-SELECT 
-    DATE(tarikh_jualan) AS tarikh,
-    COUNT(*) AS bil_transaksi,
-    SUM(kuantiti) AS unit_terjual,
-    SUM(jumlah) AS jumlah_jualan
-FROM jualan
-GROUP BY DATE(tarikh_jualan)
-ORDER BY DATE(tarikh_jualan) DESC;
 
 -- ============================================================
 -- 5.2 VIEW: Laporan Stok Semasa
@@ -844,25 +608,6 @@ FROM ahli a
 JOIN saham s ON a.id_ahli = s.id_ahli
 WHERE a.status_aktif = 1
 ORDER BY (s.syer + s.yuran) DESC;
-
--- ============================================================
--- 5.4 VIEW: Laporan Pembayaran Vendor
--- ============================================================
-CREATE VIEW v_laporan_pembayaran_vendor AS
-SELECT 
-    v.nama_vendor,
-    v.no_akaun,
-    v.bank,
-    pv.jumlah_jualan,
-    pv.komisen_dipotong,
-    pv.refund,
-    pv.jumlah_bayaran,
-    pv.tarikh_bayar,
-    pv.no_resit,
-    pv.status
-FROM pembayaran_vendor pv
-JOIN vendor v ON pv.id_vendor = v.id_vendor
-ORDER BY pv.tarikh_bayar DESC;
 
 -- ============================================================
 -- 5.5 VIEW: Top 5 Pemegang Saham
@@ -900,23 +645,6 @@ ORDER BY t.tarikh_tempahan DESC;
 -- ============================================================
 -- 6.0 TRIGGERS
 -- ============================================================
-
--- ============================================================
--- 6.1 TRIGGER: Auto Update Stok After Sales
--- ============================================================
-DELIMITER //
-
-CREATE TRIGGER trg_update_stok_sales
-AFTER INSERT ON jualan
-FOR EACH ROW
-BEGIN
-    UPDATE stok 
-    SET kuantiti_semasa = kuantiti_semasa - NEW.kuantiti,
-        tarikh_kemaskini = CURRENT_DATE
-    WHERE id_stok = NEW.id_stok;
-END //
-
-DELIMITER ;
 
 -- ============================================================
 -- 6.2 TRIGGER: Auto Update Total Tempahan
@@ -957,10 +685,7 @@ DELIMITER ;
 -- 7.0 INDEXES (Additional Performance Indexes)
 -- ============================================================
 
-CREATE INDEX idx_jualan_tarikh ON jualan(tarikh_jualan);
 CREATE INDEX idx_tempahan_status ON tempahan(status);
-CREATE INDEX idx_pembayaran_vendor_tarikh ON pembayaran_vendor(tarikh_bayar);
-CREATE INDEX idx_serahan_tarikh ON serahan(tarikh_serahan);
 
 -- ============================================================
 -- 8.0 GRANT PERMISSIONS (Optional - Adjust as needed)
@@ -980,17 +705,8 @@ CREATE INDEX idx_serahan_tarikh ON serahan(tarikh_serahan);
 -- 9.1 Check all top shareholders
 -- SELECT * FROM v_top5_pemegang_saham;
 
--- 9.2 Check daily sales report
--- SELECT * FROM v_laporan_jualan_harian;
-
--- 9.3 Check vendor payments
--- SELECT * FROM v_laporan_pembayaran_vendor;
-
 -- 9.4 Check stock status
 -- SELECT * FROM v_laporan_stok_semasa;
-
--- 9.5 Process vendor payment
--- CALL kira_bayaran_vendor(5, 1127.00, 0.00);
 
 -- 9.6 Import new student
 -- CALL import_ahli('13DDT25F3001', 'Ahmad Bin Ismail', 'Sem 1', 'JTMK');

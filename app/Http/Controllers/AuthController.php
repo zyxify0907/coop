@@ -560,19 +560,10 @@ class AuthController extends Controller
 
     private function adminChartData(): array
     {
-        $salesDateColumn = $this->tableColumn('jualan', ['tarikh', 'tarikh_jualan', 'created_at']);
         $ordersDateColumn = $this->tableColumn('tempahan', ['created_at', 'tarikh_tempahan']);
-        $endDate = $this->latestChartDate($salesDateColumn, $ordersDateColumn);
+        $endDate = $this->latestChartDate($ordersDateColumn);
         $dates = collect(range(6, 0))
             ->map(fn (int $daysAgo) => $endDate->subDays($daysAgo));
-
-        $sales = $salesDateColumn
-            ? DB::table('jualan')
-                ->selectRaw("DATE({$salesDateColumn}) as chart_date, COALESCE(SUM(jumlah), 0) as total")
-                ->whereDate($salesDateColumn, '>=', $dates->first()->toDateString())
-                ->groupBy('chart_date')
-                ->pluck('total', 'chart_date')
-            : collect();
 
         $orders = $ordersDateColumn
             ? DB::table('tempahan')
@@ -592,7 +583,6 @@ class AuthController extends Controller
 
         return [
             'labels' => $dates->map(fn (CarbonImmutable $date) => $date->format('d M'))->values(),
-            'sales' => $dates->map(fn (CarbonImmutable $date) => round((float) ($sales[$date->toDateString()] ?? 0), 2))->values(),
             'orders' => $dates->map(fn (CarbonImmutable $date) => (int) ($orders[$date->toDateString()] ?? 0))->values(),
             'imports' => $dates->map(fn (CarbonImmutable $date) => (int) ($imports[$date->toDateString()] ?? 0))->values(),
             'range' => [
@@ -602,13 +592,9 @@ class AuthController extends Controller
         ];
     }
 
-    private function latestChartDate(?string $salesDateColumn, ?string $ordersDateColumn): CarbonImmutable
+    private function latestChartDate(?string $ordersDateColumn): CarbonImmutable
     {
         $latestDates = collect();
-
-        if ($salesDateColumn) {
-            $latestDates->push(DB::table('jualan')->max(DB::raw("DATE({$salesDateColumn})")));
-        }
 
         if ($ordersDateColumn) {
             $latestDates->push(DB::table('tempahan')->max(DB::raw("DATE({$ordersDateColumn})")));

@@ -169,7 +169,6 @@ class StaffPortalController extends Controller
                 'completed_orders' => $orders ? (clone $orders)->whereIn(DB::raw('LOWER(status)'), ['sudah_ambil', 'sudah ambil', 'diambil', 'siap diambil', 'selesai'])->count() : 0,
                 'stock_total' => $items ? (int) (clone $items)->sum('stok_tertinggal') : 0,
                 'low_stock' => $items ? (clone $items)->where('stok_tertinggal', '<=', 5)->count() : 0,
-                'sales_total' => $orders && Schema::hasColumn('tempahan', 'jumlah_total') ? (float) (clone $orders)->sum('jumlah_total') : 0.0,
             ],
             'charts' => [
                 'orders' => [

@@ -142,6 +142,35 @@
                     </form>
                 </section>
 
+                <section class="profile-panel">
+                    <div class="panel-section-head">
+                        <div>
+                            <h2>Ringkasan Saham</h2>
+                            <p>Maklumat syer semasa anda.</p>
+                        </div>
+                    </div>
+                    <div class="profile-share-summary">
+                        <table class="profile-detail-table">
+                            <tr>
+                                <th>Syer Asas</th>
+                                <td>RM {{ number_format((float) optional($share)->syer, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <th>Tambahan Saham</th>
+                                <td>RM {{ number_format((float) optional($share)->tambahan_saham, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <th>Yuran Anggota</th>
+                                <td>RM {{ number_format((float) optional($share)->yuran, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <th>Status Anggota</th>
+                                <td>{{ $memberStatus }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </section>
+
                 <section class="profile-panel" id="kata-laluan">
                     <div class="panel-section-head">
                         <div>
@@ -589,6 +618,47 @@
         outline: none;
         border-color: var(--profile-blue);
         box-shadow: 0 0 0 3px rgba(11, 94, 215, .14);
+    }
+
+    .profile-share-summary {
+        padding: 20px 24px 24px;
+    }
+
+    .profile-detail-table {
+        width: 100%;
+        border: 1px solid var(--profile-border);
+        border-radius: 8px;
+        overflow: hidden;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .profile-detail-table th,
+    .profile-detail-table td {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--profile-border);
+        text-align: left;
+    }
+
+    .profile-detail-table tr:last-child th,
+    .profile-detail-table tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .profile-detail-table th {
+        width: 38%;
+        background: #F8FBFF;
+        color: var(--profile-navy);
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0;
+        text-transform: uppercase;
+    }
+
+    .profile-detail-table td {
+        color: #061A3A;
+        font-size: 16px;
+        font-weight: 900;
     }
 
     .profile-form small {

@@ -13,6 +13,7 @@ use App\Models\Permohonan;
 use App\Models\ShareTransaction;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,11 +29,6 @@ class AuthController extends Controller
     public function showLogin(): View
     {
         return view('auth.login');
-    }
-
-    public function showForgotPassword(): View
-    {
-        return view('auth.password.forgot');
     }
 
     public function showRegister(): View
@@ -73,39 +69,10 @@ class AuthController extends Controller
         return redirect()->route('auth.dashboard');
     }
 
-    public function resetForgottenPassword(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'identifier' => ['required', 'string'],
-            'nric' => ['required', 'string', 'max:20'],
-            'password' => ['required', 'string', 'min:6', 'confirmed'],
-        ]);
-
-        [$role, $user] = $this->findLoginUser($validated['identifier']);
-        $normalizedNric = preg_replace('/\D+/', '', $validated['nric']) ?: $validated['nric'];
-
-        if (! $user || (string) ($user->nric ?? '') !== (string) $normalizedNric) {
-            return back()
-                ->withErrors(['identifier' => 'Maklumat pengesahan tidak sah. Sila semak ID akaun dan No. KP anda.'])
-                ->withInput($request->except(['password', 'password_confirmation']));
-        }
-
-        $user->password_hash = Hash::make($validated['password']);
-        $user->save();
-
-        $roleLabel = match ($role) {
-            'admin' => 'admin',
-            'staff' => 'staff',
-            default => 'pelajar',
-        };
-
-        return redirect()
-            ->route('login')
-            ->with('status', 'Kata laluan akaun '.$roleLabel.' berjaya dikemaskini. Sila log masuk semula.');
-    }
-
     public function register(Request $request): RedirectResponse
     {
+        $this->normalizeNricInput($request);
+
         $baseRules = [
             'role' => ['required', Rule::in(['student'])],
             'nama' => ['required', 'string', 'max:100'],
@@ -125,19 +92,23 @@ class AuthController extends Controller
         $validated = $request->validate($rules);
 
         $academic = $this->academicFromClass($validated['kelas'] ?? null);
-        $user = Ahli::query()->create([
-            'no_matrik' => strtoupper(trim($validated['no_matrik'])),
-            'nama' => $validated['nama'],
-            'nric' => preg_replace('/\D+/', '', $validated['nric']) ?: $validated['nric'],
-            'email' => $validated['email'] ?? null,
-            'no_tel' => $validated['no_tel'] ?? null,
-            'kelas' => $validated['kelas'] ?? null,
-            'semester' => $academic['semester'] ?? null,
-            'program' => $academic['program'] ?? null,
-            'password_hash' => Hash::make($validated['password']),
-            'tarikh_daftar' => now()->toDateString(),
-            'status_aktif' => true,
-        ]);
+        try {
+            $user = Ahli::query()->create([
+                'no_matrik' => strtoupper(trim($validated['no_matrik'])),
+                'nama' => $validated['nama'],
+                'nric' => $validated['nric'],
+                'email' => $validated['email'] ?? null,
+                'no_tel' => $validated['no_tel'] ?? null,
+                'kelas' => $validated['kelas'] ?? null,
+                'semester' => $academic['semester'] ?? null,
+                'program' => $academic['program'] ?? null,
+                'password_hash' => Hash::make($validated['password']),
+                'tarikh_daftar' => now()->toDateString(),
+                'status_aktif' => true,
+            ]);
+        } catch (UniqueConstraintViolationException $exception) {
+            return $this->backWithDuplicateAhliError($request, $exception);
+        }
 
         return $this->completeRegistrationLogin($request, 'ahli', $user);
     }
@@ -790,6 +761,49 @@ class AuthController extends Controller
             'semester' => 'Sem '.$matches[2],
             'program' => $matches[1] === 'DIT' ? 'JTMK' : 'JRKV',
         ];
+    }
+
+    private function normalizeNricInput(Request $request): void
+    {
+        if (! $request->has('nric')) {
+            return;
+        }
+
+        $request->merge([
+            'nric' => $this->normalizeNric($request->input('nric')),
+        ]);
+    }
+
+    private function normalizeNric(mixed $nric): ?string
+    {
+        $nric = trim((string) $nric);
+
+        if ($nric === '') {
+            return null;
+        }
+
+        return preg_replace('/\D+/', '', $nric) ?: $nric;
+    }
+
+    private function backWithDuplicateAhliError(Request $request, UniqueConstraintViolationException $exception): RedirectResponse
+    {
+        $message = $exception->getMessage();
+        $field = match (true) {
+            str_contains($message, 'ahli.nric') || str_contains($message, "'nric'") => 'nric',
+            str_contains($message, 'ahli.no_matrik') || str_contains($message, "'no_matrik'") => 'no_matrik',
+            str_contains($message, 'ahli.email') || str_contains($message, "'email'") => 'email',
+            default => 'nric',
+        };
+
+        $messages = [
+            'nric' => 'No. KP ini sudah digunakan oleh akaun lain.',
+            'no_matrik' => 'No. matrik ini sudah digunakan oleh akaun lain.',
+            'email' => 'Email ini sudah digunakan oleh akaun lain.',
+        ];
+
+        return back()
+            ->withErrors([$field => $messages[$field]])
+            ->withInput($request->except(['password', 'password_confirmation']));
     }
 
     private function nextStaffNumber(): string

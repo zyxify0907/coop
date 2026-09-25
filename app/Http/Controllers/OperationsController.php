@@ -49,14 +49,16 @@ class OperationsController extends Controller
         $shareAdditionPending = Permohonan::query()->where('jenis', 'saham')->whereIn('status', $pendingStatuses)->count();
         $shareExitPending = Permohonan::query()->whereIn('jenis', ['berhenti', 'pengeluaran', 'pindah', 'bersara'])->whereIn('status', $pendingStatuses)->count();
         $currentYear = now()->year;
-        $yearRange = collect(range($currentYear - 4, $currentYear));
-        $yearlyShareMovement = Schema::hasTable('share_transactions')
-            ? ShareTransaction::query()
-                ->selectRaw("YEAR(transacted_at) as year_no, COALESCE(SUM(CASE WHEN UPPER(direction) = 'DEBIT' THEN -amount ELSE amount END), 0) as total")
-                ->whereBetween(DB::raw('YEAR(transacted_at)'), [$yearRange->first(), $yearRange->last()])
-                ->groupBy('year_no')
-                ->pluck('total', 'year_no')
-            : collect();
+        $shareSummaryRows = $this->shareSummaryRows();
+        $firstDataYear = collect([
+            Ahli::query()->whereNotNull('tarikh_daftar')->min(DB::raw('YEAR(tarikh_daftar)')),
+            Pekerja::query()->whereIn('staff_type', Pekerja::SHAREHOLDER_STAFF_TYPES)->whereNotNull('tarikh_mula')->min(DB::raw('YEAR(tarikh_mula)')),
+            $shareSummaryRows->min(fn (array $row) => (int) $row['date']->format('Y')),
+        ])
+            ->filter()
+            ->map(fn ($year) => (int) $year)
+            ->min() ?? $currentYear;
+        $yearRange = collect(range($firstDataYear, $currentYear));
         $studentYearCounts = Ahli::query()
             ->selectRaw('YEAR(tarikh_daftar) as year_no, COUNT(*) as total')
             ->whereNotNull('tarikh_daftar')
@@ -70,21 +72,6 @@ class OperationsController extends Controller
             ->whereBetween(DB::raw('YEAR(tarikh_mula)'), [$yearRange->first(), $yearRange->last()])
             ->groupBy('year_no')
             ->pluck('total', 'year_no');
-        $studentBeforeRangeCount = Ahli::query()
-            ->whereNotNull('tarikh_daftar')
-            ->whereYear('tarikh_daftar', '<', $yearRange->first())
-            ->count();
-        $staffBeforeRangeCount = Pekerja::query()
-            ->whereIn('staff_type', Pekerja::SHAREHOLDER_STAFF_TYPES)
-            ->whereNotNull('tarikh_mula')
-            ->whereYear('tarikh_mula', '<', $yearRange->first())
-            ->count();
-        $studentWithoutRegisterDateCount = Ahli::query()->whereNull('tarikh_daftar')->count();
-        $staffWithoutStartDateCount = Pekerja::query()
-            ->whereIn('staff_type', Pekerja::SHAREHOLDER_STAFF_TYPES)
-            ->whereNull('tarikh_mula')
-            ->count();
-
         return view('admin.dashboards.saham', [
             ...$auth,
             'summary' => [
@@ -110,25 +97,22 @@ class OperationsController extends Controller
                     ['label' => 'Berhenti / Pindah', 'value' => $shareExitPending],
                 ],
                 'annualTrend' => $yearRange
-                    ->map(fn (int $year) => [
-                        'label' => (string) $year,
-                        'value' => (float) ($yearlyShareMovement->get($year) ?? 0),
-                    ])
+                    ->map(function (int $year) use ($shareSummaryRows) {
+                        return [
+                            'label' => (string) $year,
+                            'value' => (float) $shareSummaryRows
+                                ->filter(fn (array $row) => (int) $row['date']->format('Y') <= $year)
+                                ->sum('amount'),
+                        ];
+                    })
                     ->values()
                     ->all(),
                 'yearlyMembers' => $yearRange
-                    ->map(function (int $year) use ($studentYearCounts, $staffYearCounts, $studentBeforeRangeCount, $staffBeforeRangeCount, $studentWithoutRegisterDateCount, $staffWithoutStartDateCount, $currentYear) {
-                        $studentsUntilYear = $studentBeforeRangeCount + $studentYearCounts
-                            ->filter(fn ($total, $studentYear) => (int) $studentYear <= $year)
-                            ->sum();
-                        $knownStaffUntilYear = $staffYearCounts
-                            ->filter(fn ($total, $staffYear) => (int) $staffYear <= $year)
-                            ->sum();
-
+                    ->map(function (int $year) use ($studentYearCounts, $staffYearCounts) {
                         return [
                             'label' => (string) $year,
-                            'pelajar' => (int) ($studentsUntilYear + ($year === $currentYear ? $studentWithoutRegisterDateCount : 0)),
-                            'staff' => (int) ($staffBeforeRangeCount + $knownStaffUntilYear + ($year === $currentYear ? $staffWithoutStartDateCount : 0)),
+                            'pelajar' => (int) ($studentYearCounts->get($year) ?? 0),
+                            'staff' => (int) ($staffYearCounts->get($year) ?? 0),
                         ];
                     })
                     ->values()

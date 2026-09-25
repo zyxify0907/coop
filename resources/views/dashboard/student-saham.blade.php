@@ -18,8 +18,20 @@
             ['label' => 'Syer Semasa', 'value' => $currentShare],
             ['label' => 'Tambahan Saham', 'value' => $additionalShare],
         ];
-        $chartAxisMax = 10;
-        $chartAxisMid = 5;
+        $chartValues = array_map(fn ($item) => (float) ($item['value'] ?? 0), $chartItems);
+        $highestChartValue = max($chartValues);
+        $paddedChartMax = max(10, $highestChartValue > 0 ? $highestChartValue * 1.1 : 10);
+        $rawChartStep = $paddedChartMax / 4;
+        $chartMagnitude = 10 ** floor(log10(max(1, $rawChartStep)));
+        $chartStep = collect([1, 2, 5, 10])
+            ->map(fn ($multiplier) => $multiplier * $chartMagnitude)
+            ->first(fn ($step) => $step >= $rawChartStep) ?? (10 * $chartMagnitude);
+        $chartAxisMax = $chartStep * ceil($paddedChartMax / $chartStep);
+        $chartTicks = [];
+        for ($tick = 0; $tick <= $chartAxisMax + ($chartStep / 2); $tick += $chartStep) {
+            $chartTicks[] = $tick;
+        }
+        $chartTicks = array_reverse($chartTicks);
         $typeLabels = [
             'OPENING_BALANCE' => 'Baki Awal',
             'SHARE_ADDITION' => 'Tambah Saham',
@@ -30,11 +42,11 @@
         ];
         $applicationTypeLabels = [
             'anggota' => 'Permohonan Anggota',
-            'saham' => 'Penambahan Saham',
-            'berhenti' => 'Pengeluaran / Berhenti',
-            'pengeluaran' => 'Pengeluaran Saham',
-            'pindah' => 'Pindah Keahlian',
-            'bersara' => 'Persaraan',
+            'saham' => 'Permohonan Penambahan Saham',
+            'berhenti' => 'Permohonan Pengeluaran / Berhenti',
+            'pengeluaran' => 'Permohonan Pengeluaran Saham',
+            'pindah' => 'Permohonan Pindah Keahlian',
+            'bersara' => 'Permohonan Persaraan',
         ];
         $statusLabels = [
             'baru' => 'Baharu',
@@ -101,19 +113,24 @@
                     <div><span>CARTA</span><h2>Ringkasan Saham</h2></div>
                 </header>
                 <div class="student-vertical-chart">
-                    <div class="student-vertical-chart__axis" aria-hidden="true">
-                        <span>RM {{ number_format($chartAxisMax, 0) }}</span>
-                        <span>RM {{ number_format($chartAxisMid, 0) }}</span>
-                        <span>RM 0</span>
+                    <div class="student-vertical-chart__axis" style="--tick-count: {{ count($chartTicks) }}" aria-hidden="true">
+                        @foreach ($chartTicks as $tick)
+                            <span>RM {{ number_format($tick, 0) }}</span>
+                        @endforeach
                     </div>
-                    <div class="student-vertical-chart__plot">
+                    <div class="student-vertical-chart__plot" style="--tick-count: {{ count($chartTicks) }}">
+                        <div class="student-vertical-chart__grid" aria-hidden="true">
+                            @foreach ($chartTicks as $tick)
+                                <span></span>
+                            @endforeach
+                        </div>
                         @foreach ($chartItems as $item)
                             @php
                                 $value = (float) ($item['value'] ?? 0);
-                                $height = $value > 0 ? min(176, max(10, ($value / $chartAxisMax) * 176)) : 0;
+                                $height = $chartAxisMax > 0 ? max(0, min(100, ($value / $chartAxisMax) * 100)) : 0;
                             @endphp
                             <div class="student-vertical-chart__bar">
-                                <div class="student-vertical-chart__track" style="--bar-height: {{ $height }}px">
+                                <div class="student-vertical-chart__track" style="--bar-height: {{ round($height, 4) }}%">
                                     <strong>RM {{ number_format($value, 2) }}</strong>
                                     <span @class(['is-empty' => $value <= 0])></span>
                                 </div>
@@ -201,17 +218,15 @@
     .student-share-dashboard .module-panel header a{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:0 14px;border:1px solid #BFD7FF;border-radius:8px;background:#fff;color:#1D5FD1;text-decoration:none;font-size:13px;font-weight:900}
     .student-share-dashboard .module-panel header a:hover{border-color:#082F59;background:#F7FAFF;color:#082F59}
     .student-vertical-chart{display:grid;grid-template-columns:58px minmax(0,1fr);gap:10px;flex:1;min-height:260px;padding:8px 0 0}
-    .student-vertical-chart__axis{display:grid;grid-template-rows:1fr 1fr 1fr;align-items:start;padding-top:30px;color:#5F7189;font-size:12px;font-weight:800;text-align:right}
-    .student-vertical-chart__axis span:nth-child(2){align-self:center}
-    .student-vertical-chart__axis span:nth-child(3){align-self:end;padding-bottom:58px}
-    .student-vertical-chart__plot{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:end;padding:28px 6px 0;background:linear-gradient(to bottom,transparent 0,transparent 27px,#D8E2EF 27px,#D8E2EF 28px,transparent 28px,transparent calc(50% + 13px),#D8E2EF calc(50% + 13px),#D8E2EF calc(50% + 14px),transparent calc(50% + 14px),transparent 203px,#BFCFE3 203px,#BFCFE3 204px,transparent 204px)}
-    .student-vertical-chart__plot::before,.student-vertical-chart__plot::after{content:"";position:absolute;left:0;right:0;border-top:1px dashed #D8E2EF;pointer-events:none}
-    .student-vertical-chart__plot::before{top:28px}
-    .student-vertical-chart__plot::after{top:calc(50% + 14px)}
-    .student-vertical-chart__bar{position:relative;z-index:1;display:grid;grid-template-rows:176px auto;gap:8px;align-items:end;justify-items:center;height:100%;text-align:center}
+    .student-vertical-chart__axis{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;padding-top:28px;padding-bottom:38px;color:#5F7189;font-size:12px;font-weight:800;text-align:right}
+    .student-vertical-chart__plot{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:end;padding:28px 6px 0}
+    .student-vertical-chart__grid{position:absolute;inset:28px 0 38px;display:flex;flex-direction:column;justify-content:space-between;pointer-events:none}
+    .student-vertical-chart__grid span{display:block;border-top:1px dashed #D8E2EF}
+    .student-vertical-chart__grid span:last-child{border-top:1px solid #BFCFE3}
+    .student-vertical-chart__bar{position:relative;z-index:1;display:grid;grid-template-rows:minmax(0,1fr) auto;gap:8px;align-items:end;justify-items:center;height:100%;text-align:center}
     .student-vertical-chart__bar strong{position:absolute;left:50%;bottom:calc(var(--bar-height) + 8px);transform:translateX(-50%);color:#071A34;font-size:13px;font-weight:900;white-space:nowrap}
-    .student-vertical-chart__track{position:relative;display:flex;align-items:flex-end;justify-content:center;width:100%;height:176px}
-    .student-vertical-chart__track span{display:block;width:58px;height:var(--bar-height);min-height:10px;border-radius:7px 7px 0 0;background:#082F59;color:#082F59}
+    .student-vertical-chart__track{position:relative;display:flex;align-items:flex-end;justify-content:center;width:100%;height:100%}
+    .student-vertical-chart__track span{display:block;width:58px;height:var(--bar-height);border-radius:7px 7px 0 0;background:#082F59;color:#082F59}
     .student-vertical-chart__track span.is-empty{height:0;min-height:0;border-radius:999px;border-top:8px solid currentColor;background:transparent}
     .student-vertical-chart__bar:nth-child(2) .student-vertical-chart__track span{background:#ED1C2E;color:#ED1C2E}
     .student-vertical-chart__bar:nth-child(3) .student-vertical-chart__track span{background:#E89A00;color:#E89A00}

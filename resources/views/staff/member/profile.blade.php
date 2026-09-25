@@ -637,17 +637,20 @@
     .staff-profile-page .profile-summary-grid {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 16px;
+        gap: 12px;
     }
 
     .staff-profile-page .profile-summary {
-        min-height: 114px;
-        padding: 22px 26px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-height: 88px;
+        padding: 16px 20px;
         border: 1px solid var(--profile-border);
-        border-top: 5px solid var(--summary-color);
+        border-top: 4px solid var(--summary-color);
         border-radius: 8px;
         background: #fff;
-        box-shadow: 0 8px 18px rgba(8, 47, 89, .045);
+        box-shadow: 0 5px 12px rgba(8, 47, 89, .035);
     }
 
     .staff-profile-page .profile-summary--green { --summary-color: #18B877; }
@@ -659,7 +662,7 @@
     .staff-profile-page .profile-form label span {
         display: block;
         color: var(--profile-muted);
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 900;
         letter-spacing: 0;
         text-transform: uppercase;
@@ -667,9 +670,9 @@
 
     .staff-profile-page .profile-summary strong {
         display: block;
-        margin-top: 7px;
+        margin-top: 6px;
         color: #061A3A;
-        font-size: clamp(26px, 2.25vw, 32px);
+        font-size: clamp(20px, 1.8vw, 26px);
         line-height: 1.1;
         font-weight: 900;
         overflow-wrap: anywhere;
@@ -677,9 +680,9 @@
 
     .staff-profile-page .profile-summary small {
         display: block;
-        margin-top: 7px;
+        margin-top: 6px;
         color: var(--profile-muted);
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 650;
     }
 

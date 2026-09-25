@@ -16,7 +16,7 @@
     };
     $applicationLabels = [
         'anggota' => 'Permohonan Anggota',
-        'saham' => 'Penambahan Saham',
+        'saham' => 'Permohonan Penambahan Saham',
         'berhenti' => 'Pengeluaran / Berhenti',
     ];
     $statusLabels = [

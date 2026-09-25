@@ -16,8 +16,20 @@
             ['label' => 'Syer Semasa', 'value' => $currentShare],
             ['label' => 'Tambahan Saham', 'value' => $additionalShare],
         ];
-        $chartAxisMax = 10;
-        $chartAxisMid = 5;
+        $chartValues = array_map(fn ($item) => (float) ($item['value'] ?? 0), $chartItems);
+        $highestChartValue = max($chartValues);
+        $paddedChartMax = max(10, $highestChartValue > 0 ? $highestChartValue * 1.1 : 10);
+        $rawChartStep = $paddedChartMax / 4;
+        $chartMagnitude = 10 ** floor(log10(max(1, $rawChartStep)));
+        $chartStep = collect([1, 2, 5, 10])
+            ->map(fn ($multiplier) => $multiplier * $chartMagnitude)
+            ->first(fn ($step) => $step >= $rawChartStep) ?? (10 * $chartMagnitude);
+        $chartAxisMax = $chartStep * ceil($paddedChartMax / $chartStep);
+        $chartTicks = [];
+        for ($tick = 0; $tick <= $chartAxisMax + ($chartStep / 2); $tick += $chartStep) {
+            $chartTicks[] = $tick;
+        }
+        $chartTicks = array_reverse($chartTicks);
         $typeLabels = [
             'OPENING_BALANCE' => 'Baki Awal',
             'SHARE_ADDITION' => 'Tambah Saham',
@@ -25,6 +37,14 @@
             'MANUAL_CREATE' => 'Rekod Manual Baru',
             'MANUAL_UPDATE' => 'Kemaskini Manual',
             'MANUAL_ADJUSTMENT' => 'Pelarasan Manual',
+        ];
+        $applicationTypeLabels = [
+            'anggota' => 'Permohonan Anggota',
+            'saham' => 'Permohonan Penambahan Saham',
+            'berhenti' => 'Permohonan Pengeluaran / Berhenti',
+            'pengeluaran' => 'Permohonan Pengeluaran Saham',
+            'pindah' => 'Permohonan Pindah Keahlian',
+            'bersara' => 'Permohonan Persaraan',
         ];
     @endphp
 
@@ -66,19 +86,24 @@
                     <div><span>CARTA</span><h2>Ringkasan Saham</h2></div>
                 </header>
                 <div class="staff-vertical-chart">
-                    <div class="staff-vertical-chart__axis" aria-hidden="true">
-                        <span>RM {{ number_format($chartAxisMax, 0) }}</span>
-                        <span>RM {{ number_format($chartAxisMid, 0) }}</span>
-                        <span>RM 0</span>
+                    <div class="staff-vertical-chart__axis" style="--tick-count: {{ count($chartTicks) }}" aria-hidden="true">
+                        @foreach ($chartTicks as $tick)
+                            <span>RM {{ number_format($tick, 0) }}</span>
+                        @endforeach
                     </div>
-                    <div class="staff-vertical-chart__plot">
+                    <div class="staff-vertical-chart__plot" style="--tick-count: {{ count($chartTicks) }}">
+                        <div class="staff-vertical-chart__grid" aria-hidden="true">
+                            @foreach ($chartTicks as $tick)
+                                <span></span>
+                            @endforeach
+                        </div>
                         @foreach ($chartItems as $item)
                             @php
                                 $value = (float) ($item['value'] ?? 0);
-                                $height = $value > 0 ? min(176, max(10, ($value / $chartAxisMax) * 176)) : 0;
+                                $height = $chartAxisMax > 0 ? max(0, min(100, ($value / $chartAxisMax) * 100)) : 0;
                             @endphp
                             <div class="staff-vertical-chart__bar">
-                                <div class="staff-vertical-chart__track" style="--bar-height: {{ $height }}px">
+                                <div class="staff-vertical-chart__track" style="--bar-height: {{ round($height, 4) }}%">
                                     <strong>RM {{ number_format($value, 2) }}</strong>
                                     <span @class(['is-empty' => $value <= 0])></span>
                                 </div>
@@ -97,7 +122,7 @@
                 <div class="module-list">
                     @forelse ($latestApplications as $application)
                         <a class="module-row" href="{{ route($portalPrefix.'.permohonan.index') }}">
-                            <div><strong>{{ ucwords(str_replace('_', ' ', $application->jenis)) }}</strong><small>{{ $application->tarikh_permohonan?->format('d/m/Y') ?? '-' }}</small></div>
+                            <div><strong>{{ $applicationTypeLabels[$application->jenis] ?? 'Permohonan '.ucwords(str_replace('_', ' ', $application->jenis)) }}</strong><small>{{ $application->tarikh_permohonan?->format('d/m/Y') ?? '-' }}</small></div>
                             <span>{{ ucfirst(str_replace('_', ' ', $application->status)) }}</span>
                         </a>
                     @empty
@@ -140,17 +165,15 @@
     .staff-share-actions strong{color:#0F172A;font-size:16px;font-weight:900}
     .staff-share-actions span{color:#64748B;font-size:13px;font-weight:750;line-height:1.45}
     .staff-vertical-chart{display:grid;grid-template-columns:58px minmax(0,1fr);gap:10px;flex:1;min-height:260px;padding:8px 0 0}
-    .staff-vertical-chart__axis{display:grid;grid-template-rows:1fr 1fr 1fr;align-items:start;padding-top:30px;color:#64748B;font-size:12px;font-weight:800;text-align:right}
-    .staff-vertical-chart__axis span:nth-child(2){align-self:center}
-    .staff-vertical-chart__axis span:nth-child(3){align-self:end;padding-bottom:58px}
-    .staff-vertical-chart__plot{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:end;padding:28px 6px 0;background:linear-gradient(to bottom,transparent 0,transparent 27px,#D7E3F5 27px,#D7E3F5 28px,transparent 28px,transparent calc(50% + 13px),#D7E3F5 calc(50% + 13px),#D7E3F5 calc(50% + 14px),transparent calc(50% + 14px),transparent 203px,#CBD5E1 203px,#CBD5E1 204px,transparent 204px)}
-    .staff-vertical-chart__plot::before,.staff-vertical-chart__plot::after{content:"";position:absolute;left:0;right:0;border-top:1px dashed #D7E3F5;pointer-events:none}
-    .staff-vertical-chart__plot::before{top:28px}
-    .staff-vertical-chart__plot::after{top:calc(50% + 14px)}
-    .staff-vertical-chart__bar{position:relative;z-index:1;display:grid;grid-template-rows:176px auto;gap:8px;align-items:end;justify-items:center;height:100%;text-align:center}
+    .staff-vertical-chart__axis{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;padding-top:28px;padding-bottom:38px;color:#64748B;font-size:12px;font-weight:800;text-align:right}
+    .staff-vertical-chart__plot{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:end;padding:28px 6px 0}
+    .staff-vertical-chart__grid{position:absolute;inset:28px 0 38px;display:flex;flex-direction:column;justify-content:space-between;pointer-events:none}
+    .staff-vertical-chart__grid span{display:block;border-top:1px dashed #D7E3F5}
+    .staff-vertical-chart__grid span:last-child{border-top:1px solid #CBD5E1}
+    .staff-vertical-chart__bar{position:relative;z-index:1;display:grid;grid-template-rows:minmax(0,1fr) auto;gap:8px;align-items:end;justify-items:center;height:100%;text-align:center}
     .staff-vertical-chart__bar strong{position:absolute;left:50%;bottom:calc(var(--bar-height) + 8px);transform:translateX(-50%);color:#0F172A;font-size:14px;font-weight:900;white-space:nowrap}
-    .staff-vertical-chart__track{position:relative;display:flex;align-items:flex-end;justify-content:center;width:100%;height:176px}
-    .staff-vertical-chart__track span{display:block;width:58px;height:var(--bar-height);min-height:10px;border-radius:7px 7px 0 0;background:#082F59;color:#082F59;box-shadow:0 10px 22px rgba(8,47,89,.16)}
+    .staff-vertical-chart__track{position:relative;display:flex;align-items:flex-end;justify-content:center;width:100%;height:100%}
+    .staff-vertical-chart__track span{display:block;width:58px;height:var(--bar-height);border-radius:7px 7px 0 0;background:#082F59;color:#082F59;box-shadow:0 10px 22px rgba(8,47,89,.16)}
     .staff-vertical-chart__track span.is-empty{height:0;min-height:0;border-radius:999px;border-top:8px solid currentColor;background:transparent;box-shadow:none}
     .staff-vertical-chart__bar:nth-child(2) .staff-vertical-chart__track span{background:#ED1C2E;color:#ED1C2E;box-shadow:0 10px 22px rgba(237,28,46,.16)}
     .staff-vertical-chart__bar:nth-child(3) .staff-vertical-chart__track span{background:#E89A00;color:#E89A00;box-shadow:0 10px 22px rgba(232,154,0,.18)}

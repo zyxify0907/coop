@@ -204,6 +204,46 @@ class AuthFlowTest extends TestCase
         $this->assertTrue(Hash::check('student12345', $student->password_hash));
     }
 
+    public function test_admin_student_create_validates_duplicate_normalized_nric(): void
+    {
+        $admin = AdminUser::query()->create([
+            'nama' => 'Admin One',
+            'username' => 'adminone',
+            'nric' => '800101010001',
+            'password_hash' => Hash::make('admin12345'),
+            'status_aktif' => true,
+        ]);
+
+        Ahli::query()->create([
+            'no_matrik' => 'A001',
+            'nama' => 'Existing Student',
+            'nric' => '123456789',
+            'password_hash' => Hash::make('student12345'),
+            'semester' => 'Sem 1',
+            'status_aktif' => true,
+        ]);
+
+        $response = $this
+            ->withSession(['auth_role' => 'admin', 'auth_id' => $admin->id_admin])
+            ->from(route('admin.users.create', ['type' => 'student']))
+            ->post(route('admin.users.students.store'), [
+                'no_matrik' => '34DIT24F3001',
+                'nama' => 'KHOMANI',
+                'nric' => '123-45-6789',
+                'kelas' => 'DIT1A',
+                'no_tel' => '011-3456789',
+                'tarikh_daftar' => '2026-09-24',
+            ]);
+
+        $response
+            ->assertRedirect(route('admin.users.create', ['type' => 'student']))
+            ->assertSessionHasErrors('nric');
+
+        $this->assertDatabaseMissing('ahli', [
+            'no_matrik' => '34DIT24F3001',
+        ]);
+    }
+
     public function test_admin_can_delete_staff(): void
     {
         $admin = AdminUser::query()->create([

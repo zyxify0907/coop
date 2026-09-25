@@ -1128,16 +1128,16 @@
         }
         .application-menu{
             grid-template-columns:repeat(3,minmax(0,1fr))!important;
-            gap:16px!important
+            gap:14px!important
         }
         .application-menu__item{
             position:relative!important;
             display:grid!important;
-            grid-template-columns:54px minmax(0,1fr) auto!important;
+            grid-template-columns:44px minmax(0,1fr) auto!important;
             align-items:center!important;
-            gap:16px!important;
-            min-height:104px!important;
-            padding:18px 20px!important;
+            gap:13px!important;
+            min-height:86px!important;
+            padding:14px 16px!important;
             border:1px solid #D8E2EF!important;
             border-radius:10px!important;
             background:#fff!important;
@@ -1168,23 +1168,23 @@
         .application-menu__icon{
             display:grid!important;
             place-items:center!important;
-            width:44px!important;
-            height:44px!important;
+            width:36px!important;
+            height:36px!important;
             color:#082F59!important
         }
-        .application-menu__icon svg{width:38px;height:38px}
-        .application-menu__copy{display:grid!important;gap:5px!important;min-width:0!important}
+        .application-menu__icon svg{width:31px;height:31px}
+        .application-menu__copy{display:grid!important;gap:4px!important;min-width:0!important}
         .application-menu__copy strong{
             margin:0!important;
             color:#061E5C!important;
-            font-size:16px!important;
+            font-size:14px!important;
             font-weight:900!important;
             line-height:1.25!important
         }
         .application-menu__copy span{
             color:#31517D!important;
-            font-size:13px!important;
-            line-height:1.45!important;
+            font-size:12px!important;
+            line-height:1.4!important;
             font-weight:650!important
         }
         .application-menu__chevron{
@@ -1192,7 +1192,7 @@
             align-items:center!important;
             justify-content:center!important;
             color:#082F59!important;
-            font-size:22px!important;
+            font-size:20px!important;
             font-weight:800!important
         }
         .membership-form-layout{
@@ -1487,7 +1487,7 @@
             .application-menu,
             .application-grid,
             .section-block__grid{grid-template-columns:1fr!important}
-            .application-menu__item{grid-template-columns:44px minmax(0,1fr) auto!important;min-height:86px!important;padding:14px!important}
+            .application-menu__item{grid-template-columns:38px minmax(0,1fr) auto!important;min-height:78px!important;padding:12px!important}
             .application-grid > .field-block:last-child,
             .application-grid > .field-block:last-child .button{width:100%!important}
         }

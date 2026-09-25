@@ -100,7 +100,6 @@
                             <input id="remember" name="remember" type="checkbox" @checked(old('remember'))>
                             <span>Ingat Saya</span>
                         </label>
-                        <a href="{{ route('password.forgot') }}">Lupa Kata Laluan?</a>
                     </div>
 
                     <button class="public-button public-button--danger login-submit" type="submit" id="login-submit">

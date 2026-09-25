@@ -1634,15 +1634,15 @@
         }
 
         .student-order-page .cart-dialog{
-            width:min(1120px,calc(100vw - 32px));
-            max-width:1120px;
-            max-height:min(88dvh,860px);
+            width:min(780px,calc(100vw - 56px));
+            max-width:780px;
+            max-height:min(82dvh,720px);
             padding:0;
             border:1px solid #D7E2EF;
-            border-radius:14px;
+            border-radius:12px;
             background:#fff;
             overflow:hidden;
-            box-shadow:0 24px 58px rgba(8,47,89,.18);
+            box-shadow:0 18px 42px rgba(8,47,89,.16);
         }
         .student-order-page .cart-dialog::backdrop{
             background:rgba(8,47,89,.18);
@@ -1651,10 +1651,10 @@
             display:grid;
             grid-template-rows:auto minmax(0,1fr) auto;
             width:100%;
-            max-height:min(88dvh,860px);
+            max-height:min(82dvh,720px);
             padding:0!important;
             border:0!important;
-            border-radius:14px!important;
+            border-radius:12px!important;
             background:#fff;
             overflow:hidden;
             overflow-y:hidden!important;
@@ -1666,22 +1666,22 @@
             display:flex;
             align-items:center;
             justify-content:space-between;
-            gap:18px;
-            padding:24px 28px 26px;
-            border-bottom:6px solid var(--order-red);
-            border-radius:14px 14px 0 0;
+            gap:14px;
+            padding:18px 22px 20px;
+            border-bottom:5px solid var(--order-red);
+            border-radius:12px 12px 0 0;
             background:var(--order-navy);
         }
         .student-order-page .cart-title{
             display:flex;
             align-items:center;
-            gap:18px;
+            gap:14px;
             min-width:0;
         }
         .student-order-page .cart-title h2{
             margin:0;
             color:#fff;
-            font-size:30px;
+            font-size:24px;
             line-height:1.12;
             font-weight:900;
             letter-spacing:0;
@@ -1689,36 +1689,36 @@
         .student-order-page .cart-title p{
             margin:5px 0 0;
             color:rgba(255,255,255,.78);
-            font-size:16px;
+            font-size:14px;
             font-weight:800;
         }
         .student-order-page .cart-logo{
             display:grid;
             place-items:center;
-            width:58px;
-            height:58px;
-            flex:0 0 58px;
+            width:46px;
+            height:46px;
+            flex:0 0 46px;
             border:1px solid rgba(255,255,255,.28);
-            border-radius:12px;
+            border-radius:10px;
             background:rgba(255,255,255,.08);
             color:#fff;
             box-shadow:none;
         }
         .student-order-page .cart-logo svg{
-            width:31px;
-            height:31px;
+            width:25px;
+            height:25px;
         }
         .student-order-page .cart-dialog-close{
             display:grid;
             place-items:center;
-            width:52px;
-            height:52px;
-            flex:0 0 52px;
+            width:42px;
+            height:42px;
+            flex:0 0 42px;
             border:1px solid rgba(255,255,255,.32);
             border-radius:10px;
             background:rgba(255,255,255,.06);
             color:#fff;
-            font-size:38px;
+            font-size:30px;
             font-weight:700;
             line-height:1;
             cursor:pointer;
@@ -1737,23 +1737,23 @@
         }
         .student-order-page .cart-item{
             display:grid;
-            grid-template-columns:minmax(280px,1fr) minmax(360px,auto);
-            gap:24px;
+            grid-template-columns:minmax(240px,1fr) minmax(330px,auto);
+            gap:18px;
             align-items:center;
-            padding:22px 28px;
+            padding:16px 22px;
             border-bottom:1px solid #D7E2EF;
             background:#fff;
         }
         .student-order-page .cart-product{
             display:grid;
-            grid-template-columns:84px minmax(0,1fr);
-            gap:20px;
+            grid-template-columns:68px minmax(0,1fr);
+            gap:16px;
             align-items:center;
             min-width:0;
         }
         .student-order-page .cart-product__thumb{
-            width:84px;
-            height:84px;
+            width:68px;
+            height:68px;
             border:1px solid #D7E2EF;
             border-radius:10px;
             background:#F4F7FB;
@@ -1769,7 +1769,7 @@
         .student-order-page .cart-product strong{
             display:block;
             color:var(--order-navy);
-            font-size:19px;
+            font-size:17px;
             line-height:1.25;
             font-weight:900;
         }
@@ -1777,21 +1777,21 @@
             display:block;
             margin-top:4px;
             color:#3B5374;
-            font-size:15px;
+            font-size:14px;
             font-weight:750;
         }
         .student-order-page .cart-stock-badge{
             display:inline-flex;
             align-items:center;
             gap:8px;
-            min-height:30px;
-            margin-top:10px;
-            padding:0 12px;
+            min-height:26px;
+            margin-top:8px;
+            padding:0 10px;
             border-radius:8px;
             background:#DDF7E8;
             color:#0D8A4B;
             font-style:normal;
-            font-size:13px;
+            font-size:12px;
             font-weight:900;
         }
         .student-order-page .cart-stock-badge svg{
@@ -1806,33 +1806,33 @@
         }
         .student-order-page .cart-actions{
             display:grid;
-            grid-template-columns:minmax(0,1fr) 116px;
-            gap:12px;
+            grid-template-columns:minmax(0,1fr) 100px;
+            gap:10px;
             align-items:end;
             justify-self:end;
         }
         .student-order-page .cart-quantity-form label{
             color:#3B5374;
-            font-size:13px;
+            font-size:12px;
             font-weight:900;
             letter-spacing:.02em;
             text-transform:uppercase;
         }
         .student-order-page .cart-quantity-control{
             display:grid;
-            grid-template-columns:40px 52px 40px 122px;
+            grid-template-columns:36px 46px 36px 112px;
             gap:0;
             align-items:center;
         }
         .student-order-page .cart-stepper-button,
         .student-order-page .cart-quantity-control input{
-            width:40px;
-            height:44px;
+            width:36px;
+            height:38px;
             border:1px solid #BFD0E6;
             background:#fff;
             color:var(--order-navy);
             font:inherit;
-            font-size:22px;
+            font-size:20px;
             font-weight:900;
             text-align:center;
         }
@@ -1840,10 +1840,10 @@
             border-radius:8px 0 0 8px;
         }
         .student-order-page .cart-quantity-control input{
-            width:52px;
+            width:46px;
             border-inline:0;
             border-radius:0;
-            font-size:17px;
+            font-size:16px;
             -moz-appearance:textfield;
         }
         .student-order-page .cart-quantity-control input::-webkit-outer-spin-button,
@@ -1872,11 +1872,11 @@
             justify-content:center;
             gap:10px;
             width:100%;
-            min-height:44px;
-            padding:0 14px;
+            min-height:38px;
+            padding:0 12px;
             border-radius:8px;
             font:inherit;
-            font-size:14px;
+            font-size:13px;
             font-weight:900;
             cursor:pointer;
             white-space:nowrap;
@@ -1920,30 +1920,30 @@
             display:grid;
             grid-template-columns:minmax(0,1fr) auto auto;
             align-items:center;
-            gap:14px;
-            padding:18px 28px;
+            gap:12px;
+            padding:14px 22px;
             border-top:1px solid #D7E2EF;
             background:#fff;
         }
         .student-order-page .cart-footer-count{
             display:inline-flex;
             align-items:center;
-            gap:12px;
+            gap:10px;
             color:var(--order-navy);
-            font-size:16px;
+            font-size:14px;
             font-weight:900;
         }
         .student-order-page .cart-footer-count svg{
-            width:27px;
-            height:27px;
+            width:22px;
+            height:22px;
         }
         .student-order-page .cart-footer-total{
             display:grid;
             gap:4px;
-            min-width:178px;
-            min-height:58px;
+            min-width:156px;
+            min-height:48px;
             align-content:center;
-            padding:10px 18px;
+            padding:8px 14px;
             border:1px solid #D7E2EF;
             border-radius:10px;
             background:#F8FBFF;
@@ -1968,13 +1968,13 @@
             align-items:center;
             justify-content:center;
             gap:12px;
-            min-height:58px!important;
-            padding:0 24px!important;
+            min-height:48px!important;
+            padding:0 20px!important;
             border-color:var(--order-red)!important;
             border-radius:10px!important;
             background:var(--order-red)!important;
             color:#fff!important;
-            font-size:17px!important;
+            font-size:15px!important;
             font-weight:900!important;
             white-space:nowrap;
         }
@@ -1990,7 +1990,7 @@
             cursor:wait;
         }
         .student-order-page .cart-empty{
-            padding:44px 24px;
+            padding:34px 20px;
         }
 
         @media (max-width:980px){

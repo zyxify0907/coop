@@ -94,6 +94,35 @@
                     </div>
                 </section>
 
+                <section class="panel profile-panel">
+                    <div class="panel-section-head">
+                        <div>
+                            <h2>Ringkasan Saham</h2>
+                            <p>Maklumat syer semasa anda.</p>
+                        </div>
+                    </div>
+                    <div class="profile-share-summary">
+                        <table class="profile-detail-table">
+                            <tr>
+                                <th>Syer Asas</th>
+                                <td>RM {{ number_format((float) optional($shareRecord)->syer, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <th>Tambahan Saham</th>
+                                <td>RM {{ number_format((float) optional($shareRecord)->tambahan_saham, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <th>Yuran Anggota</th>
+                                <td>RM {{ number_format((float) optional($shareRecord)->yuran, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <th>Status Anggota</th>
+                                <td>{{ $memberStatus }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </section>
+
                 <section class="panel profile-panel" id="kata-laluan">
                     <div class="panel-section-head">
                         <div>
@@ -762,6 +791,47 @@
         color: var(--profile-navy);
         font-size: 14px;
         font-weight: 650;
+    }
+
+    .admin-profile-page .profile-share-summary {
+        padding: 18px 22px 22px;
+    }
+
+    .admin-profile-page .profile-detail-table {
+        width: 100%;
+        border: 1px solid var(--profile-border);
+        border-radius: 8px;
+        overflow: hidden;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .admin-profile-page .profile-detail-table th,
+    .admin-profile-page .profile-detail-table td {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--profile-border);
+        text-align: left;
+    }
+
+    .admin-profile-page .profile-detail-table tr:last-child th,
+    .admin-profile-page .profile-detail-table tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .admin-profile-page .profile-detail-table th {
+        width: 38%;
+        background: #F8FBFF;
+        color: var(--profile-navy);
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0;
+        text-transform: uppercase;
+    }
+
+    .admin-profile-page .profile-detail-table td {
+        color: #061A3A;
+        font-size: 16px;
+        font-weight: 900;
     }
 
     .admin-profile-page .profile-actions .button {

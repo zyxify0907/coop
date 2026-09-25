@@ -13,6 +13,7 @@ use App\Models\SahamStaff;
 use App\Services\AhliImportService;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -325,6 +326,8 @@ class AdminProfileController extends Controller
             return redirect()->route('login');
         }
 
+        $this->normalizeNricInput($request);
+
         $validated = $request->validate([
             'no_matrik' => ['required', 'string', 'max:20', 'unique:ahli,no_matrik'],
             'nama' => ['required', 'string', 'max:100'],
@@ -340,19 +343,23 @@ class AdminProfileController extends Controller
         $generatedPassword = $this->generateStudentPassword($validated['no_matrik']);
         $academic = $this->academicFromClass($validated['kelas'] ?? null);
 
-        Ahli::query()->create([
-            'no_matrik' => $validated['no_matrik'],
-            'nama' => $validated['nama'],
-            'nric' => $validated['nric'],
-            'semester' => $academic['semester'] ?? ($validated['semester'] ?? null),
-            'program' => $academic['program'] ?? ($validated['program'] ?? null),
-            'kelas' => $validated['kelas'] ?? null,
-            'no_tel' => $validated['no_tel'] ?? null,
-            'email' => $validated['email'] ?? null,
-            'password_hash' => Hash::make($generatedPassword),
-            'tarikh_daftar' => $validated['tarikh_daftar'] ?? null,
-            'status_aktif' => true,
-        ]);
+        try {
+            Ahli::query()->create([
+                'no_matrik' => $validated['no_matrik'],
+                'nama' => $validated['nama'],
+                'nric' => $validated['nric'],
+                'semester' => $academic['semester'] ?? ($validated['semester'] ?? null),
+                'program' => $academic['program'] ?? ($validated['program'] ?? null),
+                'kelas' => $validated['kelas'] ?? null,
+                'no_tel' => $validated['no_tel'] ?? null,
+                'email' => $validated['email'] ?? null,
+                'password_hash' => Hash::make($generatedPassword),
+                'tarikh_daftar' => $validated['tarikh_daftar'] ?? null,
+                'status_aktif' => true,
+            ]);
+        } catch (UniqueConstraintViolationException $exception) {
+            return $this->backWithDuplicateAhliError($request, $exception);
+        }
 
         return redirect()
             ->route('admin.users.students')
@@ -400,6 +407,8 @@ class AdminProfileController extends Controller
         if (! $this->isAdmin($request) && (! $this->isCoopManager($request) || $requestedStaffType !== Pekerja::COOP_WORKER_STAFF_TYPE)) {
             return redirect()->route('login');
         }
+
+        $this->normalizeNricInput($request);
 
         $validated = $request->validate([
             'no_pekerja' => [Rule::requiredIf($requestedStaffType === Pekerja::COOP_WORKER_STAFF_TYPE), 'nullable', 'string', 'max:20', 'regex:/^PBT-\d+$/', 'unique:pekerja,no_pekerja'],
@@ -482,6 +491,8 @@ class AdminProfileController extends Controller
         if ($this->isCoopManager($request) && ($type !== 'staff' || $user->staff_type !== Pekerja::COOP_WORKER_STAFF_TYPE || $request->input('staff_type') !== Pekerja::COOP_WORKER_STAFF_TYPE)) {
             abort(403);
         }
+
+        $this->normalizeNricInput($request);
 
         $rules = [
             'nama' => ['required', 'string', 'max:100'],
@@ -723,6 +734,49 @@ class AdminProfileController extends Controller
             'staff' => Pekerja::query()->find($id),
             default => null,
         };
+    }
+
+    private function normalizeNricInput(Request $request): void
+    {
+        if (! $request->has('nric')) {
+            return;
+        }
+
+        $request->merge([
+            'nric' => $this->normalizeNric($request->input('nric')),
+        ]);
+    }
+
+    private function normalizeNric(mixed $nric): ?string
+    {
+        $nric = trim((string) $nric);
+
+        if ($nric === '') {
+            return null;
+        }
+
+        return preg_replace('/\D+/', '', $nric) ?: $nric;
+    }
+
+    private function backWithDuplicateAhliError(Request $request, UniqueConstraintViolationException $exception): RedirectResponse
+    {
+        $message = $exception->getMessage();
+        $field = match (true) {
+            str_contains($message, 'ahli.nric') || str_contains($message, "'nric'") => 'nric',
+            str_contains($message, 'ahli.no_matrik') || str_contains($message, "'no_matrik'") => 'no_matrik',
+            str_contains($message, 'ahli.email') || str_contains($message, "'email'") => 'email',
+            default => 'nric',
+        };
+
+        $messages = [
+            'nric' => 'No. KP ini sudah digunakan oleh ahli lain.',
+            'no_matrik' => 'No. matrik ini sudah digunakan oleh ahli lain.',
+            'email' => 'Email ini sudah digunakan oleh ahli lain.',
+        ];
+
+        return back()
+            ->withErrors([$field => $messages[$field]])
+            ->withInput($request->except('password'));
     }
 
     private function passwordMatches(AdminUser $user, string $password): bool

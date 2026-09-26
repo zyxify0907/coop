@@ -16,6 +16,7 @@
         $announcementsCount = count($home['announcements']);
         $notificationsCount = count($home['messages']);
         $activitiesCount = count($home['recent_activities']);
+        $recentActivities = collect($home['recent_activities'])->take(3);
     @endphp
 
     <div class="admin-home-content staff-home-content clothing-home-content">
@@ -71,7 +72,7 @@
         <section class="portal-home__panel portal-home__panel--activity">
             <header><div><span>AKTIVITI TERKINI</span><h2>Aktiviti Tempahan Baju</h2><p>Rekod tempahan dan tindakan terbaru dalam sistem.</p></div></header>
             <div class="portal-home__activity">
-                @forelse ($home['recent_activities'] as $activity)
+                @forelse ($recentActivities as $activity)
                     <div class="portal-home__activity-item"><span class="portal-home__dot"></span><div><strong>{{ $activity['name'] }}</strong><small>{{ $activity['user'] }} - {{ $activity['time'] }}</small></div></div>
                 @empty
                     <div class="portal-home__empty"><strong>Tiada aktiviti terkini.</strong><span>Tempahan dan notifikasi akan muncul di sini.</span></div>

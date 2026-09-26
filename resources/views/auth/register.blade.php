@@ -199,10 +199,10 @@
         <section class="login-intro" aria-labelledby="register-welcome">
             <div class="login-intro__content">
                 <span class="public-red-line" aria-hidden="true"></span>
-                <p class="login-kicker">Portal Ahli &amp; Staf</p>
+                <p class="login-kicker">Portal Koperasi</p>
                 <h1 id="register-welcome">Selamat Datang ke CoopBest</h1>
-                <p class="login-intro__subtitle">Portal Pengguna Koperasi Politeknik Besut</p>
-                <p class="login-intro__text">Urus keahlian, saham dan tempahan melalui satu portal rasmi yang mudah dan selamat.</p>
+                <p class="login-intro__subtitle">Portal Koperasi Politeknik Besut</p>
+                <p class="login-intro__text">Urus keahlian, saham, tempahan dan operasi pekerja koperasi melalui satu portal rasmi yang mudah dan selamat.</p>
             </div>
             <img class="public-wing public-wing--login" src="{{ asset('images/koperasi-logo.svg?v=3') }}" alt="" aria-hidden="true">
         </section>
@@ -216,10 +216,6 @@
                     <p>Lengkapkan maklumat pelajar untuk mencipta akaun CoopBest.</p>
                 </div>
 
-                @if ($errors->any())
-                    <div class="form-alert" role="alert">{{ $errors->first() }}</div>
-                @endif
-
                 <form class="login-form" method="POST" action="{{ route('register.submit') }}" id="register-form" autocomplete="off">
                     @csrf
                     <input type="hidden" name="role" value="student">
@@ -229,7 +225,7 @@
                             <label for="no_matrik">No. Matrik</label>
                             <div class="login-input-wrap">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>
-                                <input id="no_matrik" name="no_matrik" value="{{ old('no_matrik') }}" placeholder="Masukkan no. matrik">
+                                <input id="no_matrik" name="no_matrik" value="{{ old('no_matrik') }}" required placeholder="Masukkan no. matrik">
                             </div>
                         </div>
 
@@ -253,7 +249,7 @@
                             <label for="kelas">Kelas</label>
                             <div class="login-input-wrap">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-5 9 5-9 5-9-5Z"/><path d="M7 12v4c2.8 2 7.2 2 10 0v-4"/></svg>
-                                <select id="kelas" name="kelas">
+                                <select id="kelas" name="kelas" required>
                                     <option value="">Pilih kelas</option>
                                     @foreach($studentClasses as $class)
                                         <option value="{{ $class }}" @selected(old('kelas') === $class)>{{ $class }}</option>
@@ -266,7 +262,7 @@
                             <label for="email">Emel</label>
                             <div class="login-input-wrap">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="14" x="3" y="5" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
-                                <input id="email" type="email" name="email" value="{{ old('email') }}" placeholder="Masukkan emel anda">
+                                <input id="email" type="email" name="email" value="{{ old('email') }}" required placeholder="Masukkan emel anda">
                             </div>
                         </div>
 
@@ -274,7 +270,7 @@
                             <label for="no_tel">No. Telefon</label>
                             <div class="login-input-wrap">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .8 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.4 1.8.7 2.8.8a2 2 0 0 1 1.7 2Z"/></svg>
-                                <input id="no_tel" name="no_tel" value="{{ old('no_tel') }}" placeholder="Masukkan no. telefon">
+                                <input id="no_tel" name="no_tel" value="{{ old('no_tel') }}" required placeholder="Masukkan no. telefon">
                             </div>
                         </div>
 
@@ -304,7 +300,7 @@
                     </div>
 
                     <label class="register-agreement">
-                        <input type="checkbox">
+                        <input type="checkbox" name="agreement" value="1" required>
                         <span>Saya mengesahkan bahawa maklumat yang diberikan adalah benar.</span>
                     </label>
 

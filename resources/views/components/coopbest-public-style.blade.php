@@ -1877,7 +1877,7 @@
     }
     .home-services__list {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         align-items: stretch;
     }
     .home-service {
@@ -1947,7 +1947,193 @@
         text-align: center;
     }
     .home-about {
-        display: none;
+        position: relative;
+        padding: clamp(46px, 6vh, 76px) clamp(32px, 4vw, 76px);
+        background: #F5F8FC;
+        border-bottom: 1px solid var(--cb-border);
+        scroll-margin-top: 92px;
+    }
+    .home-about__inner {
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(320px, .95fr);
+        gap: clamp(32px, 4vw, 70px);
+        align-items: center;
+        width: min(1680px, 100%);
+        margin: 0 auto;
+        padding: 0;
+        text-align: left;
+    }
+    .home-about__copy {
+        max-width: 760px;
+    }
+    .home-about .public-red-line {
+        display: inline-block;
+        width: 42px;
+        height: 5px;
+        margin: 0 14px 4px 0;
+        vertical-align: middle;
+        background: #ED1C2E;
+    }
+    .home-about .public-kicker {
+        display: inline-block;
+        margin: 0;
+        color: #52647B;
+        vertical-align: middle;
+        font-size: clamp(12px, .8vw, 15px);
+        font-weight: 900;
+        letter-spacing: .18em;
+        text-transform: uppercase;
+    }
+    .home-about h2 {
+        margin: clamp(10px, 1.4vh, 14px) 0 0;
+        color: #082F59;
+        font-size: clamp(30px, 2.5vw, 44px);
+        line-height: 1.1;
+        font-weight: 900;
+        letter-spacing: 0;
+    }
+    .home-about__copy p {
+        margin: 16px 0 0;
+        color: #314864;
+        font-size: clamp(15px, 1vw, 18px);
+        line-height: 1.65;
+        font-weight: 650;
+    }
+    .home-about__copy .public-button {
+        margin-top: 26px;
+    }
+    .home-about__points {
+        display: grid;
+        gap: 14px;
+    }
+    .home-about__point {
+        position: relative;
+        min-height: 112px;
+        padding: 20px 22px 20px 28px;
+        border: 1px solid #D7E2EF;
+        border-left: 5px solid #082F59;
+        border-radius: 8px;
+        background: #FFFFFF;
+        box-shadow: 0 8px 20px rgba(8, 47, 89, .045);
+    }
+    .home-about__point:nth-child(2) {
+        border-left-color: #0B5ED7;
+    }
+    .home-about__point:nth-child(3) {
+        border-left-color: #ED1C2E;
+    }
+    .home-about__point strong {
+        display: block;
+        color: #082F59;
+        font-size: clamp(17px, 1.15vw, 21px);
+        line-height: 1.2;
+        font-weight: 900;
+    }
+    .home-about__point span {
+        display: block;
+        margin-top: 8px;
+        color: #4F6075;
+        font-size: clamp(13px, .92vw, 16px);
+        line-height: 1.45;
+        font-weight: 650;
+    }
+    .home-contact {
+        padding: clamp(46px, 6vh, 76px) clamp(32px, 4vw, 76px);
+        background: #FFFFFF;
+        border-bottom: 1px solid var(--cb-border);
+        scroll-margin-top: 92px;
+    }
+    .home-contact__inner {
+        width: min(1680px, 100%);
+        margin: 0 auto;
+    }
+    .home-contact__head {
+        max-width: 780px;
+        margin-bottom: clamp(22px, 3vh, 34px);
+    }
+    .home-contact .public-red-line {
+        display: inline-block;
+        width: 42px;
+        height: 5px;
+        margin: 0 14px 4px 0;
+        vertical-align: middle;
+        background: #ED1C2E;
+    }
+    .home-contact .public-kicker {
+        display: inline-block;
+        margin: 0;
+        color: #52647B;
+        vertical-align: middle;
+        font-size: clamp(12px, .8vw, 15px);
+        font-weight: 900;
+        letter-spacing: .18em;
+        text-transform: uppercase;
+    }
+    .home-contact h2 {
+        margin: clamp(10px, 1.4vh, 14px) 0 0;
+        color: #082F59;
+        font-size: clamp(30px, 2.5vw, 44px);
+        line-height: 1.1;
+        font-weight: 900;
+        letter-spacing: 0;
+    }
+    .home-contact__head > p:last-child {
+        margin: 12px 0 0;
+        color: #314864;
+        font-size: clamp(15px, 1vw, 18px);
+        line-height: 1.55;
+        font-weight: 650;
+    }
+    .home-contact__list {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+    }
+    .home-contact__card {
+        display: grid;
+        gap: 8px;
+        min-height: 190px;
+        padding: 22px;
+        border: 1px solid #D7E2EF;
+        border-top: 5px solid #082F59;
+        border-radius: 8px;
+        background: #F8FBFF;
+        box-shadow: 0 8px 20px rgba(8, 47, 89, .045);
+    }
+    .home-contact__card:nth-child(2) {
+        border-top-color: #0B5ED7;
+    }
+    .home-contact__card:nth-child(3) {
+        border-top-color: #ED1C2E;
+    }
+    .home-contact__role {
+        color: #0B5ED7;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+    .home-contact__card strong {
+        color: #082F59;
+        font-size: clamp(17px, 1.15vw, 21px);
+        line-height: 1.25;
+        font-weight: 900;
+    }
+    .home-contact__card a {
+        width: fit-content;
+        max-width: 100%;
+        color: #314864;
+        font-size: clamp(13px, .92vw, 16px);
+        line-height: 1.35;
+        font-weight: 750;
+        overflow-wrap: anywhere;
+        text-decoration: none;
+    }
+    .home-contact__card a:hover,
+    .home-contact__card a:focus-visible {
+        color: #ED1C2E;
+        text-decoration: underline;
+        text-underline-offset: 3px;
     }
     @media (max-height: 780px) and (min-width: 901px) {
         .home-hero {
@@ -1989,6 +2175,21 @@
         }
         .home-services__note {
             margin-top: 18px;
+        }
+    }
+    @media (max-width: 1200px) {
+        .home-services__list {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .home-contact__list {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .home-service:nth-child(2n) {
+            padding-right: 0;
+            border-right: 0;
+        }
+        .home-service:nth-child(2n + 1) {
+            padding-left: 0;
         }
     }
     @media (max-width: 900px) {
@@ -2044,6 +2245,19 @@
             padding: 34px 20px 42px;
             overflow: hidden;
         }
+        .home-about {
+            padding: 42px 20px;
+        }
+        .home-contact {
+            padding: 42px 20px;
+        }
+        .home-about__inner {
+            grid-template-columns: 1fr;
+            gap: 28px;
+        }
+        .home-contact__list {
+            grid-template-columns: 1fr;
+        }
         .home-services__list {
             grid-template-columns: 1fr;
         }
@@ -2084,8 +2298,23 @@
         .home-services {
             padding-inline: 16px;
         }
+        .home-about {
+            padding-inline: 16px;
+        }
+        .home-contact {
+            padding-inline: 16px;
+        }
         .home-services__head h2 {
             font-size: clamp(28px, 8vw, 36px);
+        }
+        .home-about h2 {
+            font-size: clamp(28px, 8vw, 36px);
+        }
+        .home-contact h2 {
+            font-size: clamp(28px, 8vw, 36px);
+        }
+        .home-about__copy .public-button {
+            width: 100%;
         }
     }
 

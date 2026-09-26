@@ -34,8 +34,7 @@
                 <a class="is-active" href="{{ url('/') }}">Utama</a>
                 <a href="#perkhidmatan">Perkhidmatan</a>
                 <a href="#tentang">Tentang Kami</a>
-                <a href="#bantuan">Bantuan</a>
-                <a class="public-login-link" href="{{ route('login') }}">Log Masuk</a>
+                <a href="#hubungi">Hubungi Kami</a>
             </div>
         </nav>
     </header>
@@ -47,12 +46,12 @@
                     <span class="public-red-line" aria-hidden="true"></span>
                     <p class="home-hero__kicker">Portal Rasmi Koperasi</p>
                     <h1 id="home-title">Koperasi Politeknik Besut</h1>
-                    <p class="home-hero__text">Urus keahlian, semak saham dan buat tempahan melalui satu portal rasmi yang mudah dan selamat.</p>
+                    <p class="home-hero__text">Urus keahlian, semak saham, tempahan dan operasi pekerja koperasi melalui satu portal rasmi yang mudah dan selamat.</p>
                     <div class="home-hero__actions">
-                        <a class="public-button public-button--red" href="{{ route('login') }}">Log Masuk Portal</a>
-                        <a class="public-button public-button--outline-light" href="#perkhidmatan">Terokai Perkhidmatan</a>
+                        <a class="public-button public-button--red" href="{{ route('login') }}">Log Masuk</a>
+                        <a class="public-button public-button--outline-light" href="{{ route('register') }}">Register</a>
                     </div>
-                    <p class="home-hero__note">Untuk pelajar dan staf Politeknik Besut.</p>
+                    <p class="home-hero__note">Untuk pelajar, staf dan pekerja koperasi Politeknik Besut.</p>
                 </div>
                 <img class="public-wing public-wing--home" src="{{ asset('images/koperasi-logo.svg?v=3') }}" alt="" aria-hidden="true">
             </div>
@@ -61,16 +60,14 @@
                 <figure class="home-visual">
                     <img src="{{ asset('images/coopbest-store-hero.png') }}" alt="Visual konsep kedai koperasi kampus dengan buku, alat tulis, beg dan baju polo">
                     <figcaption>
-                        <strong>Kedai Koperasi Politeknik Besut</strong>
-                        <span><i aria-hidden="true"></i>Perkhidmatan untuk warga kampus</span>
+                        <strong>Koperasi Politeknik Besut</strong>
+                        <span><i aria-hidden="true"></i>Portal untuk pelajar, staf dan pekerja koperasi</span>
                     </figcaption>
                 </figure>
             </div>
         </section>
 
         <section class="home-services" id="perkhidmatan" aria-labelledby="services-title">
-            <span class="home-anchor" id="tentang"></span>
-            <span class="home-anchor" id="bantuan"></span>
             <div class="home-services__inner">
                 <div class="home-services__head">
                     <span class="public-red-line public-red-line--small" aria-hidden="true"></span>
@@ -89,7 +86,7 @@
                             </svg>
                         </span>
                         <span class="home-service__copy"><strong>Keanggotaan</strong><small>Daftar dan semak maklumat ahli.</small></span>
-                        <span class="home-service__arrow" aria-hidden="true">›</span>
+                        <span class="home-service__arrow" aria-hidden="true">&rsaquo;</span>
                     </a>
                     <a class="home-service" href="{{ route('login') }}">
                         <span class="home-service__icon" aria-hidden="true">
@@ -102,7 +99,7 @@
                             </svg>
                         </span>
                         <span class="home-service__copy"><strong>Saham Koperasi</strong><small>Semak pegangan dan urusan saham.</small></span>
-                        <span class="home-service__arrow" aria-hidden="true">›</span>
+                        <span class="home-service__arrow" aria-hidden="true">&rsaquo;</span>
                     </a>
                     <a class="home-service" href="{{ route('login') }}">
                         <span class="home-service__icon" aria-hidden="true">
@@ -111,11 +108,91 @@
                             </svg>
                         </span>
                         <span class="home-service__copy"><strong>Tempahan Baju</strong><small>Buat tempahan dan semak pesanan.</small></span>
-                        <span class="home-service__arrow" aria-hidden="true">›</span>
+                        <span class="home-service__arrow" aria-hidden="true">&rsaquo;</span>
+                    </a>
+                    <a class="home-service" href="{{ route('login') }}">
+                        <span class="home-service__icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                                <path d="M4 8h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2Z"/>
+                                <path d="M9 14h6"/>
+                            </svg>
+                        </span>
+                        <span class="home-service__copy"><strong>Pekerja Koperasi</strong><small>Urus kehadiran, tugasan dan operasi harian.</small></span>
+                        <span class="home-service__arrow" aria-hidden="true">&rsaquo;</span>
                     </a>
                 </div>
 
-                <p class="home-services__note">Log masuk untuk mengakses semua perkhidmatan.</p>
+            </div>
+        </section>
+
+        <section class="home-about" id="tentang" aria-labelledby="about-title">
+            <div class="home-about__inner">
+                <div class="home-about__copy">
+                    <span class="public-red-line public-red-line--small" aria-hidden="true"></span>
+                    <p class="public-kicker">Tentang Kami</p>
+                    <h2 id="about-title">Kami membantu memudahkan urusan koperasi secara digital.</h2>
+                    <p>CoopBest ialah portal rasmi Koperasi Politeknik Besut yang menyatukan urusan keahlian, saham, tempahan, makluman rasmi dan operasi pekerja koperasi dalam satu sistem yang mudah digunakan oleh warga kampus.</p>
+                    <p>Sistem ini dibangunkan untuk menjadikan pengurusan koperasi lebih tersusun, cepat dan selamat untuk pelajar, staf, pekerja koperasi serta pentadbir.</p>
+                    <a class="public-button public-button--red" href="{{ route('login') }}">Masuk ke Portal</a>
+                </div>
+
+                <div class="home-about__points" aria-label="Fokus CoopBest">
+                    <article class="home-about__point">
+                        <strong>Keahlian</strong>
+                        <span>Daftar akaun, semak profil dan urus maklumat ahli koperasi.</span>
+                    </article>
+                    <article class="home-about__point">
+                        <strong>Saham</strong>
+                        <span>Semak pegangan saham dan permohonan berkaitan koperasi.</span>
+                    </article>
+                    <article class="home-about__point">
+                        <strong>Tempahan</strong>
+                        <span>Buat tempahan baju koperasi dan pantau status pesanan.</span>
+                    </article>
+                    <article class="home-about__point">
+                        <strong>Pekerja Koperasi</strong>
+                        <span>Sokong urusan kehadiran, rekod kerja dan operasi koperasi harian.</span>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="home-contact" id="hubungi" aria-labelledby="contact-title">
+            <div class="home-contact__inner">
+                <div class="home-contact__head">
+                    <span class="public-red-line public-red-line--small" aria-hidden="true"></span>
+                    <p class="public-kicker">Hubungi Kami</p>
+                    <h2 id="contact-title">Perlu bantuan berkaitan koperasi?</h2>
+                    <p>Hubungi pegawai berkaitan untuk urusan keahlian, saham, tempahan atau operasi pekerja koperasi.</p>
+                </div>
+
+                <div class="home-contact__list">
+                    <article class="home-contact__card">
+                        <span class="home-contact__role">Pengerusi Koperasi</span>
+                        <strong>Norulmaisura Bt Mohamad</strong>
+                        <a href="mailto:maisura.staff@example.com">maisura.staff@example.com</a>
+                        <a href="tel:+60123456789">012-3456789</a>
+                    </article>
+                    <article class="home-contact__card">
+                        <span class="home-contact__role">Staff Pengurusan Baju</span>
+                        <strong>ADNAN BIN YAZID</strong>
+                        <a href="mailto:suriyani.staff@example.com">suriyani.staff@example.com</a>
+                        <a href="tel:+60124567890">012-4567890</a>
+                    </article>
+                    <article class="home-contact__card">
+                        <span class="home-contact__role">Staff Pengurusan Saham</span>
+                        <strong>ROSHILA BINTI ABDUL MUTALIB</strong>
+                        <a href="mailto:azlina.staff@example.com">azlina.staff@example.com</a>
+                        <a href="tel:+60122345678">012-2345678</a>
+                    </article>
+                    <article class="home-contact__card">
+                        <span class="home-contact__role">Staff Pengurusan Kedai</span>
+                        <strong>Nor Azira Binti Abd Razak</strong>
+                        <a href="mailto:azira.staff@example.com">azira.staff@example.com</a>
+                        <a href="tel:+60121234567">012-1234567</a>
+                    </article>
+                </div>
             </div>
         </section>
     </main>

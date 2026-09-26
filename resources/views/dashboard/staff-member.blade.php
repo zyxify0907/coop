@@ -24,6 +24,7 @@
         $announcementsCount = count($home['announcements']);
         $notificationsCount = count($home['messages']);
         $activitiesCount = count($home['recent_activities']);
+        $recentActivities = collect($home['recent_activities'])->take(3);
     @endphp
 
     <div class="admin-home-content staff-home-content">
@@ -138,7 +139,7 @@
                 </div>
             </header>
             <div class="portal-home__activity">
-                @forelse ($home['recent_activities'] as $activity)
+                @forelse ($recentActivities as $activity)
                     <div class="portal-home__activity-item">
                         <span class="portal-home__dot"></span>
                         <div>

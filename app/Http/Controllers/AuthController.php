@@ -77,19 +77,30 @@ class AuthController extends Controller
             'role' => ['required', Rule::in(['student'])],
             'nama' => ['required', 'string', 'max:100'],
             'nric' => ['required', 'string', 'max:20'],
-            'email' => ['nullable', 'email', 'max:100'],
-            'no_tel' => ['nullable', 'string', 'max:20'],
+            'email' => ['required', 'email', 'max:100'],
+            'no_tel' => ['required', 'string', 'max:20'],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
+            'agreement' => ['accepted'],
         ];
 
-        $rules = $baseRules + [
-            'no_matrik' => ['required', 'string', 'max:20', 'unique:ahli,no_matrik'],
-            'nric' => ['required', 'string', 'max:20', 'unique:ahli,nric', 'unique:pekerja,nric', 'unique:admin,nric'],
-            'email' => ['nullable', 'email', 'max:100', 'unique:ahli,email', 'unique:pekerja,email'],
-            'kelas' => ['nullable', Rule::in($this->studentClassOptions())],
-        ];
+        $rules = $baseRules;
+        $rules['no_matrik'] = ['required', 'string', 'max:20', 'unique:ahli,no_matrik'];
+        $rules['nric'] = ['required', 'string', 'max:20', 'unique:ahli,nric', 'unique:pekerja,nric', 'unique:admin,nric'];
+        $rules['email'] = ['required', 'email', 'max:100', 'unique:ahli,email', 'unique:pekerja,email'];
+        $rules['kelas'] = ['required', Rule::in($this->studentClassOptions())];
 
-        $validated = $request->validate($rules);
+        $validated = $request->validate($rules, [
+            'no_matrik.required' => 'Sila masukkan no. matrik.',
+            'nama.required' => 'Sila masukkan nama penuh.',
+            'nric.required' => 'Sila masukkan no. kad pengenalan.',
+            'kelas.required' => 'Sila pilih kelas.',
+            'email.required' => 'Sila masukkan emel.',
+            'email.email' => 'Format emel tidak sah.',
+            'no_tel.required' => 'Sila masukkan no. telefon.',
+            'password.required' => 'Sila masukkan kata laluan.',
+            'password.confirmed' => 'Sahkan kata laluan mesti sepadan.',
+            'agreement.accepted' => 'Sila sahkan maklumat yang diberikan adalah benar.',
+        ]);
 
         $academic = $this->academicFromClass($validated['kelas'] ?? null);
         try {

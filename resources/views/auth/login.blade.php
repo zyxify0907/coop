@@ -33,10 +33,10 @@
         <section class="login-intro" aria-labelledby="login-welcome">
             <div class="login-intro__content">
                 <span class="public-red-line" aria-hidden="true"></span>
-                <p class="login-kicker">Portal Ahli &amp; Staf</p>
+                <p class="login-kicker">Portal Koperasi</p>
                 <h1 id="login-welcome">Selamat Datang ke CoopBest</h1>
-                <p class="login-intro__subtitle">Portal Pengguna Koperasi Politeknik Besut</p>
-                <p class="login-intro__text">Urus keahlian, saham dan tempahan melalui satu portal rasmi yang mudah dan selamat.</p>
+                <p class="login-intro__subtitle">Portal Koperasi Politeknik Besut</p>
+                <p class="login-intro__text">Urus keahlian, saham, tempahan dan operasi pekerja koperasi melalui satu portal rasmi yang mudah dan selamat.</p>
             </div>
             <img class="public-wing public-wing--login" src="{{ asset('images/koperasi-logo.svg?v=3') }}" alt="" aria-hidden="true">
         </section>
@@ -49,12 +49,6 @@
                     <span class="public-red-line public-red-line--small" aria-hidden="true"></span>
                     <p>Masukkan maklumat akaun anda untuk meneruskan.</p>
                 </div>
-
-                @if ($errors->any())
-                    <div class="form-alert" role="alert">
-                        {{ str_contains($errors->first(), 'Login tidak sah') ? $errors->first() : 'Maklumat login tidak lengkap. Sila semak medan yang diperlukan.' }}
-                    </div>
-                @endif
 
                 <form class="login-form" method="POST" action="{{ route('login.submit') }}" id="login-form" autocomplete="off" novalidate>
                     @csrf

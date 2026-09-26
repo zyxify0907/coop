@@ -16,13 +16,6 @@
             </div>
         </section>
 
-        @if (session('status'))
-            <div class="announcement-alert success" role="alert">
-                <span>{{ session('status') }}</span>
-                <button class="alert-close" type="button" aria-label="Close notification">&times;</button>
-            </div>
-        @endif
-
         <section class="announcement-table-panel">
             <div class="announcement-list-head">
                 <div>
@@ -127,9 +120,6 @@
     .announcement-admin__meta span,.record-badge{display:inline-flex;min-height:32px;align-items:center;justify-content:center;border-radius:999px;background:#EAF3FF;color:#0B5ED7;padding:0 14px;font-size:13px;font-weight:900}
     .record-badge{border:1px solid #BBF7D0;background:#DCFCE7;color:#15803D}
     .record-badge::before{content:'';width:8px;height:8px;margin-right:8px;border-radius:999px;background:#16A34A}
-    .announcement-alert{position:fixed;top:20px;right:20px;z-index:1000;display:flex;max-width:min(420px, calc(100vw - 32px));align-items:center;gap:12px;padding:14px 20px;border-radius:14px;border:1px solid transparent;font-weight:800;box-shadow:0 18px 38px rgba(15,23,42,.16)}
-    .announcement-alert.success{background:var(--success-soft);border-color:#bbf7d0;color:var(--success)}
-    .alert-close{margin-left:auto;border:0;background:none;font-size:22px;cursor:pointer;color:inherit}
     .announcement-table-panel{overflow:hidden;border:1px solid #D7E2EF;border-radius:12px;background:#fff;box-shadow:0 8px 20px rgba(8,47,89,.035)}
     .announcement-list-head{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;padding:24px 28px;border-bottom:1px solid #D7E2EF;background:#fff}
     .announcement-list-head h2{margin:0;color:#082F59;font-size:24px;line-height:1.2;font-weight:900}
@@ -164,23 +154,6 @@
         .announcement-admin__meta{padding-top:0}
         .announcement-list-head{align-items:flex-start;padding:22px}
         .announcement-list-actions,.announcement-button{width:100%}
-        .announcement-alert{top:12px;right:12px;left:12px;max-width:none}
     }
 </style>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.announcement-alert').forEach((alert) => {
-            const closeButton = alert.querySelector('.alert-close');
-            const closeAlert = () => {
-                alert.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
-                alert.style.opacity = '0';
-                alert.style.transform = 'translateY(-8px)';
-                setTimeout(() => alert.remove(), 260);
-            };
-
-            closeButton?.addEventListener('click', closeAlert);
-            setTimeout(closeAlert, 5000);
-        });
-    });
-</script>
 @endpush

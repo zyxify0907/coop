@@ -20,7 +20,6 @@
         };
         $isMember = $memberApplication !== null;
         $studentDepartment = $user->jabatan ?? $user->program ?? 'Jabatan belum ditetapkan';
-        $studentClass = $user->kelas ?? 'Kelas belum ditetapkan';
         $studentStatus = $isMember ? 'Pelajar / Anggota Koperasi' : 'Pelajar';
         $memberNo = $user->no_anggota ?? ($memberApplication ? ($memberApplication->data_permohonan['no_anggota'] ?? null) : null);
         $studentMessages = collect($home['messages'] ?? [])->take(3);
@@ -34,7 +33,7 @@
                 <span class="student-home-redesign__mark"></span>
                 <span class="student-welcome-banner__kicker">PORTAL PELAJAR COOPBEST</span>
                 <h1>Selamat Datang, {{ $user->nama }}</h1>
-                <p>{{ $studentDepartment }} - {{ $studentClass }}</p>
+                <p>{{ $studentDepartment }}</p>
             </div>
             <span class="student-welcome-banner__divider" aria-hidden="true"></span>
             <div class="student-welcome-banner__right">

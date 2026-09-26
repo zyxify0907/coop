@@ -63,7 +63,7 @@
     .line-chart__area{fill:url(#lineChartAreaGradient);stroke:0}
     .line-chart__line{fill:none;stroke:#0B5ED7;stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
     .line-chart__dot{fill:#fff;stroke:#0B5ED7;stroke-width:4}
-    .line-chart__value-label{fill:#061A3A;font-size:11px;font-weight:900}
+    .line-chart__value-label{fill:#061A3A;stroke:#fff;stroke-width:5px;paint-order:stroke;font-size:11px;font-weight:900}
     .line-chart__x-label{fill:#526987;font-size:12px;font-weight:900}
     .grouped-chart{display:grid;gap:18px;min-height:260px}
     .grouped-chart__legend{display:flex;align-items:center;gap:14px;color:#334155;font-size:12px;font-weight:900;text-transform:uppercase}

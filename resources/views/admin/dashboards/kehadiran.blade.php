@@ -5,51 +5,60 @@
 @section('page-subtitle', 'Ringkasan Smart Attendance pekerja koperasi.')
 
 @section('content')
-    @php
-        $formatDuration = function (?int $minutes): string {
-            $minutes = max(0, (int) $minutes);
-
-            return intdiv($minutes, 60).' jam '.($minutes % 60).' minit';
-        };
-    @endphp
-
-    <div class="module-dashboard attendance-dashboard">
-        <section class="module-hero">
+    <div class="attendance-management-dashboard">
+        <section class="attendance-hero">
             <div>
                 <span>DASHBOARD KEHADIRAN</span>
                 <h1>Dashboard Kehadiran</h1>
-                <p>Pantau ringkasan hari ini, status live pekerja, jam kerja dan anggaran elaun bulan semasa.</p>
+                <p>Pantau ringkasan kehadiran pekerja, status check-in, waktu bekerja dan elaun bulanan.</p>
             </div>
             <a href="{{ route('admin.attendance.live') }}">Buka Live Attendance</a>
         </section>
 
-        <section class="module-panel attendance-summary-panel">
-            <header>
-                <div>
-                    <span>RINGKASAN HARI INI</span>
-                    <h2>Ringkasan Hari Ini</h2>
-                </div>
-                <a href="{{ route('admin.attendance.records') }}">Lihat Rekod</a>
-            </header>
-            <div class="attendance-summary-grid">
-                <div><span>Jumlah Pekerja</span><strong>{{ number_format($summary['total']) }}</strong><small>Pekerja koperasi aktif</small></div>
-                <div><span>Sudah Check-In</span><strong>{{ number_format($summary['checked_in']) }}</strong><small>{{ number_format($summary['present']) }} hadir</small></div>
-                <div><span>Belum Check-In</span><strong>{{ number_format($summary['not_checked_in']) }}</strong><small>Belum ada rekod hari ini</small></div>
-                <div><span>Lewat</span><strong>{{ number_format($summary['late']) }}</strong><small>Check-in selepas masa dibenarkan</small></div>
-                <div><span>Tidak Hadir</span><strong>{{ number_format(max($summary['absent'], $summary['explicit_absent'])) }}</strong><small>Tiada rekod / ditanda absent</small></div>
-                <div><span>Sedang Bekerja</span><strong>{{ number_format($summary['working']) }}</strong><small>{{ number_format($summary['checked_out']) }} sudah check-out</small></div>
-            </div>
+        <section class="attendance-kpi-grid" aria-label="Ringkasan kehadiran hari ini">
+            <article class="attendance-kpi attendance-kpi--blue">
+                <span>Jumlah Pekerja</span>
+                <strong>{{ number_format($summary['total']) }}</strong>
+                <small>Pekerja koperasi aktif</small>
+            </article>
+            <article class="attendance-kpi attendance-kpi--green">
+                <span>Sudah Check-In</span>
+                <strong>{{ number_format($summary['checked_in']) }}</strong>
+                <small>Hadir hari ini</small>
+            </article>
+            <article class="attendance-kpi attendance-kpi--orange">
+                <span>Belum Check-In</span>
+                <strong>{{ number_format($summary['not_checked_in']) }}</strong>
+                <small>Belum rekod hari ini</small>
+            </article>
+            <article class="attendance-kpi attendance-kpi--orange">
+                <span>Lewat</span>
+                <strong>{{ number_format($summary['late']) }}</strong>
+                <small>Check-in selepas masa dibenarkan</small>
+            </article>
+            <article class="attendance-kpi attendance-kpi--red">
+                <span>Tidak Hadir</span>
+                <strong>{{ number_format(max($summary['absent'], $summary['explicit_absent'])) }}</strong>
+                <small>Tiada rekod / ditanda absent</small>
+            </article>
+            <article class="attendance-kpi attendance-kpi--blue">
+                <span>Sedang Bekerja</span>
+                <strong>{{ number_format($summary['working']) }}</strong>
+                <small>Belum check-out</small>
+            </article>
         </section>
 
-        <section class="module-grid {{ $role === 'admin' ? 'attendance-live-correction-grid' : 'module-grid--full' }}">
-            <article class="module-panel attendance-live-panel">
+        <section class="attendance-dashboard-grid">
+            <article class="attendance-panel attendance-panel--live">
                 <header>
                     <div>
                         <span>STATUS LIVE</span>
                         <h2>Status Kehadiran Live</h2>
+                        <p>Status semasa pekerja hari ini.</p>
                     </div>
                     <a href="{{ route('admin.attendance.live') }}">Lihat Semua</a>
                 </header>
+
                 <div class="attendance-live-list">
                     @forelse ($liveAttendance as $row)
                         @php
@@ -58,63 +67,106 @@
                             $statusLabel = $isCheckedOut ? 'Balik' : $row['label'];
                             $statusClass = $isCheckedOut ? 'checked-out' : $row['status'];
                         @endphp
-                        <div class="attendance-live-row">
-                            <div class="attendance-live-row__person">
+                        <div class="attendance-live-card">
+                            <div class="attendance-person">
                                 <strong>{{ $row['worker']->nama }}</strong>
                                 <small>{{ $row['worker']->no_pekerja ?? '-' }}</small>
                             </div>
-                            <div><span>Check-In</span><strong>{{ $record?->check_in_time?->timezone('Asia/Kuala_Lumpur')->format('h:i A') ?? '-' }}</strong></div>
-                            <div><span>Check-Out</span><strong>{{ $record?->check_out_time?->timezone('Asia/Kuala_Lumpur')->format('h:i A') ?? '-' }}</strong></div>
-                            <em class="attendance-live-status attendance-live-status--{{ $statusClass }}">{{ $statusLabel }}</em>
+                            <span class="attendance-status-pill attendance-status-pill--{{ $statusClass }}">{{ $statusLabel }}</span>
+                            <div class="attendance-time">
+                                <span>Check-In</span>
+                                <strong>{{ $record?->check_in_time?->timezone('Asia/Kuala_Lumpur')->format('h:i A') ?? '-' }}</strong>
+                            </div>
+                            <div class="attendance-time">
+                                <span>Check-Out</span>
+                                <strong>{{ $record?->check_out_time?->timezone('Asia/Kuala_Lumpur')->format('h:i A') ?? '-' }}</strong>
+                            </div>
                         </div>
                     @empty
-                        <div class="module-empty">Belum ada data pekerja untuk hari ini.</div>
+                        <div class="attendance-empty-state">Tiada rekod kehadiran hari ini</div>
                     @endforelse
                 </div>
             </article>
 
-            @if ($role === 'admin')
-                <article class="module-panel">
-                    <header><div><span>CORRECTION</span><h2>Pembetulan Pending</h2></div><a href="{{ route('admin.attendance.corrections') }}">Semak</a></header>
-                    <div class="module-list">
+            <article class="attendance-panel attendance-panel--corrections">
+                <header>
+                    <div>
+                        <span>CORRECTION</span>
+                        <h2>Pembetulan Pending</h2>
+                        <p>Permohonan pembetulan kehadiran yang perlu disemak.</p>
+                    </div>
+                    @if ($role === 'admin')
+                        <a href="{{ route('admin.attendance.corrections') }}">Semak</a>
+                    @endif
+                </header>
+
+                <div class="attendance-correction-list">
+                    @if ($role === 'admin')
                         @forelse ($pendingCorrections as $correction)
-                            <a class="module-row" href="{{ route('admin.attendance.corrections') }}">
-                                <div><strong>{{ $correction->staff?->nama ?? 'Pekerja' }}</strong><small>{{ $correction->correction_date?->format('d/m/Y') }} · {{ ucwords(str_replace('_', ' ', $correction->correction_type)) }}</small></div>
-                                <span>{{ ucfirst($correction->status) }}</span>
+                            <a class="attendance-correction-card" href="{{ route('admin.attendance.corrections') }}">
+                                <div>
+                                    <strong>{{ $correction->staff?->nama ?? 'Pekerja' }}</strong>
+                                    <small>{{ $correction->correction_date?->format('d/m/Y') ?? '-' }}</small>
+                                    <span>{{ ucwords(str_replace('_', ' ', $correction->correction_type)) }}</span>
+                                </div>
+                                <em>{{ ucfirst($correction->status) }}</em>
                             </a>
                         @empty
-                            <div class="module-empty">Tiada pembetulan pending.</div>
+                            <div class="attendance-empty-state">Tiada pembetulan pending</div>
                         @endforelse
-                    </div>
-                </article>
-            @endif
+                    @else
+                        <div class="attendance-empty-state">Tiada pembetulan pending</div>
+                    @endif
+                </div>
+            </article>
         </section>
     </div>
 @endsection
 
-@include('admin.dashboards.styles')
-
 @push('styles')
 <style>
-    .attendance-dashboard .module-hero{margin-bottom:0}
-    .attendance-live-correction-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-    .attendance-summary-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
-    .attendance-summary-grid div{display:grid;gap:7px;min-height:118px;padding:17px;border:1px solid #D7E3F5;border-radius:12px;background:#F8FBFF}
-    .attendance-summary-grid span,.attendance-live-row span{color:#526987;font-size:11px;font-weight:900;letter-spacing:.05em;text-transform:uppercase}
-    .attendance-summary-grid strong{color:#061B34;font-size:28px;font-weight:900;line-height:1}
-    .attendance-summary-grid small{color:#64748B;font-weight:800}
-    .attendance-live-list{display:grid;gap:10px;max-height:560px;overflow:auto;padding-right:2px}
-    .attendance-live-row{display:grid;grid-template-columns:minmax(150px,1fr) repeat(2,minmax(78px,.5fr));align-items:center;gap:12px;padding:13px 14px;border:1px solid #D7E3F5;border-radius:12px;background:#F8FBFF}
-    .attendance-live-row__person strong,.attendance-live-row div strong{display:block;color:#061B34;font-weight:900}
-    .attendance-live-row__person small{display:block;margin-top:3px;color:#64748B;font-weight:800}
-    .attendance-live-status{display:inline-flex;align-items:center;justify-content:center;min-height:32px;padding:0 12px;border-radius:999px;background:#E8F0FF;color:#1D4ED8;font-size:12px;font-style:normal;font-weight:900;white-space:nowrap}
-    .attendance-live-status--working{background:#DDF7E8;color:#0D8A4B}
-    .attendance-live-status--late{background:#FFF4DB;color:#B45309}
-    .attendance-live-status--not_checked_in,.attendance-live-status--absent{background:#FDE8E8;color:#E00012}
-    .attendance-live-status--checked-out,.attendance-live-status--present{background:#E8F0FF;color:#1D4ED8}
-    .attendance-live-status{grid-column:1 / -1;justify-self:start}
-    @media (max-width:1280px){.attendance-summary-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-    @media (max-width:1000px){.attendance-live-correction-grid{grid-template-columns:1fr}}
-    @media (max-width:760px){.attendance-summary-grid{grid-template-columns:1fr}.attendance-live-row{grid-template-columns:1fr}.attendance-live-status{grid-column:auto}}
+    .content:has(.attendance-management-dashboard){background:#F4F7FB}
+    .attendance-management-dashboard{width:min(100% - clamp(24px,4vw,64px),1500px);margin:0 auto;display:grid;gap:18px;color:#061A3A}
+    .attendance-hero{display:flex;align-items:center;justify-content:space-between;gap:22px;min-height:128px;padding:24px 26px 24px 30px;border:1px solid #D7E2EF;border-left:5px solid #ED1C2E;border-radius:14px;background:#fff;box-shadow:0 8px 18px rgba(8,47,89,.04)}
+    .attendance-hero span,.attendance-panel header span{display:inline-flex;color:#0B5ED7;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+    .attendance-hero h1{margin:7px 0 0;color:#061A3A;font-size:clamp(25px,2.2vw,34px);line-height:1.1;font-weight:900;letter-spacing:0}
+    .attendance-hero p{margin:8px 0 0;max-width:720px;color:#526987;font-size:14px;font-weight:750;line-height:1.5}
+    .attendance-hero a,.attendance-panel header a{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:0 16px;border:1px solid #0B5ED7;border-radius:7px;background:#0B5ED7;color:#fff;font-size:13px;font-weight:900;text-decoration:none;white-space:nowrap}
+    .attendance-panel header a{border-color:#9EC5FF;background:#fff;color:#0B5ED7}
+    .attendance-hero a:hover{background:#084FB5;border-color:#084FB5}
+    .attendance-panel header a:hover{background:#EAF2FF}
+    .attendance-kpi-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+    .attendance-kpi{position:relative;display:grid;gap:6px;min-height:98px;padding:17px 20px 16px 24px;border:1px solid #D7E2EF;border-radius:10px;background:#fff;box-shadow:0 8px 18px rgba(8,47,89,.04);overflow:hidden}
+    .attendance-kpi::before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:#0B5ED7}
+    .attendance-kpi--green::before{background:#18B877}
+    .attendance-kpi--orange::before{background:#F59E0B}
+    .attendance-kpi--red::before{background:#ED1C2E}
+    .attendance-kpi span{color:#526987;font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
+    .attendance-kpi strong{color:#061A3A;font-size:clamp(20px,1.7vw,26px);font-weight:900;line-height:1.05}
+    .attendance-kpi small{color:#526987;font-size:12px;font-weight:800;line-height:1.35}
+    .attendance-dashboard-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(360px,.85fr);gap:18px;align-items:start}
+    .attendance-panel{min-width:0;padding:22px;border:1px solid #D7E2EF;border-radius:16px;background:#fff;box-shadow:0 8px 18px rgba(8,47,89,.04)}
+    .attendance-panel header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px;padding-bottom:15px;border-bottom:1px solid #D7E2EF}
+    .attendance-panel h2{margin:5px 0 0;color:#061A3A;font-size:20px;line-height:1.2;font-weight:900;letter-spacing:0}
+    .attendance-panel p{margin:6px 0 0;color:#526987;font-size:13px;font-weight:750;line-height:1.45}
+    .attendance-live-list,.attendance-correction-list{display:grid;gap:12px}
+    .attendance-live-list{max-height:610px;overflow:auto;padding-right:2px}
+    .attendance-live-card{display:grid;grid-template-columns:minmax(180px,1fr) auto minmax(92px,.42fr) minmax(92px,.42fr);align-items:center;gap:14px;min-height:86px;padding:15px 16px;border:1px solid #D7E2EF;border-radius:14px;background:#FBFDFF}
+    .attendance-person strong,.attendance-time strong,.attendance-correction-card strong{display:block;color:#061A3A;font-weight:900;line-height:1.2}
+    .attendance-person small,.attendance-time span,.attendance-correction-card small,.attendance-correction-card span{display:block;color:#526987;font-size:12px;font-weight:800;line-height:1.35}
+    .attendance-person small{margin-top:4px}
+    .attendance-time span{margin-bottom:4px;font-size:11px;font-weight:900;letter-spacing:.05em;text-transform:uppercase}
+    .attendance-status-pill,.attendance-correction-card em{display:inline-flex;align-items:center;justify-content:center;min-height:30px;min-width:104px;padding:0 12px;border-radius:999px;background:#EAF2FF;color:#0B5ED7;font-size:12px;font-style:normal;font-weight:900;white-space:nowrap}
+    .attendance-status-pill--working,.attendance-status-pill--present,.attendance-status-pill--checked-out{background:#E7F6EF;color:#14875A}
+    .attendance-status-pill--late{background:#FFF4DB;color:#A56500}
+    .attendance-status-pill--not_checked_in,.attendance-status-pill--absent{background:#FEE2E2;color:#B91C1C}
+    .attendance-correction-card{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:86px;padding:15px 16px;border:1px solid #D7E2EF;border-radius:14px;background:#FBFDFF;color:inherit;text-decoration:none}
+    .attendance-correction-card:hover{border-color:#9EC5FF;background:#F6FAFF}
+    .attendance-correction-card span{margin-top:2px}
+    .attendance-correction-card em{min-width:82px;background:#FFF4DB;color:#A56500}
+    .attendance-empty-state{display:grid;min-height:132px;place-items:center;padding:22px;border:1px dashed #BFD0E6;border-radius:14px;background:#FBFDFF;color:#526987;font-size:14px;font-weight:900;text-align:center}
+    @media (max-width:1280px){.attendance-dashboard-grid{grid-template-columns:1fr}}
+    @media (max-width:820px){.attendance-hero,.attendance-panel header{align-items:stretch;flex-direction:column}.attendance-hero a,.attendance-panel header a{width:100%}.attendance-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.attendance-live-card{grid-template-columns:1fr;align-items:start}.attendance-status-pill{justify-self:start}}
+    @media (max-width:560px){.attendance-management-dashboard{width:min(100% - 24px,1500px)}.attendance-kpi-grid{grid-template-columns:1fr}.attendance-panel{padding:18px}.attendance-correction-card{align-items:flex-start;flex-direction:column}}
 </style>
 @endpush

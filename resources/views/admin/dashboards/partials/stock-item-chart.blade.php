@@ -11,7 +11,7 @@
                 @foreach ($items as $item)
                     @php
                         $value = (int) ($item['value'] ?? 0);
-                        $height = max(8, round(($value / $maxValue) * 100));
+                        $height = min(84, max(8, round(($value / $maxValue) * 84)));
                         $lowCount = (int) ($item['low_count'] ?? 0);
                     @endphp
                     <div class="stock-chart__item" style="--bar-height: {{ $height }}%;">

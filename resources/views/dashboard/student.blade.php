@@ -83,9 +83,7 @@
                                         <path d="M3 10h18"/>
                                     </svg>
                                     <time datetime="{{ $announcement->created_at?->toDateString() }}">{{ $announcement->created_at?->format('d/m/Y') ?? '-' }}</time>
-                                    @if (! empty($announcement->status_label))
-                                        <span>{{ $announcement->status_label }}</span>
-                                    @endif
+                                    <span>Oleh {{ $announcement->announcer_name }}</span>
                                 </div>
                             </div>
                             <a class="student-announcement-item__link" href="{{ route('announcements.index') }}">

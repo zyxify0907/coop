@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'title',
@@ -16,9 +17,12 @@ use Illuminate\Database\Eloquent\Model;
     'starts_at',
     'ends_at',
     'created_by',
+    'created_by_role',
 ])]
 class Announcement extends Model
 {
+    protected $with = ['creatorAdmin', 'creatorStaff'];
+
     protected function casts(): array
     {
         return [
@@ -42,6 +46,25 @@ class Announcement extends Model
             ->where(function (Builder $query) use ($role): void {
                 $query->where('audience', 'all')->orWhere('audience', $role);
             });
+    }
+
+    public function creatorAdmin(): BelongsTo
+    {
+        return $this->belongsTo(AdminUser::class, 'created_by', 'id_admin');
+    }
+
+    public function creatorStaff(): BelongsTo
+    {
+        return $this->belongsTo(Pekerja::class, 'created_by', 'id_pekerja');
+    }
+
+    public function getAnnouncerNameAttribute(): string
+    {
+        return match ($this->created_by_role) {
+            'staff' => $this->creatorStaff?->nama ?? 'Pengurusan CoopBest',
+            'admin' => $this->creatorAdmin?->nama ?? 'Admin CoopBest',
+            default => $this->creatorAdmin?->nama ?? $this->creatorStaff?->nama ?? 'Admin CoopBest',
+        };
     }
 
     public function getAudienceLabelAttribute(): string

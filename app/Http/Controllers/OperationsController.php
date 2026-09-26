@@ -51,27 +51,42 @@ class OperationsController extends Controller
         $currentYear = now()->year;
         $shareSummaryRows = $this->shareSummaryRows();
         $firstDataYear = collect([
-            Ahli::query()->whereNotNull('tarikh_daftar')->min(DB::raw('YEAR(tarikh_daftar)')),
-            Pekerja::query()->whereIn('staff_type', Pekerja::SHAREHOLDER_STAFF_TYPES)->whereNotNull('tarikh_mula')->min(DB::raw('YEAR(tarikh_mula)')),
+            Saham::query()
+                ->join('ahli', 'saham.id_ahli', '=', 'ahli.id_ahli')
+                ->whereRaw('(COALESCE(syer, 0) + COALESCE(tambahan_saham, 0)) > 0')
+                ->whereNotNull('ahli.tarikh_daftar')
+                ->min(DB::raw('YEAR(ahli.tarikh_daftar)')),
+            Schema::hasTable('saham_staff')
+                ? $approvedStaffShareQuery()
+                    ->join('pekerja', 'saham_staff.id_pekerja', '=', 'pekerja.id_pekerja')
+                    ->whereRaw('(COALESCE(syer, 0) + COALESCE(tambahan_saham, 0)) > 0')
+                    ->whereNotNull('pekerja.tarikh_mula')
+                    ->min(DB::raw('YEAR(pekerja.tarikh_mula)'))
+                : null,
             $shareSummaryRows->min(fn (array $row) => (int) $row['date']->format('Y')),
         ])
             ->filter()
             ->map(fn ($year) => (int) $year)
             ->min() ?? $currentYear;
         $yearRange = collect(range($firstDataYear, $currentYear));
-        $studentYearCounts = Ahli::query()
-            ->selectRaw('YEAR(tarikh_daftar) as year_no, COUNT(*) as total')
-            ->whereNotNull('tarikh_daftar')
-            ->whereBetween(DB::raw('YEAR(tarikh_daftar)'), [$yearRange->first(), $yearRange->last()])
+        $studentYearCounts = Saham::query()
+            ->join('ahli', 'saham.id_ahli', '=', 'ahli.id_ahli')
+            ->selectRaw('YEAR(ahli.tarikh_daftar) as year_no, COUNT(*) as total')
+            ->whereRaw('(COALESCE(syer, 0) + COALESCE(tambahan_saham, 0)) > 0')
+            ->whereNotNull('ahli.tarikh_daftar')
+            ->whereBetween(DB::raw('YEAR(ahli.tarikh_daftar)'), [$yearRange->first(), $yearRange->last()])
             ->groupBy('year_no')
             ->pluck('total', 'year_no');
-        $staffYearCounts = Pekerja::query()
-            ->whereIn('staff_type', Pekerja::SHAREHOLDER_STAFF_TYPES)
-            ->selectRaw('YEAR(tarikh_mula) as year_no, COUNT(*) as total')
-            ->whereNotNull('tarikh_mula')
-            ->whereBetween(DB::raw('YEAR(tarikh_mula)'), [$yearRange->first(), $yearRange->last()])
-            ->groupBy('year_no')
-            ->pluck('total', 'year_no');
+        $staffYearCounts = Schema::hasTable('saham_staff')
+            ? $approvedStaffShareQuery()
+                ->join('pekerja', 'saham_staff.id_pekerja', '=', 'pekerja.id_pekerja')
+                ->selectRaw('YEAR(pekerja.tarikh_mula) as year_no, COUNT(*) as total')
+                ->whereRaw('(COALESCE(syer, 0) + COALESCE(tambahan_saham, 0)) > 0')
+                ->whereNotNull('pekerja.tarikh_mula')
+                ->whereBetween(DB::raw('YEAR(pekerja.tarikh_mula)'), [$yearRange->first(), $yearRange->last()])
+                ->groupBy('year_no')
+                ->pluck('total', 'year_no')
+            : collect();
 
         return view('admin.dashboards.saham', [
             ...$auth,

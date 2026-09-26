@@ -18,8 +18,8 @@
                 default => ucfirst((string) $status),
             };
     @endphp
-    <div class="module-dashboard">
-        <section class="module-hero">
+    <div class="module-dashboard share-dashboard clothing-dashboard">
+        <section class="share-dashboard-header">
             <div>
                 <span>DASHBOARD BAJU</span>
                 <h1>Clothing Order Dashboard</h1>
@@ -50,36 +50,39 @@
             <div><span>Belum Ambil</span><strong>{{ number_format($summary['pickup_orders']) }}</strong><small>Menunggu pengambilan</small></div>
         </section>
 
-        <section class="module-grid">
-            <article class="module-panel">
-                <header><div><span>CARTA</span><h2>Status Tempahan Baju</h2></div></header>
-                @include('admin.dashboards.partials.donut-chart', ['items' => $charts['orders'], 'money' => false])
-            </article>
-            <article class="module-panel">
-                <header><div><span>CARTA</span><h2>Stok Baju Mengikut Item</h2></div></header>
-                @include('admin.dashboards.partials.stock-item-chart', ['items' => $charts['stockByItem']])
-            </article>
-        </section>
+        <section class="share-dashboard-grid">
+            <div class="share-dashboard-column">
+                <article class="module-panel">
+                    <header><div><span>CARTA</span><h2>Status Tempahan Baju</h2></div></header>
+                    @include('admin.dashboards.partials.donut-chart', ['items' => $charts['orders'], 'money' => false])
+                </article>
 
-        <section class="module-grid">
-            <article class="module-panel">
-                <header><div><span>ORDER</span><h2>Tempahan Terkini</h2></div><a href="{{ $ordersRoute }}">Lihat Semua</a></header>
-                <div class="module-list">
-                    @forelse ($recentOrders as $order)
-                        <div class="module-row">
-                            <div><strong>{{ $order->nama ?? $order->no_matrik ?? 'Tempahan Baju' }}</strong><small>{{ isset($order->tarikh_tempahan) ? \Carbon\Carbon::parse($order->tarikh_tempahan)->format('d/m/Y') : '-' }}</small></div>
-                            <span>{{ $orderStatusLabel($order->status ?? '-', $order->tarikh_ambil ?? null) }}</span>
-                        </div>
-                    @empty
-                        <div class="module-empty">Tiada tempahan baju lagi.</div>
-                    @endforelse
-                </div>
-            </article>
+                <article class="module-panel">
+                    <header><div><span>ORDER</span><h2>Tempahan Terkini</h2></div><a href="{{ $ordersRoute }}">Lihat Semua</a></header>
+                    <div class="module-list">
+                        @forelse ($recentOrders as $order)
+                            <div class="module-row">
+                                <div><strong>{{ $order->nama ?? $order->no_matrik ?? 'Tempahan Baju' }}</strong><small>{{ isset($order->tarikh_tempahan) ? \Carbon\Carbon::parse($order->tarikh_tempahan)->format('d/m/Y') : '-' }}</small></div>
+                                <span>{{ $orderStatusLabel($order->status ?? '-', $order->tarikh_ambil ?? null) }}</span>
+                            </div>
+                        @empty
+                            <div class="module-empty">Tiada tempahan baju lagi.</div>
+                        @endforelse
+                    </div>
+                </article>
+            </div>
 
-            <article class="module-panel">
-                <header><div><span>SIZE</span><h2>Saiz Paling Banyak Ditempah</h2></div><a href="{{ $ordersRoute }}">Lihat Semua</a></header>
-                @include('admin.dashboards.partials.bar-chart', ['items' => $charts['popularSizes'], 'money' => false])
-            </article>
+            <div class="share-dashboard-column">
+                <article class="module-panel">
+                    <header><div><span>CARTA</span><h2>Stok Baju Mengikut Item</h2></div></header>
+                    @include('admin.dashboards.partials.stock-item-chart', ['items' => $charts['stockByItem']])
+                </article>
+
+                <article class="module-panel">
+                    <header><div><span>SIZE</span><h2>Saiz Paling Banyak Ditempah</h2></div><a href="{{ $ordersRoute }}">Lihat Semua</a></header>
+                    @include('admin.dashboards.partials.bar-chart', ['items' => $charts['popularSizes'], 'money' => false])
+                </article>
+            </div>
         </section>
     </div>
 @endsection
@@ -93,6 +96,10 @@
     .clothing-order-actions a:hover{border-color:#AFC7EA;background:#F8FBFF}
     .clothing-order-actions strong{color:#0F172A;font-size:16px;font-weight:900}
     .clothing-order-actions span{color:#64748B;font-size:13px;font-weight:750;line-height:1.45}
+    .clothing-dashboard .share-dashboard-header{border-left-color:#0B5ED7}
+    .clothing-dashboard .module-metrics div:nth-child(2)::before{background:#0B5ED7}
+    .clothing-dashboard .module-metrics div:nth-child(3)::before{background:#F59E0B}
+    .clothing-dashboard .module-metrics div:nth-child(4)::before{background:#18B877}
     @media (max-width:720px){.clothing-order-actions{grid-template-columns:1fr}}
 </style>
 @endpush

@@ -83,7 +83,6 @@
                         <div class="portal-home__announcement">
                             <div class="portal-home__announcement-top">
                                 <span class="portal-home__pill {{ $categoryClass($announcement->category) }}">{{ $categoryLabel($announcement->category) }}</span>
-                                <span class="portal-home__pill general">{{ $announcement->status_label }}</span>
                             </div>
                             <h3>{{ $announcement->title }}</h3>
                             <p>{{ $announcement->body }}</p>

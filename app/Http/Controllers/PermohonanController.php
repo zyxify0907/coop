@@ -529,7 +529,22 @@ class PermohonanController extends Controller
             }
 
             $this->audit($request, $actorRole, $actorId, $validated['status'], 'permohonan', $permohonan, 'Status permohonan dikemaskini kepada '.$validated['status'].'.');
-            $this->notifyApplicant($permohonan, 'Status permohonan dikemaskini', 'Permohonan anda kini berstatus '.str_replace('_', ' ', $validated['status']).'.', $this->applicantNotificationLink($permohonan));
+
+            if ($isDecisionAction && $previousStatus !== $validated['status'] && $permohonan->jenis === 'anggota' && $validated['status'] === 'diluluskan') {
+                $this->notifyApplicant(
+                    $permohonan,
+                    'Permohonan Anggota Diluluskan',
+                    'Tahniah! Permohonan anda untuk menjadi anggota koperasi telah diluluskan.',
+                    $this->applicantNotificationLink($permohonan)
+                );
+            } elseif ($isDecisionAction && $previousStatus !== $validated['status']) {
+                $this->notifyApplicant(
+                    $permohonan,
+                    'Status permohonan dikemaskini',
+                    'Permohonan anda kini berstatus '.str_replace('_', ' ', $validated['status']).'.',
+                    $this->applicantNotificationLink($permohonan)
+                );
+            }
         });
 
         return redirect()->route('admin.permohonan.show', $permohonan)->with('status', 'Status permohonan berjaya dikemaskini.');
@@ -732,7 +747,12 @@ class PermohonanController extends Controller
             ]);
 
             $this->audit($request, $actorRole, $actorId, 'approve', 'share_addition', $application, 'Permohonan tambah saham diluluskan.');
-            $this->notifyApplicant($application, 'Tambah saham diluluskan', 'Permohonan tambah saham anda telah diluluskan.', route('student.permohonan.index', ['jenis' => 'saham']));
+            $this->notifyApplicant(
+                $application,
+                'Permohonan Tambahan Saham Diluluskan',
+                'Tahniah! Permohonan tambahan saham anda telah diluluskan dan rekod saham anda telah dikemas kini.',
+                $this->applicantNotificationLink($application)
+            );
         });
 
         $statusMessage = $this->isStaffApplication($application)

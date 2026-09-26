@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Announcement;
+use App\Models\Pekerja;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -29,12 +30,7 @@ class AnnouncementController extends Controller
 
     public function adminIndex(Request $request): View|RedirectResponse
     {
-        if ($request->session()->get('auth_role') !== 'admin') {
-            return redirect()->route('login');
-        }
-
-        $role = 'admin';
-        $user = $this->currentUser($request);
+        ['role' => $role, 'user' => $user] = $this->announcementManager($request);
         $announcements = Announcement::query()
             ->orderByDesc('is_pinned')
             ->latest()
@@ -45,12 +41,7 @@ class AnnouncementController extends Controller
 
     public function create(Request $request): View|RedirectResponse
     {
-        if ($request->session()->get('auth_role') !== 'admin') {
-            return redirect()->route('login');
-        }
-
-        $role = 'admin';
-        $user = $this->currentUser($request);
+        ['role' => $role, 'user' => $user] = $this->announcementManager($request);
         $announcement = new Announcement(['audience' => 'all', 'category' => 'General', 'is_active' => true]);
 
         return view('admin.announcements.form', compact('role', 'user', 'announcement'));
@@ -58,10 +49,11 @@ class AnnouncementController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $this->ensureAdmin($request);
+        $this->announcementManager($request);
 
         Announcement::query()->create($this->validated($request) + [
             'created_by' => $request->session()->get('auth_id'),
+            'created_by_role' => $request->session()->get('auth_role'),
         ]);
 
         return redirect()->route('admin.announcements.index')->with('status', 'Announcement berjaya ditambah.');
@@ -69,19 +61,14 @@ class AnnouncementController extends Controller
 
     public function edit(Request $request, Announcement $announcement): View|RedirectResponse
     {
-        if ($request->session()->get('auth_role') !== 'admin') {
-            return redirect()->route('login');
-        }
-
-        $role = 'admin';
-        $user = $this->currentUser($request);
+        ['role' => $role, 'user' => $user] = $this->announcementManager($request);
 
         return view('admin.announcements.form', compact('role', 'user', 'announcement'));
     }
 
     public function update(Request $request, Announcement $announcement): RedirectResponse
     {
-        $this->ensureAdmin($request);
+        $this->announcementManager($request);
         $announcement->update($this->validated($request));
 
         return redirect()->route('admin.announcements.index')->with('status', 'Announcement berjaya dikemaskini.');
@@ -89,7 +76,7 @@ class AnnouncementController extends Controller
 
     public function destroy(Request $request, Announcement $announcement): RedirectResponse
     {
-        $this->ensureAdmin($request);
+        $this->systemAdmin($request);
         $announcement->delete();
 
         return redirect()->route('admin.announcements.index')->with('status', 'Announcement berjaya dipadam.');
@@ -112,7 +99,28 @@ class AnnouncementController extends Controller
         ];
     }
 
-    private function ensureAdmin(Request $request): void
+    /**
+     * @return array{role: string, user: mixed}
+     */
+    private function announcementManager(Request $request): array
+    {
+        $role = (string) $request->session()->get('auth_role');
+        $user = $this->currentUser($request);
+        $isAuthorisedStaff = $role === 'staff'
+            && $user instanceof Pekerja
+            && $user->status_aktif
+            && in_array($user->staff_type, [
+                Pekerja::SHARE_MANAGER_STAFF_TYPE,
+                'clothing_staff',
+                Pekerja::COOP_MANAGER_STAFF_TYPE,
+            ], true);
+
+        abort_unless($role === 'admin' || $isAuthorisedStaff, 403);
+
+        return compact('role', 'user');
+    }
+
+    private function systemAdmin(Request $request): void
     {
         abort_unless($request->session()->get('auth_role') === 'admin', 403);
     }

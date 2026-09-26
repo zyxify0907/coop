@@ -682,13 +682,14 @@
                     </div>
                 @endif
 
-                <div class="field-block field-block--full">
-                    <label for="catatan_pelajar">Catatan Tambahan</label>
-                    <textarea id="catatan_pelajar" name="catatan_pelajar" rows="3">{{ old('catatan_pelajar') }}</textarea>
-                </div>
-
-                <div class="field-block field-block--full">
-                    <button class="button" type="submit">Hantar Permohonan</button>
+                <div class="section-block field-block--full application-submit-block">
+                    <div class="field-block">
+                        <label for="catatan_pelajar">Catatan Tambahan</label>
+                        <textarea id="catatan_pelajar" name="catatan_pelajar" rows="3">{{ old('catatan_pelajar') }}</textarea>
+                    </div>
+                    <div class="application-submit-block__action">
+                        <button class="button" type="submit">Hantar Permohonan</button>
+                    </div>
                 </div>
             </form>
         </section>
@@ -858,6 +859,16 @@
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 18px;
+        }
+        .application-submit-block {
+            display: grid;
+            gap: 18px;
+        }
+        .application-submit-block__action {
+            display: flex;
+            justify-content: flex-end;
+            padding-top: 16px;
+            border-top: 1px solid #dbe7ff;
         }
         .subsection-title {
             margin: 2px 0 0;

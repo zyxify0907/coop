@@ -82,6 +82,7 @@
         ['section' => 'SAHAM', 'label' => 'Senarai Transaksi', 'route' => 'koperasi.transactions.index', 'active' => 'koperasi.transactions.*', 'icon' => 'chart'],
         ['section' => 'Tempahan Baju', 'label' => 'Stok Baju', 'route' => 'clothing-staff.baju.index', 'active' => 'clothing-staff.baju.*', 'icon' => 'box'],
         ['section' => 'Tempahan Baju', 'label' => 'Senarai Tempahan', 'route' => 'clothing-staff.orders.index', 'active' => 'clothing-staff.orders.*', 'icon' => 'clipboard'],
+        ['section' => 'Pengurusan', 'label' => 'Urus Pengumuman', 'route' => 'admin.announcements.index', 'active' => 'admin.announcements.*', 'icon' => 'clipboard'],
     ];
 
     $shareStaffLinks = [
@@ -156,6 +157,7 @@
         ],
         'clothing_staff' => [
             $clothingStaffLinks[0],
+            ['section' => 'Pengurusan', 'label' => 'Pengumuman', 'route' => 'admin.announcements.index', 'active' => 'admin.announcements.*', 'icon' => 'clipboard'],
             ['section' => 'Saham', 'label' => 'Saham', 'route' => 'clothing-staff.dashboard.saham', 'active' => ['clothing-staff.dashboard.saham', 'clothing-staff.permohonan.*', 'student.permohonan.status', 'koperasi.transactions.*'], 'icon' => 'chart'],
             [
                 'section' => 'Tempahan',
@@ -163,6 +165,7 @@
                 'active' => ['clothing-staff.dashboard.baju', 'clothing-staff.baju.*', 'clothing-staff.orders.*'],
                 'icon' => 'box',
                 'children' => [
+                    ['label' => 'Dashboard Baju', 'route' => 'clothing-staff.dashboard.baju', 'active' => 'clothing-staff.dashboard.baju'],
                     ['label' => 'Stok Baju', 'route' => 'clothing-staff.baju.index', 'active' => 'clothing-staff.baju.*'],
                     ['label' => 'Senarai Tempahan', 'route' => 'clothing-staff.orders.index', 'active' => 'clothing-staff.orders.*'],
                 ],
@@ -170,11 +173,13 @@
         ],
         'share_staff' => [
             $shareStaffLinks[0],
+            ['section' => 'Pengurusan', 'label' => 'Pengumuman', 'route' => 'admin.announcements.index', 'active' => 'admin.announcements.*', 'icon' => 'clipboard'],
             $shareStaffLinks[1],
             $shareStaffManagementDropdown,
         ],
         'coop_manager' => [
             $coopManagerLinks[0],
+            ['section' => 'Pengurusan', 'label' => 'Pengumuman', 'route' => 'admin.announcements.index', 'active' => 'admin.announcements.*', 'icon' => 'clipboard'],
             $coopManagerLinks[1],
             $coopManagerManagementDropdown,
         ],
@@ -485,6 +490,9 @@
             color: var(--sidebar-text);
             font-weight: 700;
             font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
             transition: all var(--transition-fast);
         }
 
@@ -498,6 +506,12 @@
             background: var(--sidebar-active-bg);
             color: var(--sidebar-active);
             border-left: 3px solid #1D4ED8;
+        }
+
+        .nav-link__label {
+            display: block;
+            min-width: max-content;
+            white-space: nowrap;
         }
 
         .nav-icon {
@@ -2372,10 +2386,10 @@
         }
 
         .view-dialog--attendance {
-            width: min(1280px, calc(100vw - 32px)) !important;
-            max-width: 1280px !important;
-            height: min(88dvh, 860px) !important;
-            max-height: calc(100dvh - 32px) !important;
+            width: min(1080px, calc(100vw - 96px)) !important;
+            max-width: 1080px !important;
+            height: min(80dvh, 760px) !important;
+            max-height: calc(100dvh - 96px) !important;
         }
 
         .view-dialog::backdrop {
@@ -2703,7 +2717,7 @@
                                         <rect x="4" y="14" width="6" height="6" rx="1"/>
                                 @endswitch
                             </svg>
-                            {{ $link['label'] }}
+                            <span class="nav-link__label">{{ $link['label'] }}</span>
                         </a>
                     @endforeach
                 </nav>
@@ -2766,9 +2780,6 @@
                 <div class="topbar-actions">
                     @yield('page-actions')
                     @if ($showAccountTools)
-                        <button class="icon-button" type="button" aria-label="Toggle theme" title="Toggle theme">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.9 15.1A8 8 0 1 1 8.9 3.1a6 6 0 0 0 12 12Z"/></svg>
-                        </button>
                         <details class="notification-menu">
                             <summary class="icon-button notification-trigger" aria-label="Notifikasi" title="Notifikasi">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 6.5-3 7-3 9h18c0-2-3-2.5-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>

@@ -15,9 +15,10 @@
 @push('styles')
 <style>
     .attendance-records-table {
-        min-width: 1260px;
+        min-width: 1180px;
         border-collapse: separate;
         border-spacing: 0;
+        table-layout: fixed;
     }
 
     .attendance-records-table tbody tr {
@@ -30,15 +31,21 @@
 
     .attendance-records-table td {
         border-bottom: 0;
-        vertical-align: top;
+        vertical-align: middle;
+        padding-top: 16px;
+        padding-bottom: 16px;
     }
 
     .attendance-records-table__staff {
-        width: 240px;
+        width: 230px;
     }
 
     .attendance-records-table__staff-cell {
-        min-width: 240px;
+        min-width: 230px;
+    }
+
+    .attendance-records-table__date {
+        width: 118px;
     }
 
     .attendance-records-table__date,
@@ -51,25 +58,38 @@
         white-space: nowrap;
     }
 
+    .attendance-records-table__date,
+    .attendance-records-table__date-cell,
+    .attendance-records-table__time,
+    .attendance-records-table__time-cell,
+    .attendance-records-table__duration,
+    .attendance-records-table__duration-cell,
+    .attendance-records-table__status,
+    .attendance-records-table td:nth-child(8),
+    .attendance-records-table__gps,
+    .attendance-records-table__gps-cell {
+        text-align: center;
+    }
+
     .attendance-records-table__time {
-        width: 110px;
+        width: 112px;
     }
 
     .attendance-records-table__duration {
-        width: 150px;
+        width: 142px;
     }
 
     .attendance-records-table__status {
-        width: 150px;
+        width: 142px;
     }
 
     .attendance-records-table__gps {
-        width: 130px;
+        width: 104px;
     }
 
     .attendance-records-table__action,
     .attendance-records-table__action-cell {
-        width: 220px;
+        width: 160px;
     }
 
     .attendance-records-table .attendance-person {
@@ -89,12 +109,13 @@
     }
 
     .attendance-records-table__action-cell {
-        padding-right: 20px;
+        padding-right: 14px;
     }
 
     .attendance-records-table .attendance-actions {
         flex-wrap: nowrap;
-        justify-content: flex-start;
+        justify-content: flex-end;
+        gap: 6px;
     }
 
     .attendance-records-table .attendance-actions form {
@@ -104,7 +125,15 @@
 
     .attendance-records-table .attendance-actions .attendance-secondary,
     .attendance-records-table .attendance-actions .attendance-danger {
-        min-width: 86px;
+        min-width: 68px;
+        min-height: 34px;
+        padding-inline: 10px;
+        font-size: 12px;
+    }
+
+    .attendance-records-table .attendance-badge {
+        margin-inline: auto;
+        min-width: 104px;
     }
 
     .view-dialog {

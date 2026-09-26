@@ -32,6 +32,7 @@
                     </div>
                     <p>{{ $announcement->body }}</p>
                     <footer>
+                        <span>Diumumkan oleh: {{ $announcement->announcer_name }}</span>
                         <span>Mula: {{ $announcement->starts_at?->format('d/m/Y') ?? '-' }}</span>
                         <span>Tamat: {{ $announcement->ends_at?->format('d/m/Y') ?? '-' }}</span>
                     </footer>

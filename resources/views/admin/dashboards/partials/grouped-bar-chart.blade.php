@@ -14,8 +14,8 @@
                 @php
                     $student = (int) ($item['pelajar'] ?? 0);
                     $staff = (int) ($item['staff'] ?? 0);
-                    $studentHeight = max(6, round(($student / $maxValue) * 100));
-                    $staffHeight = max(6, round(($staff / $maxValue) * 100));
+                    $studentHeight = min(84, max(6, round(($student / $maxValue) * 84)));
+                    $staffHeight = min(84, max(6, round(($staff / $maxValue) * 84)));
                 @endphp
                 <div class="grouped-chart__year">
                     <div class="grouped-chart__bars">

@@ -44,6 +44,7 @@
                             <th>Tajuk</th>
                             <th>Kategori</th>
                             <th>Sasaran</th>
+                            <th>Diumumkan Oleh</th>
                             <th>Tarikh</th>
                             <th>Status</th>
                             <th>Tindakan</th>
@@ -63,6 +64,7 @@
                                 </td>
                                 <td><code class="badge-code">{{ $announcement->category }}</code></td>
                                 <td>{{ $announcement->audience_label }}</td>
+                                <td>{{ $announcement->announcer_name }}</td>
                                 <td>{{ $announcement->starts_at?->format('d/m/Y') ?? '-' }} hingga {{ $announcement->ends_at?->format('d/m/Y') ?? '-' }}</td>
                                 <td>
                                     <span class="announcement-status {{ $announcement->is_active ? 'active' : 'inactive' }}">{{ $announcement->status_label }}</span>
@@ -70,17 +72,19 @@
                                 <td>
                                     <div class="announcement-actions">
                                         <a class="edit-button" href="{{ route('admin.announcements.edit', $announcement) }}">Edit</a>
-                                        <form method="POST" action="{{ route('admin.announcements.destroy', $announcement) }}" onsubmit="return confirm('Padam announcement ini?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button class="delete-button" type="submit">Delete</button>
-                                        </form>
+                                        @if ($role === 'admin')
+                                            <form method="POST" action="{{ route('admin.announcements.destroy', $announcement) }}" onsubmit="return confirm('Padam announcement ini?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button class="delete-button" type="submit">Delete</button>
+                                            </form>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6">
+                                <td colspan="7">
                                     <div class="empty-state">
                                         <strong>Tiada announcement lagi.</strong>
                                         <span>Klik Tambah Announcement untuk cipta pengumuman baru.</span>

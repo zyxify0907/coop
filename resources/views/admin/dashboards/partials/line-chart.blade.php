@@ -22,14 +22,19 @@
         ['value' => 0, 'y' => $plotBottom],
     ];
 
-    $pointData = collect($items)->values()->map(function ($item, $index) use ($maxValue, $plotLeft, $plotTop, $plotWidth, $plotHeight, $count) {
+    $pointData = collect($items)->values()->map(function ($item, $index) use ($maxValue, $plotLeft, $plotTop, $plotWidth, $plotHeight, $plotBottom, $count) {
         $value = (float) ($item['value'] ?? 0);
+        $x = $plotLeft + (($plotWidth / $count) * $index);
+        $y = $plotTop + ($plotHeight - (($value / $maxValue) * $plotHeight));
+        $labelOffset = 22;
+        $valueLabelY = min($plotBottom - 10, $y + $labelOffset + 12);
 
         return [
             'label' => $item['label'] ?? '-',
             'value' => $value,
-            'x' => $plotLeft + (($plotWidth / $count) * $index),
-            'y' => $plotTop + ($plotHeight - (($value / $maxValue) * $plotHeight)),
+            'x' => $x,
+            'y' => $y,
+            'valueLabelY' => $valueLabelY,
         ];
     });
 
@@ -79,7 +84,7 @@
             <path class="line-chart__line" d="{{ $linePath }}"/>
         @endif
         @foreach ($pointData as $point)
-            <text class="line-chart__value-label" x="{{ round($point['x'], 2) }}" y="{{ round(max(16, $point['y'] - 14), 2) }}" text-anchor="middle">{{ $moneyTick((float) $point['value']) }}</text>
+            <text class="line-chart__value-label" x="{{ round($point['x'], 2) }}" y="{{ round($point['valueLabelY'], 2) }}" text-anchor="middle">{{ $moneyTick((float) $point['value']) }}</text>
             <circle class="line-chart__dot" cx="{{ round($point['x'], 2) }}" cy="{{ round($point['y'], 2) }}" r="5">
                 <title>{{ $point['label'] }}: RM {{ number_format((float) $point['value'], 2) }}</title>
             </circle>

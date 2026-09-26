@@ -383,6 +383,7 @@ class AttendanceController extends Controller
         return view('attendance.admin.show', [
             'role' => $request->session()->get('auth_role'), 'user' => $admin,
             'record' => $record->load(['staff', 'corrections.reviewer']),
+            'statuses' => $this->statusLabels(),
         ]);
     }
 
@@ -439,7 +440,7 @@ class AttendanceController extends Controller
     {
         $admin = $this->systemAdmin($request);
         $status = (string) $request->query('status', 'pending');
-        $corrections = AttendanceCorrection::query()->with(['staff', 'attendance', 'reviewer'])
+        $corrections = AttendanceCorrection::query()->with(['staff', 'attendance.staff', 'reviewer'])
             ->when(in_array($status, ['pending', 'approved', 'rejected'], true), fn ($query) => $query->where('status', $status))
             ->latest()->paginate(30)->withQueryString();
 

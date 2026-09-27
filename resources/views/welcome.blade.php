@@ -58,7 +58,7 @@
 
             <div class="home-hero__right">
                 <figure class="home-visual">
-                    <img src="{{ asset('images/coopbest-store-hero.png') }}" alt="Visual konsep kedai koperasi kampus dengan buku, alat tulis, beg dan baju polo">
+                    <img src="{{ asset('images/coopbest-mart-front.jpeg') }}" alt="CoopBest Mart di Koperasi Politeknik Besut">
                     <figcaption>
                         <strong>Koperasi Politeknik Besut</strong>
                         <span><i aria-hidden="true"></i>Portal untuk pelajar, staf dan pekerja koperasi</span>

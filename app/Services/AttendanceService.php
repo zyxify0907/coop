@@ -18,7 +18,7 @@ class AttendanceService
             'work_end_time' => '17:00:00',
             'break_start_time' => '13:00:00',
             'break_end_time' => '14:00:00',
-            'grace_period_minutes' => 10,
+            'grace_period_minutes' => 15,
             'full_day_minutes' => 480,
             'half_day_rate_multiplier' => 0.50,
             'checkout_cutoff_time' => '20:00:00',

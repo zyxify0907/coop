@@ -134,7 +134,7 @@
                     @if ($isCoopWorkerCreate)
                         <div class="field">
                             <label for="kadar_elaun">Kadar Elaun</label>
-                            <input id="kadar_elaun" name="kadar_elaun" type="number" min="0" step="0.01" value="{{ old('kadar_elaun', 0) }}">
+                            <input id="kadar_elaun" name="kadar_elaun" type="number" min="0" step="0.01" value="{{ old('kadar_elaun', 40) }}">
                         </div>
                     @endif
                 @endif

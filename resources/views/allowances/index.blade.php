@@ -8,6 +8,7 @@
     @include('attendance.partials.styles')
     @php
         $duration = fn ($minutes) => intdiv((int) ($minutes ?? 0), 60).' jam '.((int) ($minutes ?? 0) % 60).' minit';
+        $monthName = \Carbon\CarbonImmutable::create((int) $filters['year'], (int) $filters['month'], 1)->locale('ms')->translatedFormat('F Y');
         $statusLabels = [
             'present' => 'Hadir', 'late' => 'Lewat', 'early_leave' => 'Keluar Awal',
             'missing_checkout' => 'Tiada Check Out', 'outside_area' => 'Di Luar Kawasan',
@@ -58,7 +59,7 @@
         @unless($ownView)
             <section class="attendance-panel">
                 <div class="allowance-actions">
-                    <a class="attendance-primary" target="_blank" href="{{ route('admin.allowances.pdf', ['staff_id' => $staff->id_pekerja, 'month' => $filters['month'], 'year' => $filters['year']]) }}">Export PDF</a>
+                    <a class="attendance-primary" href="{{ route('admin.allowances.pdf', ['staff_id' => $staff->id_pekerja, 'month' => $filters['month'], 'year' => $filters['year']]) }}">Print / Save PDF</a>
                     @if($allowanceStatus !== 'completed')
                         <form method="POST" action="{{ route('admin.allowances.complete') }}">
                             @csrf
@@ -119,6 +120,58 @@
             </div>
         </section>
     </div>
+
+    <section class="allowance-print-report" aria-hidden="true">
+        <header class="allowance-print-report__head">
+            <div>
+                <h1>Elaun Bulanan Pekerja Koperasi</h1>
+                <p>{{ $staff->nama }} ({{ $staff->no_pekerja }})</p>
+                <p>Bulan: {{ $monthName }}</p>
+            </div>
+            <div class="allowance-print-report__rate">
+                <span>Kadar Harian</span>
+                <strong>RM {{ number_format((float) $staff->kadar_elaun, 2) }}</strong>
+            </div>
+        </header>
+
+        <section class="allowance-print-summary">
+            <div><span>Jumlah Hadir</span><strong>{{ $summary['present_days'] }}</strong></div>
+            <div><span>Hari Penuh</span><strong>{{ $summary['full_days'] }}</strong></div>
+            <div><span>Jumlah Lewat</span><strong>{{ $summary['late_minutes'] }} minit</strong></div>
+            <div><span>Jumlah Minit</span><strong>{{ $summary['total_minutes'] }}</strong></div>
+            <div><span>Jumlah Elaun</span><strong>RM {{ number_format((float) ($monthlyAllowance?->total_allowance ?? $summary['total_allowance']), 2) }}</strong></div>
+        </section>
+
+        <table class="allowance-print-table">
+            <thead>
+                <tr>
+                    <th>Tarikh</th><th>Check In</th><th>Check Out</th><th>Jumlah Jam</th><th>Jumlah Minit</th><th>Minit Lewat</th><th>Kadar Harian</th><th>Elaun</th><th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($records as $record)
+                    <tr>
+                        <td>{{ $record->attendance_date->format('d/m/Y') }}</td>
+                        <td>{{ $record->check_in_time?->timezone('Asia/Kuala_Lumpur')->format('h:i A') ?? '-' }}</td>
+                        <td>{{ $record->check_out_time?->timezone('Asia/Kuala_Lumpur')->format('h:i A') ?? '-' }}</td>
+                        <td>{{ $record->check_out_time ? $duration($record->total_minutes) : '-' }}</td>
+                        <td>{{ $record->check_out_time ? $record->total_minutes : '-' }}</td>
+                        <td>{{ $record->late_minutes }}</td>
+                        <td>RM {{ number_format((float) $record->daily_rate, 2) }}</td>
+                        <td>RM {{ number_format((float) $record->allowance_amount, 2) }}</td>
+                        <td>{{ $statusLabels[$record->status] ?? $record->status }}</td>
+                    </tr>
+                @empty
+                    <tr><td colspan="9">Tiada rekod kehadiran untuk pilihan ini.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+
+        <footer class="allowance-print-signatures">
+            <div>Disediakan oleh</div>
+            <div>Disahkan oleh</div>
+        </footer>
+    </section>
 @endsection
 
 @push('styles')
@@ -129,6 +182,30 @@
     .allowance-table{min-width:1220px}
     .allowance-table td,.allowance-table th{white-space:nowrap}
     .allowance-table .attendance-person{min-width:220px;white-space:normal}
+    .allowance-print-report{display:none}
+    @media print{
+        @page{size:A4 landscape;margin:12mm}
+        body *{visibility:hidden!important}
+        .allowance-print-report,.allowance-print-report *{visibility:visible!important}
+        .allowance-print-report{display:block!important;position:fixed;inset:0;width:100%;color:#111827;background:#fff;font-family:Arial,sans-serif}
+        .allowance-print-report__head{display:flex;justify-content:space-between;gap:24px;padding-bottom:12px;margin-bottom:16px;border-bottom:2px solid #111827}
+        .allowance-print-report h1{margin:0 0 6px;font-size:20px}
+        .allowance-print-report p{margin:0 0 3px;font-size:11px}
+        .allowance-print-report__rate{text-align:right}
+        .allowance-print-report__rate span{display:block;font-size:11px}
+        .allowance-print-report__rate strong{display:block;margin-top:4px;font-size:20px}
+        .allowance-print-summary{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid #cbd5e1;margin-bottom:16px}
+        .allowance-print-summary div{padding:9px;border-right:1px solid #cbd5e1}
+        .allowance-print-summary div:last-child{border-right:0}
+        .allowance-print-summary span{display:block;font-size:9px;font-weight:700;text-transform:uppercase;color:#475569}
+        .allowance-print-summary strong{display:block;margin-top:4px;font-size:13px}
+        .allowance-print-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:9px}
+        .allowance-print-table th,.allowance-print-table td{padding:6px 5px;border:1px solid #94a3b8;vertical-align:middle;white-space:nowrap}
+        .allowance-print-table th{background:#e2e8f0!important;font-size:8px;text-align:center;text-transform:uppercase;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+        .allowance-print-table td:nth-child(5),.allowance-print-table td:nth-child(6),.allowance-print-table td:nth-child(7),.allowance-print-table td:nth-child(8){text-align:right}
+        .allowance-print-signatures{display:grid;grid-template-columns:1fr 1fr;gap:80px;margin-top:30px}
+        .allowance-print-signatures div{padding-top:38px;border-top:1px solid #111827;text-align:center;font-size:11px}
+    }
     @media(max-width:1100px){.allowance-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
     @media(max-width:680px){.allowance-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.allowance-actions{align-items:stretch;flex-direction:column}.allowance-actions form,.allowance-actions button{width:100%}}
 </style>

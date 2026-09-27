@@ -37,7 +37,8 @@
         .right{text-align:right}
         .foot{margin-top:28px;display:grid;grid-template-columns:1fr 1fr;gap:80px}
         .sign{padding-top:42px;border-top:1px solid #111827;text-align:center}
-        @media print{.sheet{max-width:none;padding:0}.head{margin-top:0}@page{size:A4 landscape;margin:12mm}}
+        @page{size:A4 landscape;margin:12mm}
+        @media print{.sheet{max-width:none;padding:0}.head{margin-top:0}}
     </style>
 </head>
 <body>

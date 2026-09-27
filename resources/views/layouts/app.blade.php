@@ -39,31 +39,31 @@
 
     $adminLinks = [
         ['section' => 'Home', 'label' => 'Admin Home', 'route' => 'auth.dashboard', 'active' => 'auth.dashboard', 'icon' => 'grid'],
-        ['section' => 'Dashboard', 'label' => 'Dashboard Saham', 'route' => 'admin.dashboard.saham', 'active' => 'admin.dashboard.saham', 'icon' => 'chart'],
-        ['section' => 'Dashboard', 'label' => 'Dashboard Baju', 'route' => 'admin.dashboard.baju', 'active' => 'admin.dashboard.baju', 'icon' => 'box'],
-        ['section' => 'Dashboard', 'label' => 'Dashboard Kehadiran', 'route' => 'admin.attendance.dashboard', 'active' => 'admin.attendance.dashboard', 'icon' => 'clipboard'],
-        ['section' => 'Kehadiran Pekerja', 'label' => 'Rekod Kehadiran', 'route' => 'admin.attendance.records', 'active' => 'admin.attendance.records*', 'icon' => 'book'],
+        ['section' => 'Kehadiran Pekerja', 'label' => 'Dashboard Kehadiran', 'route' => 'admin.attendance.dashboard', 'active' => 'admin.attendance.dashboard', 'icon' => 'chart'],
+        ['section' => 'Kehadiran Pekerja', 'label' => 'Rekod Kehadiran', 'route' => 'admin.attendance.records', 'active' => 'admin.attendance.records*', 'icon' => 'clipboard'],
         ['section' => 'Kehadiran Pekerja', 'label' => 'Elaun Bulanan', 'route' => 'admin.allowances.index', 'active' => 'admin.allowances.*', 'icon' => 'cash'],
         ['section' => 'Kehadiran Pekerja', 'label' => 'Tetapan Attendance', 'route' => 'admin.attendance.settings', 'active' => 'admin.attendance.settings*', 'icon' => 'book'],
+        ['section' => 'SAHAM', 'label' => 'Dashboard Saham', 'route' => 'admin.dashboard.saham', 'active' => 'admin.dashboard.saham', 'icon' => 'chart'],
         ['section' => 'SAHAM', 'label' => 'Permohonan Student', 'route' => 'admin.permohonan.index', 'params' => ['pemohon' => 'pelajar'], 'active' => 'admin.permohonan.*', 'audience' => 'pelajar', 'icon' => 'clipboard'],
-        ['section' => 'SAHAM', 'label' => 'Permohonan Staff', 'route' => 'admin.permohonan.index', 'params' => ['pemohon' => 'staff'], 'active' => 'admin.permohonan.*', 'audience' => 'staff', 'icon' => 'shield'],
+        ['section' => 'SAHAM', 'label' => 'Permohonan Staff', 'route' => 'admin.permohonan.index', 'params' => ['pemohon' => 'staff'], 'active' => 'admin.permohonan.*', 'audience' => 'staff', 'icon' => 'clipboard'],
         ['section' => 'SAHAM', 'label' => 'Anggota Student', 'route' => 'admin.anggota.students', 'active' => 'admin.anggota.students', 'icon' => 'users'],
-        ['section' => 'SAHAM', 'label' => 'Anggota Staff', 'route' => 'admin.anggota.staff', 'active' => 'admin.anggota.staff', 'icon' => 'shield'],
-        ['section' => 'SAHAM', 'label' => 'Saham', 'route' => 'admin.saham.index', 'active' => 'admin.saham.*', 'icon' => 'chart'],
-        ['section' => 'SAHAM', 'label' => 'Transaksi Saham', 'route' => 'koperasi.transactions.index', 'active' => 'koperasi.transactions.*', 'icon' => 'chart'],
+        ['section' => 'SAHAM', 'label' => 'Anggota Staff', 'route' => 'admin.anggota.staff', 'active' => 'admin.anggota.staff', 'icon' => 'users'],
+        ['section' => 'SAHAM', 'label' => 'Saham', 'route' => 'admin.saham.index', 'active' => 'admin.saham.*', 'icon' => 'cash'],
+        ['section' => 'SAHAM', 'label' => 'Transaksi Saham', 'route' => 'koperasi.transactions.index', 'active' => 'koperasi.transactions.*', 'icon' => 'cash'],
+        ['section' => 'Tempahan Baju', 'label' => 'Dashboard Baju', 'route' => 'admin.dashboard.baju', 'active' => 'admin.dashboard.baju', 'icon' => 'chart'],
         ['section' => 'Tempahan Baju', 'label' => 'Senarai Tempahan', 'route' => 'admin.tempahan.index', 'active' => 'admin.tempahan.*', 'icon' => 'clipboard'],
         ['section' => 'Tempahan Baju', 'label' => 'Stok Baju', 'route' => 'admin.baju.index', 'active' => 'admin.baju.index', 'icon' => 'box'],
         ['section' => 'Pengguna', 'label' => 'Senarai Student', 'route' => 'admin.users.students', 'active' => 'admin.users.students', 'icon' => 'users'],
-        ['section' => 'Pengguna', 'label' => 'Senarai Staff', 'route' => 'admin.users.staff', 'active' => 'admin.users.staff', 'icon' => 'shield'],
+        ['section' => 'Pengguna', 'label' => 'Senarai Staff', 'route' => 'admin.users.staff', 'active' => 'admin.users.staff', 'icon' => 'users'],
         ['section' => 'Pengguna', 'label' => 'Senarai Pekerja Koperasi', 'route' => 'admin.users.coop-workers', 'active' => 'admin.users.coop-workers', 'icon' => 'users'],
         ['section' => 'Pengurusan', 'label' => 'Urus Announcement', 'route' => 'admin.announcements.index', 'active' => 'admin.announcements.*', 'icon' => 'clipboard'],
     ];
 
     $lecturerLinks = [
         ['section' => 'Home', 'label' => 'Home', 'route' => 'lecturer-member.dashboard', 'active' => 'lecturer-member.dashboard', 'icon' => 'grid'],
-        ['section' => 'Dashboard', 'label' => 'Dashboard Saham', 'route' => 'lecturer-member.dashboard.saham', 'active' => 'lecturer-member.dashboard.saham', 'icon' => 'chart'],
+        ['section' => 'SAHAM', 'label' => 'Dashboard Saham', 'route' => 'lecturer-member.dashboard.saham', 'active' => 'lecturer-member.dashboard.saham', 'icon' => 'chart'],
         ['section' => 'SAHAM', 'label' => 'Permohonan Anggota', 'route' => 'lecturer-member.permohonan.index', 'active' => 'lecturer-member.permohonan.*', 'icon' => 'clipboard'],
-        ['section' => 'SAHAM', 'label' => 'Semak Permohonan', 'route' => 'student.permohonan.status', 'active' => 'student.permohonan.status', 'icon' => 'book'],
+        ['section' => 'SAHAM', 'label' => 'Semak Permohonan', 'route' => 'student.permohonan.status', 'active' => 'student.permohonan.status', 'icon' => 'clipboard'],
         ['section' => 'SAHAM', 'label' => 'Senarai Transaksi', 'route' => 'koperasi.transactions.index', 'active' => 'koperasi.transactions.*', 'icon' => 'chart'],
     ];
 
@@ -75,11 +75,11 @@
 
     $clothingStaffLinks = [
         ['section' => 'Home', 'label' => 'Home', 'route' => 'clothing-staff.dashboard', 'active' => 'clothing-staff.dashboard', 'icon' => 'grid'],
-        ['section' => 'Dashboard', 'label' => 'Dashboard Saham', 'route' => 'clothing-staff.dashboard.saham', 'active' => 'clothing-staff.dashboard.saham', 'icon' => 'chart'],
-        ['section' => 'Dashboard', 'label' => 'Dashboard Baju', 'route' => 'clothing-staff.dashboard.baju', 'active' => 'clothing-staff.dashboard.baju', 'icon' => 'box'],
+        ['section' => 'SAHAM', 'label' => 'Dashboard Saham', 'route' => 'clothing-staff.dashboard.saham', 'active' => 'clothing-staff.dashboard.saham', 'icon' => 'chart'],
         ['section' => 'SAHAM', 'label' => 'Permohonan', 'route' => 'clothing-staff.permohonan.index', 'active' => 'clothing-staff.permohonan.*', 'icon' => 'clipboard'],
-        ['section' => 'SAHAM', 'label' => 'Semak Permohonan', 'route' => 'student.permohonan.status', 'active' => 'student.permohonan.status', 'icon' => 'book'],
+        ['section' => 'SAHAM', 'label' => 'Semak Permohonan', 'route' => 'student.permohonan.status', 'active' => 'student.permohonan.status', 'icon' => 'clipboard'],
         ['section' => 'SAHAM', 'label' => 'Senarai Transaksi', 'route' => 'koperasi.transactions.index', 'active' => 'koperasi.transactions.*', 'icon' => 'chart'],
+        ['section' => 'Tempahan Baju', 'label' => 'Dashboard Baju', 'route' => 'clothing-staff.dashboard.baju', 'active' => 'clothing-staff.dashboard.baju', 'icon' => 'chart'],
         ['section' => 'Tempahan Baju', 'label' => 'Stok Baju', 'route' => 'clothing-staff.baju.index', 'active' => 'clothing-staff.baju.*', 'icon' => 'box'],
         ['section' => 'Tempahan Baju', 'label' => 'Senarai Tempahan', 'route' => 'clothing-staff.orders.index', 'active' => 'clothing-staff.orders.*', 'icon' => 'clipboard'],
         ['section' => 'Pengurusan', 'label' => 'Urus Pengumuman', 'route' => 'admin.announcements.index', 'active' => 'admin.announcements.*', 'icon' => 'clipboard'],
@@ -87,13 +87,13 @@
 
     $shareStaffLinks = [
         ['section' => 'Home', 'label' => 'Home', 'route' => 'share-staff.dashboard', 'active' => 'share-staff.dashboard', 'icon' => 'grid'],
-        ['section' => 'Saham', 'label' => 'Saham', 'route' => 'share-staff.dashboard.saham', 'active' => ['share-staff.dashboard.saham', 'share-staff.shares', 'share-staff.permohonan.*', 'student.permohonan.status'], 'icon' => 'chart'],
+        ['section' => 'Saham', 'label' => 'Saham', 'route' => 'share-staff.dashboard.saham', 'active' => ['share-staff.dashboard.saham', 'share-staff.shares', 'share-staff.permohonan.*', 'student.permohonan.status'], 'icon' => 'cash'],
         ['section' => 'SAHAM', 'label' => 'Permohonan Pelajar', 'route' => 'admin.permohonan.index', 'params' => ['pemohon' => 'pelajar'], 'active' => 'admin.permohonan.*', 'icon' => 'clipboard'],
-        ['section' => 'SAHAM', 'label' => 'Permohonan Staff', 'route' => 'admin.permohonan.index', 'params' => ['pemohon' => 'staff'], 'active' => 'admin.permohonan.*', 'icon' => 'shield'],
-        ['section' => 'SAHAM', 'label' => 'Rumusan Saham', 'route' => 'admin.saham.index', 'params' => ['kategori' => 'rumusan'], 'active' => 'admin.saham.*', 'icon' => 'chart'],
-        ['section' => 'SAHAM', 'label' => 'Senarai Saham', 'route' => 'admin.saham.index', 'active' => 'admin.saham.*', 'icon' => 'book'],
-        ['section' => 'SAHAM', 'label' => 'Transaksi Saham', 'route' => 'koperasi.transactions.index', 'active' => 'koperasi.transactions.*', 'icon' => 'chart'],
-        ['section' => 'Saham Sendiri', 'label' => 'Saham', 'route' => 'share-staff.shares', 'active' => ['share-staff.shares', 'share-staff.permohonan.*'], 'icon' => 'shield'],
+        ['section' => 'SAHAM', 'label' => 'Permohonan Staff', 'route' => 'admin.permohonan.index', 'params' => ['pemohon' => 'staff'], 'active' => 'admin.permohonan.*', 'icon' => 'clipboard'],
+        ['section' => 'SAHAM', 'label' => 'Rumusan Saham', 'route' => 'admin.saham.index', 'params' => ['kategori' => 'rumusan'], 'active' => 'admin.saham.*', 'icon' => 'cash'],
+        ['section' => 'SAHAM', 'label' => 'Senarai Saham', 'route' => 'admin.saham.index', 'active' => 'admin.saham.*', 'icon' => 'cash'],
+        ['section' => 'SAHAM', 'label' => 'Transaksi Saham', 'route' => 'koperasi.transactions.index', 'active' => 'koperasi.transactions.*', 'icon' => 'cash'],
+        ['section' => 'Saham Sendiri', 'label' => 'Saham', 'route' => 'share-staff.shares', 'active' => ['share-staff.shares', 'share-staff.permohonan.*'], 'icon' => 'cash'],
     ];
 
     $shareStaffManagementDropdown = [
@@ -112,9 +112,9 @@
 
     $coopManagerLinks = [
         ['section' => 'Home', 'label' => 'Home', 'route' => 'coop-manager.dashboard', 'active' => 'coop-manager.dashboard', 'icon' => 'grid'],
-        ['section' => 'Saham', 'label' => 'Saham', 'route' => 'coop-manager.dashboard.saham', 'active' => ['coop-manager.dashboard.saham', 'coop-manager.shares', 'coop-manager.permohonan.*', 'student.permohonan.status'], 'icon' => 'chart'],
+        ['section' => 'Saham', 'label' => 'Saham', 'route' => 'coop-manager.dashboard.saham', 'active' => ['coop-manager.dashboard.saham', 'coop-manager.shares', 'coop-manager.permohonan.*', 'student.permohonan.status'], 'icon' => 'cash'],
         ['section' => 'Pekerja Koperasi', 'label' => 'Senarai Pekerja Koperasi', 'route' => 'admin.users.coop-workers', 'active' => 'admin.users.coop-workers', 'icon' => 'users'],
-        ['section' => 'Kehadiran Pekerja', 'label' => 'Rekod Kehadiran', 'route' => 'admin.attendance.records', 'active' => 'admin.attendance.records*', 'icon' => 'book'],
+        ['section' => 'Kehadiran Pekerja', 'label' => 'Rekod Kehadiran', 'route' => 'admin.attendance.records', 'active' => 'admin.attendance.records*', 'icon' => 'clipboard'],
         ['section' => 'Kehadiran Pekerja', 'label' => 'Elaun Bulanan', 'route' => 'admin.allowances.index', 'active' => 'admin.allowances.*', 'icon' => 'cash'],
     ];
 
@@ -131,7 +131,7 @@
 
     $studentLinks = [
         ['section' => 'Home', 'label' => 'Home', 'route' => 'auth.dashboard', 'active' => 'auth.dashboard', 'icon' => 'grid'],
-        ['section' => 'Saham', 'label' => 'Saham', 'route' => 'student.dashboard.saham', 'active' => ['student.dashboard.saham', 'student.permohonan.*', 'koperasi.transactions.*'], 'icon' => 'chart'],
+        ['section' => 'Saham', 'label' => 'Saham', 'route' => 'student.dashboard.saham', 'active' => ['student.dashboard.saham', 'student.permohonan.*', 'koperasi.transactions.*'], 'icon' => 'cash'],
         ['section' => 'Tempahan', 'label' => 'Tempahan', 'route' => 'student.tempahan.index', 'active' => 'student.tempahan.*', 'icon' => 'box'],
     ];
 
@@ -153,12 +153,12 @@
     $staffTopLinks = match ($staffType) {
         'lecturer_member' => [
             $lecturerLinks[0],
-            ['section' => 'Saham', 'label' => 'Saham', 'route' => 'lecturer-member.dashboard.saham', 'active' => ['lecturer-member.dashboard.saham', 'lecturer-member.permohonan.*', 'student.permohonan.status', 'koperasi.transactions.*'], 'icon' => 'chart'],
+            ['section' => 'Saham', 'label' => 'Saham', 'route' => 'lecturer-member.dashboard.saham', 'active' => ['lecturer-member.dashboard.saham', 'lecturer-member.permohonan.*', 'student.permohonan.status', 'koperasi.transactions.*'], 'icon' => 'cash'],
         ],
         'clothing_staff' => [
             $clothingStaffLinks[0],
             ['section' => 'Pengurusan', 'label' => 'Pengumuman', 'route' => 'admin.announcements.index', 'active' => 'admin.announcements.*', 'icon' => 'clipboard'],
-            ['section' => 'Saham', 'label' => 'Saham', 'route' => 'clothing-staff.dashboard.saham', 'active' => ['clothing-staff.dashboard.saham', 'clothing-staff.permohonan.*', 'student.permohonan.status', 'koperasi.transactions.*'], 'icon' => 'chart'],
+            ['section' => 'Saham', 'label' => 'Saham', 'route' => 'clothing-staff.dashboard.saham', 'active' => ['clothing-staff.dashboard.saham', 'clothing-staff.permohonan.*', 'student.permohonan.status', 'koperasi.transactions.*'], 'icon' => 'cash'],
             [
                 'section' => 'Tempahan',
                 'label' => 'Tempahan',

@@ -4,9 +4,6 @@
     $notificationTitle = null;
     $notificationLink = null;
     $suppressDialogNotice = request()->boolean('dialog');
-    $unreadPopupNotification = isset($headerNotifications)
-        ? $headerNotifications->first(fn ($notification) => ! $notification->read_at)
-        : null;
 
     if ($suppressDialogNotice) {
         $notificationType = null;
@@ -22,11 +19,6 @@
         $notificationType = 'success';
         $notificationTitle = 'Berjaya';
         $notificationMessage = session('success') ?: session('status');
-    } elseif ($unreadPopupNotification) {
-        $notificationType = 'success';
-        $notificationTitle = $unreadPopupNotification->title;
-        $notificationMessage = $unreadPopupNotification->message ?? 'Sila semak notifikasi anda.';
-        $notificationLink = $unreadPopupNotification->link;
     }
 @endphp
 
@@ -159,7 +151,7 @@
         closeButton.type = 'button';
         closeButton.dataset.systemNoticeClose = '';
         closeButton.setAttribute('aria-label', 'Tutup notifikasi');
-        closeButton.textContent = '×';
+        closeButton.textContent = 'x';
 
         notice.append(icon, copy, closeButton);
         document.body.append(notice);

@@ -73,7 +73,7 @@
                             <h3>{{ $announcement->title }}</h3>
                             <p>{{ $announcement->body }}</p>
                             <div class="admin-announcement-item__meta">
-                                <span>Dicipta oleh {{ $announcement->created_by ? 'Admin #'.$announcement->created_by : 'Admin' }}</span>
+                                <span>Dicipta oleh {{ $announcement->announcer_name }}</span>
                                 <span>{{ $announcement->created_at?->format('d/m/Y') ?? '-' }}</span>
                                 <span>Tamat: {{ $announcement->ends_at?->format('d/m/Y') ?? '-' }}</span>
                             </div>

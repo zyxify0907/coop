@@ -111,6 +111,7 @@
                         <div class="baju-meta-text">
                             <span>Jumlah stok: {{ $item->total_stock }}</span>
                             <span>Harga: {{ $money($item->harga) }}</span>
+                            <span>{{ $item->is_visible ? 'Dipaparkan kepada pelajar' : 'Disorok daripada pelajar' }}</span>
                         </div>
                     </div>
                 </div>

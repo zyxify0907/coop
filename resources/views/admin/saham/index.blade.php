@@ -1380,17 +1380,17 @@
                 <table class="print-table">
                     <colgroup>
                         <col style="width: 3%;">
-                        <col style="width: 18%;">
-                        <col style="width: 8%;">
+                        <col style="width: 19%;">
+                        <col style="width: 9%;">
                         <col style="width: 10%;">
                         <col style="width: 6%;">
                         <col style="width: 5%;">
                         <col style="width: 8%;">
                         <col style="width: 7%;">
                         <col style="width: 8%;">
-                        <col style="width: 7%;">
-                        <col style="width: 6%;">
-                        <col style="width: 7%;">
+                        <col style="width: 8%;">
+                        <col style="width: 8%;">
+                        <col style="width: 9%;">
                     </colgroup>
                     <thead>
                         <tr>
@@ -1715,38 +1715,63 @@
             return;
         }
 
-        const printWindow = window.open('', '_blank', 'width=1200,height=820');
-
-        if (!printWindow) {
-            window.print();
-            return;
-        }
-
         const title = report.querySelector('.print-report__title')?.textContent.trim() || 'Laporan Saham';
-        const reportMarkup = report.outerHTML.replace(' aria-hidden="true"', '');
+        const originalTitle = document.title;
+        const printMarkup = report.outerHTML.replace(' aria-hidden="true"', '');
+        const printStyles = document.createElement('style');
+        const printRoot = document.createElement('div');
 
-        printWindow.document.open();
-        printWindow.document.write(`<!doctype html>
-<html lang="ms"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title}</title>
-<style>
-    @page { size: A4 landscape; margin: 8mm; }
-    * { box-sizing: border-box; }
-    body { margin: 0; color: #111827; background: #f1f5f9; font-family: Arial, sans-serif; }
-    .print-preview-actions { display: flex; justify-content: flex-end; width: min(1240px, calc(100% - 32px)); margin: 18px auto 0; }
-    .print-preview-actions button { min-height: 40px; padding: 0 16px; border: 0; border-radius: 6px; background: #2453a6; color: #fff; font: 700 14px Arial, sans-serif; cursor: pointer; }
-    .print-preview-actions button:hover { background: #1e40af; }
-    .print-report { display: block; width: 100%; }
-    .print-preview-sheet { width: min(1240px, calc(100% - 32px)); margin: 16px auto 32px; padding: 22px; background: #fff; box-shadow: 0 10px 30px rgba(15, 23, 42, .14); }
-    .print-report__title { margin: 0; padding: 0 0 6px; border-bottom: 1px solid #111827; text-align: center; font-size: 15px; font-weight: 700; letter-spacing: .04em; }
-    .print-report__meta { margin: 8px 0 10px; font-size: 9px; }
-    .print-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 8px; }
-    .print-table th, .print-table td { padding: 4px 3px; border: 1px solid #94a3b8; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
-    .print-table th { background: #e2e8f0; font-size: 7.5px; font-weight: 700; text-align: center; }
-    .print-report__name { display: block; font-weight: 700; }
-    @media print { body { padding: 0; background: #fff; } .print-preview-actions { display: none; } .print-preview-sheet { width: 100%; margin: 0; padding: 0; box-shadow: none; } }
-</style></head><body><div class="print-preview-actions"><button type="button" onclick="window.print()">Print / Save PDF</button></div><main class="print-preview-sheet">${reportMarkup}</main></body></html>`);
-        printWindow.document.close();
-        printWindow.focus();
+        printStyles.id = 'saham-print-styles';
+        printStyles.textContent = `
+            @page { size: A4 landscape; margin: 8mm; }
+            @media print {
+                body > *:not(#saham-print-root) { display: none !important; }
+                #saham-print-root { display: block !important; color: #111827; background: #fff; font-family: Arial, sans-serif; }
+                #saham-print-root .print-report { display: block !important; width: 100%; color: #111827; background: #fff; font-family: Arial, sans-serif; }
+                #saham-print-root .print-report__title { margin: 0; padding: 0 0 6px; border-bottom: 1px solid #111827; text-align: center; font-size: 15px; font-weight: 700; letter-spacing: .04em; }
+                #saham-print-root .print-report__meta { margin: 8px 0 10px; font-size: 9px; }
+                #saham-print-root .print-table { width: 100% !important; min-width: 0 !important; border-collapse: collapse; border-spacing: 0; table-layout: fixed; font-size: 8px; line-height: 1.2; }
+                #saham-print-root .print-table col { box-sizing: border-box; }
+                #saham-print-root .print-table th,
+                #saham-print-root .print-table td { box-sizing: border-box; padding: 3px 2px; border: 1px solid #94a3b8; color: #111827 !important; font-size: 8px !important; line-height: 1.2 !important; letter-spacing: 0 !important; vertical-align: middle; overflow: hidden !important; text-overflow: clip; white-space: nowrap; word-break: normal; overflow-wrap: normal; }
+                #saham-print-root .print-table th:last-child,
+                #saham-print-root .print-table td:last-child { width: auto !important; min-width: 0 !important; max-width: none !important; }
+                #saham-print-root .print-table th { background: #e2e8f0 !important; font-size: 7px !important; font-weight: 700; text-align: center; text-transform: uppercase; white-space: normal !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+                #saham-print-root .print-table td:nth-child(1),
+                #saham-print-root .print-table td:nth-child(3),
+                #saham-print-root .print-table td:nth-child(4),
+                #saham-print-root .print-table td:nth-child(5),
+                #saham-print-root .print-table td:nth-child(6),
+                #saham-print-root .print-table td:nth-child(7),
+                #saham-print-root .print-table td:nth-child(12) { text-align: center; }
+                #saham-print-root .print-table td:nth-child(8),
+                #saham-print-root .print-table td:nth-child(9),
+                #saham-print-root .print-table td:nth-child(10),
+                #saham-print-root .print-table td:nth-child(11) { text-align: right; }
+                #saham-print-root .print-table--staff td:nth-child(6),
+                #saham-print-root .print-table--staff td:nth-child(7),
+                #saham-print-root .print-table--staff td:nth-child(8),
+                #saham-print-root .print-table--staff td:nth-child(9) { text-align: right; }
+                #saham-print-root .print-table--staff td:nth-child(10) { text-align: center; }
+                #saham-print-root .print-report__name { display: block; width: 100%; overflow: hidden !important; text-overflow: ellipsis; white-space: nowrap !important; font-size: 8px !important; line-height: 1.2 !important; letter-spacing: 0 !important; font-weight: 700; }
+            }
+        `;
+
+        printRoot.id = 'saham-print-root';
+        printRoot.innerHTML = printMarkup;
+        document.head.appendChild(printStyles);
+        document.body.appendChild(printRoot);
+        document.title = title;
+
+        const cleanup = () => {
+            printRoot.remove();
+            printStyles.remove();
+            document.title = originalTitle;
+            window.removeEventListener('afterprint', cleanup);
+        };
+
+        window.addEventListener('afterprint', cleanup);
+        window.print();
     }
 </script>
 @endpush

@@ -297,6 +297,7 @@ class OperationsController extends Controller
             'role' => 'ahli',
             'user' => $user,
             'items' => $this->studentBajuItemsQuery()
+                ->where('item_baju.is_visible', true)
                 ->where('item_baju.stok_tertinggal', '>', 0)
                 ->orderBy('item_baju.nama_item')
                 ->orderByRaw("FIELD(UPPER(item_baju.saiz), 'S', 'M', 'L', 'XL', 'XXL')")
@@ -323,6 +324,10 @@ class OperationsController extends Controller
 
         $item = DB::table('item_baju')->where('id_item', $validated['item_id'])->first();
         abort_if(! $item, 404);
+
+        if (! (bool) $item->is_visible) {
+            return back()->withErrors(['item_id' => 'Baju ini tidak tersedia untuk tempahan pelajar.'])->withInput();
+        }
 
         $cart = $request->session()->get($this->studentOrderCartKey(), []);
         $itemId = (string) $item->id_item;
@@ -369,6 +374,10 @@ class OperationsController extends Controller
         $item = DB::table('item_baju')->where('id_item', $itemId)->first();
         abort_if(! $item, 404);
 
+        if (! (bool) $item->is_visible) {
+            return back()->withErrors(['cart' => 'Baju ini tidak lagi tersedia untuk tempahan pelajar.']);
+        }
+
         if ((int) $item->stok_tertinggal < (int) $validated['quantity']) {
             return back()->withErrors(['quantity' => 'Kuantiti melebihi stok baju semasa.'])->withInput();
         }
@@ -397,6 +406,7 @@ class OperationsController extends Controller
             $itemIds = array_map('intval', array_keys($cart));
             $items = DB::table('item_baju')
                 ->whereIn('id_item', $itemIds)
+                ->where('is_visible', true)
                 ->lockForUpdate()
                 ->get()
                 ->keyBy('id_item');
@@ -464,6 +474,10 @@ class OperationsController extends Controller
         if (Schema::hasTable('item_baju')) {
             $item = DB::table('item_baju')->where('id_item', $validated['item_id'])->first();
             abort_if(! $item, 404);
+
+            if (! (bool) $item->is_visible) {
+                return back()->withErrors(['item_id' => 'Baju ini tidak tersedia untuk tempahan pelajar.'])->withInput();
+            }
 
             if ((int) $item->stok_tertinggal < $validated['quantity']) {
                 return back()->withErrors(['quantity' => 'Kuantiti melebihi stok baju semasa.'])->withInput();
@@ -797,6 +811,7 @@ class OperationsController extends Controller
                 'item_baju.harga',
                 'item_baju.stok_tertinggal',
                 'item_baju.image_path',
+            'item_baju.is_visible',
                 'kategori_baju.nama_kategori',
             ])
             ->orderBy('item_baju.nama_item')
@@ -809,6 +824,7 @@ class OperationsController extends Controller
                 $item->id_kategori ?? 'none',
                 number_format((float) $item->harga, 2, '.', ''),
                 $item->image_path ?? 'none',
+                (int) $item->is_visible,
             ]))
             ->map(function ($group) {
                 $first = $group->first();
@@ -897,6 +913,7 @@ class OperationsController extends Controller
                 'harga' => $validated['harga'],
                 'stok_tertinggal' => (int) $stock,
                 'image_path' => $imagePath,
+                'is_visible' => true,
             ])
             ->values()
             ->all();
@@ -948,6 +965,7 @@ class OperationsController extends Controller
             'stok_saiz' => ['required', 'array'],
             'stok_saiz.*' => ['nullable', 'integer', 'min:0'],
             'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'is_visible' => ['nullable', 'boolean'],
         ]);
 
         $item = DB::table('item_baju')->where('id_item', $id)->first();
@@ -955,6 +973,9 @@ class OperationsController extends Controller
 
         $groupRows = $this->bajuGroupRows($item);
         $imagePath = $item->image_path;
+        $isVisible = array_key_exists('is_visible', $validated)
+            ? (bool) $validated['is_visible']
+            : (bool) $item->is_visible;
 
         if ($request->hasFile('image')) {
             $this->deleteBajuImage($imagePath);
@@ -963,7 +984,7 @@ class OperationsController extends Controller
 
         $categoryId = array_key_exists('id_kategori', $validated) ? $validated['id_kategori'] : $item->id_kategori;
 
-        DB::transaction(function () use ($validated, $groupRows, $imagePath, $categoryId): void {
+        DB::transaction(function () use ($validated, $groupRows, $imagePath, $categoryId, $isVisible): void {
             $existingBySize = $groupRows->keyBy(fn ($row) => strtoupper((string) $row->saiz));
 
             foreach ($validated['stok_saiz'] as $size => $stock) {
@@ -977,6 +998,7 @@ class OperationsController extends Controller
                     'harga' => $validated['harga'],
                     'stok_tertinggal' => $stock,
                     'image_path' => $imagePath,
+                    'is_visible' => $isVisible,
                 ];
 
                 if ($existing) {

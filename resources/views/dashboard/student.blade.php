@@ -32,7 +32,7 @@
                 <img class="student-welcome-banner__watermark" src="{{ asset('images/koperasi-logo.svg') }}" alt="" aria-hidden="true">
                 <span class="student-home-redesign__mark"></span>
                 <span class="student-welcome-banner__kicker">PORTAL PELAJAR COOPBEST</span>
-                <h1>Selamat Datang, {{ $user->nama }}</h1>
+                <h1>{{ $user->nama }}</h1>
                 <p>{{ $studentDepartment }}</p>
             </div>
             <span class="student-welcome-banner__divider" aria-hidden="true"></span>

@@ -606,6 +606,10 @@
         font-weight: 500;
     }
     .login-input-wrap input::placeholder { color: #7A8798; }
+    .login-input-wrap input[type="password"]::-ms-reveal,
+    .login-input-wrap input[type="password"]::-ms-clear {
+        display: none;
+    }
     .password-toggle {
         width: 42px;
         height: 42px;

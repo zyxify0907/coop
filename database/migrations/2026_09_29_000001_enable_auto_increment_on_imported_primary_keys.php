@@ -44,6 +44,25 @@ return new class extends Migration
 
         foreach ($autoIncrementColumns as $table => [$column, $type]) {
             if (Schema::hasTable($table) && Schema::hasColumn($table, $column)) {
+                $hasLeadingIndex = DB::selectOne(
+                    'SELECT 1 FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ? AND SEQ_IN_INDEX = 1 LIMIT 1',
+                    [$table, $column],
+                );
+
+                if (! $hasLeadingIndex) {
+                    $hasPrimaryKey = DB::selectOne(
+                        'SELECT 1 FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND INDEX_NAME = ? LIMIT 1',
+                        [$table, 'PRIMARY'],
+                    );
+
+                    if ($hasPrimaryKey) {
+                        $index = 'uq_ai_'.$table.'_'.$column;
+                        DB::statement("ALTER TABLE `{$table}` ADD UNIQUE KEY `{$index}` (`{$column}`)");
+                    } else {
+                        DB::statement("ALTER TABLE `{$table}` ADD PRIMARY KEY (`{$column}`)");
+                    }
+                }
+
                 DB::statement("ALTER TABLE `{$table}` MODIFY `{$column}` {$type} NOT NULL AUTO_INCREMENT");
             }
         }

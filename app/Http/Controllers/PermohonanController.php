@@ -45,11 +45,19 @@ class PermohonanController extends Controller
             }
 
             $staffMemberNumber = $this->staffMemberNumber($user);
-            if (! $staffMemberNumber) {
+            $hasApprovedMembership = Permohonan::query()
+                ->whereNull('id_ahli')
+                ->where('no_matrik', $user->no_pekerja)
+                ->where('jenis', 'anggota')
+                ->where('status', 'diluluskan')
+                ->exists();
+            if ($staffMemberNumber || $hasApprovedMembership) {
+                unset($types['anggota']);
+            } else {
                 $types = collect($types)->only('anggota')->all();
             }
 
-            $defaultType = $staffMemberNumber ? 'saham' : 'anggota';
+            $defaultType = isset($types['anggota']) ? 'anggota' : 'saham';
             $activeType = $jenis && isset($types[$jenis]) ? $jenis : $defaultType;
             $portalRoutes = $this->staffPortalRoutes($user->staff_type);
 
@@ -80,11 +88,18 @@ class PermohonanController extends Controller
 
         $types = $this->applicationTypesForRole('ahli');
 
-        if (blank($user->no_anggota)) {
+        $hasApprovedMembership = Permohonan::query()
+            ->where('id_ahli', $user->id_ahli)
+            ->where('jenis', 'anggota')
+            ->where('status', 'diluluskan')
+            ->exists();
+        if (filled($user->no_anggota) || $hasApprovedMembership) {
+            unset($types['anggota']);
+        } else {
             $types = collect($types)->only('anggota')->all();
         }
 
-        $activeType = $jenis && isset($types[$jenis]) ? $jenis : 'anggota';
+        $activeType = $jenis && isset($types[$jenis]) ? $jenis : (isset($types['anggota']) ? 'anggota' : 'saham');
 
         return view('student.permohonan.index', [
             'role' => 'ahli',
@@ -182,6 +197,20 @@ class PermohonanController extends Controller
         }
 
         $types = $this->applicationTypesForRole($authRole, $authRole === 'staff' ? $user->staff_type : null);
+        $hasMemberNumber = $authRole === 'staff'
+            ? filled($this->staffMemberNumber($user))
+            : filled($user->no_anggota);
+        $approvedMembershipQuery = Permohonan::query()
+            ->where('jenis', 'anggota')
+            ->where('status', 'diluluskan');
+        if ($authRole === 'staff') {
+            $approvedMembershipQuery->whereNull('id_ahli')->where('no_matrik', $user->no_pekerja);
+        } else {
+            $approvedMembershipQuery->where('id_ahli', $user->id_ahli);
+        }
+        if ($hasMemberNumber || $approvedMembershipQuery->exists()) {
+            unset($types['anggota']);
+        }
         abort_unless(isset($types[$jenis]), 404);
 
         $isStaffApplicant = $authRole === 'staff';

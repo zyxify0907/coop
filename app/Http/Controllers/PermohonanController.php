@@ -91,12 +91,13 @@ class PermohonanController extends Controller
         $hasApprovedMembership = Permohonan::query()
             ->where(function ($query) use ($user): void {
                 $query->where('id_ahli', $user->id_ahli)
-                    ->orWhere('no_matrik', $user->no_matrik);
+                    ->orWhere('no_matrik', $user->no_matrik)
+                    ->orWhere('data_permohonan->no_matrik', $user->no_matrik);
             })
             ->where('jenis', 'anggota')
             ->where('status', 'diluluskan')
             ->exists();
-        if (filled($user->no_anggota) || $user->saham !== null || $hasApprovedMembership) {
+        if (filled($user->no_anggota) || $hasApprovedMembership) {
             unset($types['anggota']);
         } else {
             $types = collect($types)->only('anggota')->all();
@@ -202,7 +203,7 @@ class PermohonanController extends Controller
         $types = $this->applicationTypesForRole($authRole, $authRole === 'staff' ? $user->staff_type : null);
         $hasMemberNumber = $authRole === 'staff'
             ? filled($this->staffMemberNumber($user))
-            : (filled($user->no_anggota) || $user->saham !== null);
+            : filled($user->no_anggota);
         $approvedMembershipQuery = Permohonan::query()
             ->where('jenis', 'anggota')
             ->where('status', 'diluluskan');
@@ -211,7 +212,8 @@ class PermohonanController extends Controller
         } else {
             $approvedMembershipQuery->where(function ($query) use ($user): void {
                 $query->where('id_ahli', $user->id_ahli)
-                    ->orWhere('no_matrik', $user->no_matrik);
+                    ->orWhere('no_matrik', $user->no_matrik)
+                    ->orWhere('data_permohonan->no_matrik', $user->no_matrik);
             });
         }
         if ($hasMemberNumber || $approvedMembershipQuery->exists()) {

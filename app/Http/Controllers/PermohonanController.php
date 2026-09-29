@@ -147,6 +147,7 @@ class PermohonanController extends Controller
                 'applications' => Permohonan::query()
                     ->whereNull('id_ahli')
                     ->where('no_matrik', $user->no_pekerja)
+                    ->whereNot(fn ($query) => $query->where('jenis', 'anggota')->where('status', 'diluluskan'))
                     ->latest('tarikh_permohonan')
                     ->latest('id_permohonan')
                     ->paginate(15, ['*'], 'applications_page'),
@@ -172,6 +173,7 @@ class PermohonanController extends Controller
             'createRoute' => 'student.permohonan.index',
             'applications' => Permohonan::query()
                 ->where('id_ahli', $user->id_ahli)
+                ->whereNot(fn ($query) => $query->where('jenis', 'anggota')->where('status', 'diluluskan'))
                 ->latest('tarikh_permohonan')
                 ->latest('id_permohonan')
                 ->paginate(15, ['*'], 'applications_page'),

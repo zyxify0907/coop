@@ -102,12 +102,12 @@
                                 </select>
                                 <input name="tarikh_siap" type="date" value="{{ $order->tarikh_siap }}">
                                 <input name="tarikh_ambil" type="date" value="{{ $order->tarikh_ambil }}">
-                                <button class="button" type="submit">Simpan</button>
+                                <button class="button" type="submit">Kemaskini</button>
                             </form>
                             <form method="POST" action="{{ route($orderRoutes['destroy'], $order->id_tempahan) }}" onsubmit="return confirm('Padam tempahan ini?');" style="margin-top:8px">
                                 @csrf
                                 @method('DELETE')
-                                <button class="link-button danger" type="submit">Delete</button>
+                                <button class="link-button danger" type="submit">Padam</button>
                             </form>
                         </td>
                     </tr>

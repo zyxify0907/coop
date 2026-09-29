@@ -187,11 +187,11 @@
                         </td>
                         <td>
                             <div class="list-actions">
-                                <button class="button action-save" type="submit" form="{{ $updateFormId }}">Simpan</button>
+                                <button class="button action-save" type="submit" form="{{ $updateFormId }}">Kemaskini</button>
                                 <form method="POST" action="{{ route($tempahanRoutes['destroy'], $updateId) }}" onsubmit="return confirm('Padam tempahan ini?');" class="delete-form">
                                     @csrf
                                     @method('DELETE')
-                                    <button class="action-delete" type="submit">Delete</button>
+                                    <button class="action-delete" type="submit">Padam</button>
                                 </form>
                             </div>
                         </td>

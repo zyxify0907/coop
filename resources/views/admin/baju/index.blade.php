@@ -116,11 +116,11 @@
                     </div>
                 </div>
                 <div class="baju-card__buttons">
-                    <a class="button" href="{{ route($bajuRoutes['edit'], $item->id_item) }}">Edit</a>
+                    <a class="button" href="{{ route($bajuRoutes['edit'], $item->id_item) }}">Kemaskini</a>
                     <form method="POST" action="{{ route($bajuRoutes['destroy'], $item->id_item) }}" onsubmit="return confirm('Padam baju ini?');">
                         @csrf
                         @method('DELETE')
-                        <button class="link-button danger" type="submit">Delete</button>
+                        <button class="link-button danger" type="submit">Padam</button>
                     </form>
                 </div>
             </article>

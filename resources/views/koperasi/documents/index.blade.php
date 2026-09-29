@@ -146,7 +146,7 @@
                                         <form method="POST" action="{{ route('koperasi.documents.destroy', $document) }}" onsubmit="return confirm('Padam dokumen ini?');">
                                             @csrf
                                             @method('DELETE')
-                                            <button class="action-delete" type="submit">Delete</button>
+                                            <button class="action-delete" type="submit">Padam</button>
                                         </form>
                                     </div>
                                 </td>

@@ -64,14 +64,12 @@
                                 </td>
                                 <td>
                                     <div class="announcement-actions">
-                                        <a class="edit-button" href="{{ route('admin.announcements.edit', $announcement) }}">Edit</a>
-                                        @if ($role === 'admin')
-                                            <form method="POST" action="{{ route('admin.announcements.destroy', $announcement) }}" onsubmit="return confirm('Padam announcement ini?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button class="delete-button" type="submit">Delete</button>
-                                            </form>
-                                        @endif
+                                        <a class="edit-button" href="{{ route('admin.announcements.edit', $announcement) }}">Kemaskini</a>
+                                        <form method="POST" action="{{ route('admin.announcements.destroy', $announcement) }}" onsubmit="return confirm('Padam pengumuman ini?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="delete-button" type="submit">Padam</button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>

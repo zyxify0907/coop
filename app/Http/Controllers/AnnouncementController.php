@@ -76,7 +76,7 @@ class AnnouncementController extends Controller
 
     public function destroy(Request $request, Announcement $announcement): RedirectResponse
     {
-        $this->systemAdmin($request);
+        $this->announcementManager($request);
         $announcement->delete();
 
         return redirect()->route('admin.announcements.index')->with('status', 'Announcement berjaya dipadam.');
@@ -118,11 +118,6 @@ class AnnouncementController extends Controller
         abort_unless($role === 'admin' || $isAuthorisedStaff, 403);
 
         return compact('role', 'user');
-    }
-
-    private function systemAdmin(Request $request): void
-    {
-        abort_unless($request->session()->get('auth_role') === 'admin', 403);
     }
 
     private function currentUser(Request $request): mixed

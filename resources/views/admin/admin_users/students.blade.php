@@ -192,12 +192,12 @@
                             <td>
                                 <div class="student-action-buttons">
                                     <a class="student-edit-button" href="{{ route('admin.users.edit', ['type' => 'student', 'id' => $student->id_ahli]) }}">
-                                        Edit
+                                        Kemaskini
                                     </a>
                                     <form class="student-delete-form" method="POST" action="{{ route('admin.users.destroy', ['type' => 'student', 'id' => $student->id_ahli]) }}" data-student-name="{{ $student->nama }}">
                                         @csrf
                                         @method('DELETE')
-                                        <button class="student-delete-button" type="submit">Delete</button>
+                                        <button class="student-delete-button" type="submit">Padam</button>
                                     </form>
                                 </div>
                             </td>

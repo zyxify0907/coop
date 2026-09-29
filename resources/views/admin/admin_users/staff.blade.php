@@ -161,11 +161,11 @@
                             @endif
                             <td>
                                 <div class="action-buttons">
-                                    <a class="edit-button" href="{{ route('admin.users.edit', ['type' => 'staff', 'id' => $member->id_pekerja]) }}">Edit</a>
+                                    <a class="edit-button" href="{{ route('admin.users.edit', ['type' => 'staff', 'id' => $member->id_pekerja]) }}">Kemaskini</a>
                                     <form method="POST" action="{{ route('admin.users.destroy', ['type' => 'staff', 'id' => $member->id_pekerja]) }}" onsubmit="return confirm('Padam staff ini? Tindakan ini tidak boleh dibatalkan.');">
                                         @csrf
                                         @method('DELETE')
-                                        <button class="delete-button" type="submit">Delete</button>
+                                        <button class="delete-button" type="submit">Padam</button>
                                     </form>
                                 </div>
                             </td>

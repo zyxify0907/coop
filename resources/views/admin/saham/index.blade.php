@@ -488,6 +488,27 @@
         white-space: nowrap;
     }
 
+    .share-edit-details { position: relative; }
+    .share-edit-details > summary { list-style: none; cursor: pointer; }
+    .share-edit-details > summary::-webkit-details-marker { display: none; }
+    .share-edit-form {
+        position: absolute;
+        z-index: 5;
+        top: calc(100% + 6px);
+        right: 0;
+        display: grid !important;
+        gap: 9px;
+        width: 220px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, .16);
+    }
+    .share-edit-form label { display: grid; gap: 4px; color: var(--muted); font-size: 11px; font-weight: 800; text-align: left; }
+    .share-edit-form input { width: 100%; min-height: 34px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; }
+    .share-edit-form .button { width: 100%; min-height: 34px; }
+
     .summary-table {
         max-width: 920px;
         min-width: 820px;
@@ -1352,10 +1373,24 @@
                                             <span class="link-button" aria-disabled="true">Profil Tiada</span>
                                         @endif
                                         @if ($role === 'admin' || ($role === 'staff' && ($user->staff_type ?? null) === \App\Models\Pekerja::SHARE_MANAGER_STAFF_TYPE))
+                                            <details class="share-edit-details">
+                                                <summary class="link-button">Kemaskini</summary>
+                                                <form method="POST" action="{{ route('admin.saham.update', $record) }}" class="share-edit-form">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    <label>Jumlah Saham (RM)
+                                                        <input name="jumlah_saham" type="number" min="0" step="0.01" value="{{ (float) $record->syer + (float) $record->tambahan_saham }}" required>
+                                                    </label>
+                                                    <label>Yuran (RM)
+                                                        <input name="yuran" type="number" min="0" step="0.01" value="{{ (float) $record->yuran }}" required>
+                                                    </label>
+                                                    <button class="button" type="submit">Simpan Kemaskini</button>
+                                                </form>
+                                            </details>
                                             <form method="POST" action="{{ route('admin.saham.destroy', $record) }}" onsubmit="return confirm('Padam rekod saham ini?');">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button class="link-button danger" type="submit">Delete</button>
+                                                <button class="link-button danger" type="submit">Padam</button>
                                             </form>
                                         @endif
                                     </div>
@@ -1529,10 +1564,21 @@
                                             <a class="button profile-button" href="{{ route('admin.users.edit', ['type' => 'staff', 'id' => $staff->id_pekerja]) }}">Lihat Profil</a>
                                         @endif
                                         @if ($role === 'admin' || ($role === 'staff' && ($user->staff_type ?? null) === \App\Models\Pekerja::SHARE_MANAGER_STAFF_TYPE))
+                                            <details class="share-edit-details">
+                                                <summary class="link-button">Kemaskini</summary>
+                                                <form method="POST" action="{{ route('admin.saham.staff.update', $staff) }}" class="share-edit-form">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    <label>Jumlah Saham (RM)
+                                                        <input name="jumlah_saham" type="number" min="0" step="0.01" value="{{ $staffTotalShare }}" required>
+                                                    </label>
+                                                    <button class="button" type="submit">Simpan Kemaskini</button>
+                                                </form>
+                                            </details>
                                             <form method="POST" action="{{ route('admin.saham.staff.destroy', $staff) }}" onsubmit="return confirm('Padam rekod saham staff ini?');">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button class="link-button danger" type="submit">Delete</button>
+                                                <button class="link-button danger" type="submit">Padam</button>
                                             </form>
                                         @endif
                                     </div>

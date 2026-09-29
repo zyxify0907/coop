@@ -25,6 +25,11 @@
         $notificationsCount = count($home['messages']);
         $activitiesCount = count($home['recent_activities']);
         $recentActivities = collect($home['recent_activities'])->take(3);
+        $canManageAnnouncements = in_array($staffType, [
+            \App\Models\Pekerja::SHARE_MANAGER_STAFF_TYPE,
+            'clothing_staff',
+            \App\Models\Pekerja::COOP_MANAGER_STAFF_TYPE,
+        ], true);
     @endphp
 
     <div class="admin-home-content staff-home-content">
@@ -78,6 +83,9 @@
                         <h2>Pengumuman Terkini</h2>
                         <p>Makluman rasmi terkini untuk staff.</p>
                     </div>
+                    @if ($canManageAnnouncements)
+                        <a class="portal-home__primary" href="{{ route('admin.announcements.create') }}">Tambah</a>
+                    @endif
                 </header>
                 <div class="portal-home__stack">
                     @forelse ($home['announcements'] as $announcement)
@@ -89,8 +97,19 @@
                             <p>{{ $announcement->body }}</p>
                             <div class="portal-home__announcement-meta">
                                 <span>{{ $announcement->created_at?->format('d/m/Y') ?? '-' }}</span>
+                                <span>Oleh {{ $announcement->announcer_name }}</span>
                                 <span>Tamat: {{ $announcement->ends_at?->format('d/m/Y') ?? '-' }}</span>
                             </div>
+                            @if ($canManageAnnouncements)
+                                <div class="portal-home__announcement-actions">
+                                    <a href="{{ route('admin.announcements.edit', $announcement) }}">Kemaskini</a>
+                                    <form method="POST" action="{{ route('admin.announcements.destroy', $announcement) }}" onsubmit="return confirm('Padam pengumuman ini?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit">Padam</button>
+                                    </form>
+                                </div>
+                            @endif
                         </div>
                     @empty
                         <div class="portal-home__empty">
@@ -215,6 +234,12 @@
     .portal-home__announcement h3{color:#061E5C;font-size:clamp(18px,1.25vw,21px);line-height:1.2}
     .portal-home__announcement p{color:#31517D;font-size:14px;font-weight:650}
     .portal-home__announcement-meta{color:#2453A6;font-weight:800}
+    .portal-home__announcement-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .portal-home__announcement-actions form{margin:0}
+    .portal-home__announcement-actions a,.portal-home__announcement-actions button{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:0 15px;border:1px solid #9EC5FF;border-radius:6px;background:#fff;color:#0B5ED7;text-decoration:none;font:inherit;font-size:13px;font-weight:900;cursor:pointer}
+    .portal-home__announcement-actions button{border-color:#FECACA;background:#FEF2F2;color:#B91C1C}
+    .portal-home__announcement-actions a:hover{border-color:#0B5ED7;background:#EAF2FF}
+    .portal-home__announcement-actions button:hover{background:#FEE2E2}
     .portal-home__pill{min-height:28px;padding:0 13px}
     .portal-home__notice{padding:14px 16px;border:1px solid #C8DBF3;border-radius:10px;background:#fff}
     .portal-home__notice:hover{border-color:#9EC5FF;background:#FBFDFF;color:#082F59}
@@ -269,6 +294,7 @@
         .portal-home__welcome h1{max-width:100%;font-size:28px;white-space:normal}
         .portal-home__panel header{align-items:stretch;flex-direction:column}
         .portal-home__primary{width:100%}
+        .portal-home__announcement-actions,.portal-home__announcement-actions form,.portal-home__announcement-actions a,.portal-home__announcement-actions button{width:100%}
     }
 </style>
 @endpush

@@ -96,7 +96,7 @@ class PermohonanController extends Controller
             ->where('jenis', 'anggota')
             ->where('status', 'diluluskan')
             ->exists();
-        if (filled($user->no_anggota) || $hasApprovedMembership) {
+        if (filled($user->no_anggota) || $user->saham !== null || $hasApprovedMembership) {
             unset($types['anggota']);
         } else {
             $types = collect($types)->only('anggota')->all();
@@ -202,7 +202,7 @@ class PermohonanController extends Controller
         $types = $this->applicationTypesForRole($authRole, $authRole === 'staff' ? $user->staff_type : null);
         $hasMemberNumber = $authRole === 'staff'
             ? filled($this->staffMemberNumber($user))
-            : filled($user->no_anggota);
+            : (filled($user->no_anggota) || $user->saham !== null);
         $approvedMembershipQuery = Permohonan::query()
             ->where('jenis', 'anggota')
             ->where('status', 'diluluskan');

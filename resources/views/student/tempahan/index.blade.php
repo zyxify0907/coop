@@ -70,17 +70,6 @@
                                 <strong>{{ $itemName }}</strong>
                                 <span class="baju-card__price">{{ $money($preview->harga) }}</span>
                             </div>
-                            @if ($preview->size_chart_path)
-                                <button
-                                    class="size-chart-button"
-                                    type="button"
-                                    data-size-chart-open
-                                    data-size-chart-src="{{ asset($preview->size_chart_path) }}"
-                                    data-size-chart-title="Carta Saiz {{ $itemName }}"
-                                >
-                                    Lihat Carta Saiz
-                                </button>
-                            @endif
                             <div class="baju-card__sizes">
                                 @foreach ($variants as $variant)
                                     <button
@@ -100,6 +89,17 @@
                                 @csrf
                                 <input name="item_id" type="hidden" value="{{ (int) old('item_id') && $variants->contains('item_id', (int) old('item_id')) ? old('item_id') : '' }}" required>
                                 <div class="card-cart-form__row">
+                                    @if ($preview->size_chart_path)
+                                        <button
+                                            class="size-chart-button"
+                                            type="button"
+                                            data-size-chart-open
+                                            data-size-chart-src="{{ asset($preview->size_chart_path) }}"
+                                            data-size-chart-title="Carta Saiz {{ $itemName }}"
+                                        >
+                                            Lihat Carta Saiz
+                                        </button>
+                                    @endif
                                     <label>
                                         <span>KUANTITI</span>
                                         <input name="quantity" type="number" inputmode="numeric" min="1" value="{{ old('quantity', 1) }}" required>
@@ -1572,10 +1572,11 @@
         }
         .student-order-page .card-cart-form__row{
             display:grid;
-            grid-template-columns:82px minmax(0,1fr);
+            grid-template-columns:auto 82px minmax(0,1fr);
             gap:10px;
             align-items:end;
         }
+        .student-order-page .card-cart-form__row .size-chart-button{margin:0;align-self:end;white-space:nowrap}
         .student-order-page .card-cart-form label span{
             color:#344D6D;
             font-size:11px;
@@ -1712,6 +1713,7 @@
             .student-order-page .baju-catalog{grid-template-columns:1fr;gap:14px}
             .student-order-page .baju-card__image{aspect-ratio:4/3}
             .student-order-page .card-cart-form__row{grid-template-columns:82px minmax(0,1fr)}
+            .student-order-page .card-cart-form__row .size-chart-button{grid-column:1 / -1;justify-self:start}
             .student-order-page .order-list-panel{padding:0!important}
             .student-order-page .student-orders-table-wrap{margin:0 16px 16px}
             .student-order-page .order-list-panel .panel-pad{padding:16px!important}

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Smart Attendance')
-@section('page-title', 'Smart Attendance')
+@section('title', 'Kehadiran Pekerja')
+@section('page-title', 'Kehadiran Pekerja')
 @section('page-subtitle', 'Rekod kehadiran masuk dan keluar kerja di koperasi.')
 
 @section('content')

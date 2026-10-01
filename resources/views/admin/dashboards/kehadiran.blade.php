@@ -2,7 +2,7 @@
 
 @section('title', 'Dashboard Kehadiran')
 @section('page-title', 'Dashboard Kehadiran')
-@section('page-subtitle', 'Ringkasan Smart Attendance pekerja koperasi.')
+@section('page-subtitle', 'Ringkasan kehadiran pekerja koperasi.')
 
 @section('content')
     <div class="attendance-management-dashboard">
@@ -12,7 +12,7 @@
                 <h1>Dashboard Kehadiran</h1>
                 <p>Pantau ringkasan kehadiran pekerja, status check-in, waktu bekerja dan elaun bulanan.</p>
             </div>
-            <a href="{{ route('admin.attendance.live') }}">Buka Live Attendance</a>
+            <a href="{{ route('admin.attendance.live') }}">Buka Kehadiran Langsung</a>
         </section>
 
         <section class="attendance-kpi-grid" aria-label="Ringkasan kehadiran hari ini">

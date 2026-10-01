@@ -42,7 +42,7 @@
         ['section' => 'Kehadiran Pekerja', 'label' => 'Ringkasan Kehadiran', 'route' => 'admin.attendance.dashboard', 'active' => 'admin.attendance.dashboard', 'icon' => 'chart'],
         ['section' => 'Kehadiran Pekerja', 'label' => 'Rekod Kehadiran', 'route' => 'admin.attendance.records', 'active' => 'admin.attendance.records*', 'icon' => 'clipboard'],
         ['section' => 'Kehadiran Pekerja', 'label' => 'Elaun Bulanan', 'route' => 'admin.allowances.index', 'active' => 'admin.allowances.*', 'icon' => 'cash'],
-        ['section' => 'Kehadiran Pekerja', 'label' => 'Tetapan Attendance', 'route' => 'admin.attendance.settings', 'active' => 'admin.attendance.settings*', 'icon' => 'book'],
+        ['section' => 'Kehadiran Pekerja', 'label' => 'Tetapan Kehadiran', 'route' => 'admin.attendance.settings', 'active' => 'admin.attendance.settings*', 'icon' => 'book'],
         ['section' => 'SAHAM', 'label' => 'Ringkasan Saham', 'route' => 'admin.dashboard.saham', 'active' => 'admin.dashboard.saham', 'icon' => 'chart'],
         ['section' => 'SAHAM', 'label' => 'Permohonan Student', 'route' => 'admin.permohonan.index', 'params' => ['pemohon' => 'pelajar'], 'active' => 'admin.permohonan.*', 'audience' => 'pelajar', 'icon' => 'clipboard'],
         ['section' => 'SAHAM', 'label' => 'Permohonan Staff', 'route' => 'admin.permohonan.index', 'params' => ['pemohon' => 'staff'], 'active' => 'admin.permohonan.*', 'audience' => 'staff', 'icon' => 'clipboard'],

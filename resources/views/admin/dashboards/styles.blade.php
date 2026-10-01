@@ -1,10 +1,12 @@
 @push('styles')
 <style>
     .module-dashboard{display:grid;gap:20px}
-    .module-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding:30px;border:1px solid var(--line);border-left:5px solid var(--secondary);border-radius:18px;background:#fff;box-shadow:0 16px 40px rgba(15,23,42,.06)}
-    .module-hero span,.module-panel header span{display:inline-flex;color:var(--secondary);font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
-    .module-hero h1{margin:8px 0 0;color:#0F172A;font-size:34px;line-height:1.15;font-weight:900;letter-spacing:0}
-    .module-hero p{margin:8px 0 0;color:#334155;font-size:16px;font-weight:800}
+    .module-hero{position:relative;display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:150px;margin:0 0 24px;padding:30px 34px 30px 46px;border:1px solid #D6E2F0;border-left:8px solid #082F59;border-radius:14px;background:#fff;box-shadow:0 10px 28px rgba(8,47,89,.06);box-sizing:border-box;overflow:hidden}
+    .module-hero::before{content:"";position:absolute;top:24px;left:46px;width:52px;height:4px;border-radius:999px;background:#ED1C2E}
+    .module-hero > div > span{display:none}
+    .module-panel header span{display:inline-flex;color:var(--secondary);font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+    .module-hero h1{margin:16px 0 0;color:#082F59;font-size:32px;line-height:1.12;font-weight:900;letter-spacing:0}
+    .module-hero p{margin:8px 0 0;color:#496487;font-size:15px;line-height:1.45;font-weight:700}
     .module-hero a,.module-panel header a{display:inline-flex;align-items:center;justify-content:center;min-height:42px;border:1px solid #BFD7FF;border-radius:8px;background:var(--secondary);color:#fff;padding:0 16px;text-decoration:none;font-weight:900}
     .module-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
     .module-metrics div{display:grid;gap:7px;min-height:132px;padding:20px;border:1px solid var(--line);border-radius:14px;background:#fff;box-shadow:0 12px 30px rgba(15,23,42,.045)}
@@ -80,10 +82,11 @@
     .is-staff{background:#18B877}
     .content:has(.share-dashboard){background:#F4F7FB}
     .share-dashboard{width:min(100% - clamp(24px,4vw,64px),1500px);margin:0 auto;gap:18px;color:#061A3A}
-    .share-dashboard-header{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px 24px;border:1px solid #D7E2EF;border-left:4px solid #ED1C2E;border-radius:12px;background:#fff;box-shadow:0 8px 18px rgba(8,47,89,.04)}
-    .share-dashboard-header span{display:inline-flex;color:#0B5ED7;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
-    .share-dashboard-header h1{margin:6px 0 0;color:#061A3A;font-size:clamp(24px,2.1vw,34px);line-height:1.12;font-weight:900;letter-spacing:0}
-    .share-dashboard-header p{margin:7px 0 0;color:#526987;font-size:14px;font-weight:700}
+    .share-dashboard-header{position:relative;display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:150px;margin:0 0 24px;padding:30px 34px 30px 46px;border:1px solid #D6E2F0;border-left:8px solid #082F59;border-radius:14px;background:#fff;box-shadow:0 10px 28px rgba(8,47,89,.06);box-sizing:border-box;overflow:hidden}
+    .share-dashboard-header::before{content:"";position:absolute;top:24px;left:46px;width:52px;height:4px;border-radius:999px;background:#ED1C2E}
+    .share-dashboard-header > div > span{display:none}
+    .share-dashboard-header h1{margin:16px 0 0;color:#082F59;font-size:32px;line-height:1.12;font-weight:900;letter-spacing:0}
+    .share-dashboard-header p{margin:8px 0 0;color:#496487;font-size:15px;line-height:1.45;font-weight:700}
     .share-dashboard-header a{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:0 16px;border:1px solid #0B5ED7;border-radius:7px;background:#0B5ED7;color:#fff;font-size:13px;font-weight:900;text-decoration:none;white-space:nowrap}
     .share-dashboard-header a:hover{background:#084FB5;border-color:#084FB5}
     .share-dashboard .module-metrics{gap:16px}

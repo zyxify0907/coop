@@ -173,58 +173,54 @@
         }
 
         .content .applications-wrap .applications-hero {
+            position: relative;
             display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 18px;
-            min-height: 0 !important;
-            padding: 26px 28px !important;
-            border: 1px solid #D7E2EF !important;
-            border-left: 6px solid #0b1e36 !important;
-            border-radius: 12px !important;
-            background: #fff !important;
-            box-shadow: 0 12px 28px rgba(11, 30, 54, .08) !important;
-        }
-
-        .hero-kicker {
-            display: inline-flex;
             align-items: center;
-            gap: 10px;
-            min-height: 20px;
-            padding: 0;
-            border-radius: 0;
-            background: transparent;
-            color: #0d6efd;
-            font-size: 11px;
-            font-weight: 900;
-            letter-spacing: .05em;
-            text-transform: uppercase;
+            justify-content: space-between;
+            gap: 24px;
+            min-height: 150px !important;
+            margin: 0 0 24px !important;
+            padding: 30px 34px 30px 46px !important;
+            border: 1px solid #D6E2F0 !important;
+            border-left: 8px solid #082F59 !important;
+            border-radius: 14px !important;
+            background: #fff !important;
+            box-shadow: 0 10px 28px rgba(8, 47, 89, .06) !important;
+            box-sizing: border-box;
+            overflow: hidden;
         }
 
-        .hero-kicker::before {
+        .content .applications-wrap .applications-hero::before {
             content: "";
-            width: 24px;
-            height: 3px;
+            position: absolute;
+            top: 24px;
+            left: 46px;
+            width: 52px;
+            height: 4px;
             border-radius: 999px;
-            background: #d91c1c;
+            background: #ED1C2E;
+        }
+
+        .content .applications-wrap .applications-hero .hero-kicker {
+            display: none;
         }
 
         .content .applications-wrap .applications-hero h1 {
-            margin: 0 !important;
-            color: #071a33 !important;
-            font-size: 26px !important;
-            line-height: 1.15 !important;
+            margin: 16px 0 0 !important;
+            color: #082F59 !important;
+            font-size: 32px !important;
+            line-height: 1.12 !important;
             letter-spacing: 0;
-            font-weight: 700 !important;
+            font-weight: 900 !important;
         }
 
         .content .applications-wrap .applications-hero p {
             max-width: 720px;
             margin: 8px 0 0 !important;
-            color: #263a54 !important;
-            font-size: 14px;
+            color: #496487 !important;
+            font-size: 15px;
             line-height: 1.45;
-            font-weight: 600 !important;
+            font-weight: 700 !important;
         }
 
         .hero-meta {
@@ -597,7 +593,19 @@
             }
 
             .content .applications-wrap .applications-hero {
-                padding: 20px !important;
+                min-height: 0 !important;
+                padding: 24px 22px 24px 32px !important;
+            }
+
+            .content .applications-wrap .applications-hero::before {
+                top: 20px;
+                left: 32px;
+                width: 44px;
+                height: 3px;
+            }
+
+            .content .applications-wrap .applications-hero h1 {
+                font-size: 26px !important;
             }
 
             .hero-meta {

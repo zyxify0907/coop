@@ -32,15 +32,13 @@
     <div class="alert danger">{{ $errors->first() }}</div>
 @endif
 
-@if ($isClothingStaff)
-    <section class="baju-orders-hero">
-        <div>
-            <h1>Senarai Tempahan Baju</h1>
-            <p>Urus status pesanan, tarikh siap dan pengambilan.</p>
-        </div>
-        <a class="clothing-dashboard-backlink" href="{{ route($ordersDashboardRoute) }}">Dashboard Tempahan</a>
-    </section>
-@endif
+<section class="baju-orders-hero">
+    <div>
+        <h1>Senarai Tempahan Baju</h1>
+        <p>Urus status pesanan, tarikh siap dan pengambilan.</p>
+    </div>
+    <a class="clothing-dashboard-backlink" href="{{ route($ordersDashboardRoute) }}">{{ $isClothingStaff ? 'Ringkasan Tempahan' : 'Ringkasan Baju' }}</a>
+</section>
 
 <section class="panel order-panel">
     <div class="panel-head">
@@ -131,9 +129,10 @@
     .alert{padding:14px 16px;border-radius:10px;margin-bottom:16px}
     .alert.success{background:#ecfdf5;color:#166534;border:1px solid #bbf7d0}
     .alert.danger{background:var(--danger-soft);color:var(--primary-dark);border:1px solid var(--danger-soft)}
-    .baju-orders-hero{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;margin-bottom:24px;padding:34px 36px;border:1px solid var(--line);border-left:5px solid var(--secondary);border-radius:22px;background:#fff;box-shadow:0 14px 34px rgba(15,23,42,.055)}
-    .baju-orders-hero h1{margin:0;color:var(--text);font-size:38px;line-height:1.15;font-weight:900;letter-spacing:0}
-    .baju-orders-hero p{margin:14px 0 0;color:var(--muted-2);font-size:16px;font-weight:800}
+    .baju-orders-hero{position:relative;display:flex;justify-content:space-between;align-items:center;gap:24px;min-height:150px;margin:0 0 24px;padding:30px 34px 30px 46px;border:1px solid #D6E2F0;border-left:8px solid #082F59;border-radius:14px;background:#fff;box-shadow:0 10px 28px rgba(8,47,89,.06);box-sizing:border-box;overflow:hidden}
+    .baju-orders-hero::before{content:"";position:absolute;top:24px;left:46px;width:52px;height:4px;border-radius:999px;background:#ED1C2E}
+    .baju-orders-hero h1{margin:16px 0 0;color:#082F59;font-size:32px;line-height:1.12;font-weight:900;letter-spacing:0}
+    .baju-orders-hero p{margin:8px 0 0;color:#496487;font-size:15px;line-height:1.45;font-weight:700}
     .clothing-dashboard-backlink{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 20px;border:1px solid #D7E3F5;border-radius:10px;background:#fff;color:var(--secondary);font-size:15px;font-weight:900;text-decoration:none;white-space:nowrap}
     .clothing-dashboard-backlink::before{content:'\2190';margin-right:8px;color:var(--primary);font-weight:900}
     .clothing-dashboard-backlink:hover{border-color:#AFC7EA;background:#F8FBFF}

@@ -38,8 +38,8 @@
     }
 
     $adminLinks = [
-        ['section' => 'Home', 'label' => 'Admin Home', 'route' => 'auth.dashboard', 'active' => 'auth.dashboard', 'icon' => 'grid'],
-        ['section' => 'Kehadiran Pekerja', 'label' => 'Dashboard Kehadiran', 'route' => 'admin.attendance.dashboard', 'active' => 'admin.attendance.dashboard', 'icon' => 'chart'],
+        ['section' => 'Home', 'label' => 'Laman Utama Admin', 'route' => 'auth.dashboard', 'active' => 'auth.dashboard', 'icon' => 'grid'],
+        ['section' => 'Kehadiran Pekerja', 'label' => 'Ringkasan Kehadiran', 'route' => 'admin.attendance.dashboard', 'active' => 'admin.attendance.dashboard', 'icon' => 'chart'],
         ['section' => 'Kehadiran Pekerja', 'label' => 'Rekod Kehadiran', 'route' => 'admin.attendance.records', 'active' => 'admin.attendance.records*', 'icon' => 'clipboard'],
         ['section' => 'Kehadiran Pekerja', 'label' => 'Elaun Bulanan', 'route' => 'admin.allowances.index', 'active' => 'admin.allowances.*', 'icon' => 'cash'],
         ['section' => 'Kehadiran Pekerja', 'label' => 'Tetapan Attendance', 'route' => 'admin.attendance.settings', 'active' => 'admin.attendance.settings*', 'icon' => 'book'],
@@ -50,13 +50,13 @@
         ['section' => 'SAHAM', 'label' => 'Anggota Staff', 'route' => 'admin.anggota.staff', 'active' => 'admin.anggota.staff', 'icon' => 'users'],
         ['section' => 'SAHAM', 'label' => 'Saham', 'route' => 'admin.saham.index', 'active' => 'admin.saham.*', 'icon' => 'cash'],
         ['section' => 'SAHAM', 'label' => 'Transaksi Saham', 'route' => 'koperasi.transactions.index', 'active' => 'koperasi.transactions.*', 'icon' => 'cash'],
-        ['section' => 'Tempahan Baju', 'label' => 'Dashboard Baju', 'route' => 'admin.dashboard.baju', 'active' => 'admin.dashboard.baju', 'icon' => 'chart'],
+        ['section' => 'Tempahan Baju', 'label' => 'Ringkasan Baju', 'route' => 'admin.dashboard.baju', 'active' => 'admin.dashboard.baju', 'icon' => 'chart'],
         ['section' => 'Tempahan Baju', 'label' => 'Senarai Tempahan', 'route' => 'admin.tempahan.index', 'active' => 'admin.tempahan.*', 'icon' => 'clipboard'],
         ['section' => 'Tempahan Baju', 'label' => 'Stok Baju', 'route' => 'admin.baju.index', 'active' => 'admin.baju.index', 'icon' => 'box'],
         ['section' => 'Pengguna', 'label' => 'Senarai Student', 'route' => 'admin.users.students', 'active' => 'admin.users.students', 'icon' => 'users'],
         ['section' => 'Pengguna', 'label' => 'Senarai Staff', 'route' => 'admin.users.staff', 'active' => 'admin.users.staff', 'icon' => 'users'],
         ['section' => 'Pengguna', 'label' => 'Senarai Pekerja Koperasi', 'route' => 'admin.users.coop-workers', 'active' => 'admin.users.coop-workers', 'icon' => 'users'],
-        ['section' => 'Pengurusan', 'label' => 'Urus Announcement', 'route' => 'admin.announcements.index', 'active' => 'admin.announcements.*', 'icon' => 'clipboard'],
+        ['section' => 'Pengurusan', 'label' => 'Pengumuman', 'route' => 'admin.announcements.index', 'active' => 'admin.announcements.*', 'icon' => 'clipboard'],
     ];
 
     $lecturerLinks = [
@@ -2629,7 +2629,7 @@
                         </span>
                         <div>
                             <span class="brand-title"><span class="brand-title__coop">Coop</span><span class="brand-title__best">Best</span></span>
-                            <span class="brand-subtitle">Koperasi Dashboard</span>
+                            <span class="brand-subtitle">Koperasi Politeknik Besut</span>
                         </div>
                     </div>
                     <label class="sidebar-close" for="sidebar-toggle" aria-label="Close menu" tabindex="0">

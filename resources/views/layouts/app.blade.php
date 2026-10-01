@@ -1248,6 +1248,7 @@
         .sidebar-user { margin: 14px 14px 10px; border-radius: 8px; box-shadow: none; }
         .nav { padding: 10px 8px; }
         .nav-label { padding: 18px 10px 6px; color: #64748B; font-size: 10px; letter-spacing: .08em; }
+        .nav .nav-label:first-child { padding-top: 6px; }
         .nav-link { min-height: 40px; margin: 2px 0; border-radius: 6px; font-size: 14px; }
         .nav-link:hover { background: #EEF2F7; color: #1D4ED8; }
         .nav-link:hover .nav-icon { color: #1D4ED8; }

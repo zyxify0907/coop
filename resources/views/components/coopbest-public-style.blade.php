@@ -572,6 +572,12 @@
         font-size: 16px;
         font-weight: 800;
     }
+    .login-field__hint {
+        margin: -2px 0 10px;
+        color: var(--cb-muted);
+        font-size: 13px;
+        line-height: 1.45;
+    }
     .login-input-wrap {
         min-height: 58px;
         display: grid;

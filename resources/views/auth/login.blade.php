@@ -54,13 +54,14 @@
                     @csrf
 
                     <div class="login-field" data-field>
-                        <label for="identifier">No. Matrik / No. Kad Pengenalan</label>
+                        <label for="identifier">ID Pengguna</label>
+                        <p class="login-field__hint" id="identifier-hint">Pelajar: no. matrik, no. KP atau e-mel. Staf: no. KP, e-mel atau no. pekerja. Admin: no. KP atau nama pengguna.</p>
                         <div class="login-input-wrap">
                             <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                                 <circle cx="12" cy="7" r="4"/>
                             </svg>
-                            <input id="identifier" name="identifier" type="text" value="" placeholder="Masukkan ID pengguna" autocomplete="off" aria-describedby="identifier-error">
+                            <input id="identifier" name="identifier" type="text" value="" placeholder="Masukkan ID mengikut akaun anda" autocomplete="off" aria-describedby="identifier-hint identifier-error">
                         </div>
                         <p class="field-error" id="identifier-error" aria-live="polite"></p>
                     </div>

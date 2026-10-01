@@ -8,7 +8,6 @@
     $typeConfig = $types[$activeType];
     $currentData = old();
     $isStaffApplicant = ($role ?? 'ahli') === 'staff';
-    $portalLabel = $portalLabel ?? 'Student Portal';
     $identityLabel = $identityLabel ?? 'No Matrik';
     $identityValue = $identityValue ?? $user->no_matrik;
     $memberNumber = $isStaffApplicant ? (! in_array($identityValue, ['Belum dijana', 'Belum menjadi anggota'], true) ? $identityValue : null) : ($user->no_anggota ?? null);
@@ -42,7 +41,6 @@
 @section('content')
     <section class="student-hero student-application-hero" style="background:#fff!important;background-image:none!important;">
         <div>
-            <span>PERMOHONAN DIGITAL</span>
             <h2>Borang Permohonan Digital</h2>
             <p>{{ $typeConfig['description'] }}</p>
         </div>
@@ -97,7 +95,6 @@
                     <h2 style="margin:0">{{ $typeConfig['label'] }}</h2>
                     <p style="margin:6px 0 0;color:var(--muted)">Maklumat asas diambil daripada profil semasa.</p>
                 </div>
-                <span class="badge success">{{ $portalLabel }}</span>
             </div>
 
             <form method="POST" action="{{ route($portalRoutes['permohonan_store'], ['jenis' => $activeType]) }}" class="application-grid" enctype="multipart/form-data">

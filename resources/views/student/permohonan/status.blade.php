@@ -5,7 +5,6 @@
 @section('page-subtitle', 'Semak status permohonan dan dokumen yang telah dihantar.')
 
 @php
-    $portalLabel = $portalLabel ?? ($role === 'staff' ? 'STAFF PORTAL' : 'STUDENT PORTAL');
     $shareDashboardRoute = match (true) {
         ($role ?? null) === 'ahli' => 'student.dashboard.saham',
         ($role ?? null) === 'staff' && ($user->staff_type ?? null) === 'lecturer_member' => 'lecturer-member.dashboard.saham',
@@ -48,7 +47,6 @@
     <div class="coop-wrap status-page">
         <section class="status-hero">
             <div>
-                <span class="coop-kicker">{{ $portalLabel }}</span>
                 <h1>Semak Permohonan</h1>
                 <p>Rekod permohonan dan dokumen yang telah anda hantar.</p>
             </div>

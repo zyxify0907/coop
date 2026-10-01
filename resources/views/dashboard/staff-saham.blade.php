@@ -51,7 +51,6 @@
     <div class="module-dashboard">
         <section class="module-hero">
             <div>
-                <span>RINGKASAN SAHAM</span>
                 <h1>Saham Staf</h1>
                 <p>Pantau nombor anggota, jumlah saham, permohonan saham dan transaksi terkini.</p>
             </div>

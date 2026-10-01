@@ -70,17 +70,6 @@
                                 <strong>{{ $itemName }}</strong>
                                 <span class="baju-card__price">{{ $money($preview->harga) }}</span>
                             </div>
-                            @if ($preview->size_chart_path)
-                                <button
-                                    class="size-chart-button"
-                                    type="button"
-                                    data-size-chart-open
-                                    data-size-chart-src="{{ asset($preview->size_chart_path) }}"
-                                    data-size-chart-title="Carta Saiz {{ $itemName }}"
-                                >
-                                    Lihat Carta Saiz
-                                </button>
-                            @endif
                             <div class="baju-card__sizes">
                                 @foreach ($variants as $variant)
                                     <button
@@ -96,6 +85,17 @@
                                     </button>
                                 @endforeach
                             </div>
+                            @if ($preview->size_chart_path)
+                                <button
+                                    class="size-chart-button"
+                                    type="button"
+                                    data-size-chart-open
+                                    data-size-chart-src="{{ asset($preview->size_chart_path) }}"
+                                    data-size-chart-title="Carta Saiz {{ $itemName }}"
+                                >
+                                    Lihat Carta Saiz
+                                </button>
+                            @endif
                             <form method="POST" action="{{ route('student.tempahan.cart.add') }}" class="card-cart-form">
                                 @csrf
                                 <input name="item_id" type="hidden" value="{{ (int) old('item_id') && $variants->contains('item_id', (int) old('item_id')) ? old('item_id') : '' }}" required>

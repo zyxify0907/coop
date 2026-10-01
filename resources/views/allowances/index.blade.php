@@ -123,10 +123,13 @@
 
     <section class="allowance-print-report" aria-hidden="true">
         <header class="allowance-print-report__head">
-            <div>
+            <div class="allowance-print-report__brand">
+                <img src="/images/koperasi-logo.svg" alt="Logo Koperasi Politeknik Besut Berhad">
+                <div>
                 <h1>Elaun Bulanan Pekerja Koperasi</h1>
                 <p>{{ $staff->nama }} ({{ $staff->no_pekerja }})</p>
                 <p>Bulan: {{ $monthName }}</p>
+                </div>
             </div>
             <div class="allowance-print-report__rate">
                 <span>Kadar Harian</span>
@@ -135,12 +138,13 @@
         </header>
 
         <section class="allowance-print-summary">
-            <div><span>Jumlah Hadir</span><strong>{{ $summary['present_days'] }}</strong></div>
-            <div><span>Hari Penuh</span><strong>{{ $summary['full_days'] }}</strong></div>
-            <div><span>Jumlah Lewat</span><strong>{{ $summary['late_minutes'] }} minit</strong></div>
-            <div><span>Jumlah Minit</span><strong>{{ $summary['total_minutes'] }}</strong></div>
-            <div><span>Jumlah Elaun</span><strong>RM {{ number_format((float) ($monthlyAllowance?->total_allowance ?? $summary['total_allowance']), 2) }}</strong></div>
+            <div><span>Hari layak</span><strong>{{ $summary['present_days'] }} hari</strong></div>
+            <div><span>Hari penuh</span><strong>{{ $summary['full_days'] }} hari</strong></div>
+            <div><span>Jumlah masa</span><strong>{{ $duration($summary['total_minutes']) }}</strong></div>
+            <div><span>Jumlah lewat</span><strong>{{ $summary['late_minutes'] }} minit</strong></div>
+            <div><span>Jumlah elaun</span><strong>RM {{ number_format((float) ($monthlyAllowance?->total_allowance ?? $summary['total_allowance']), 2) }}</strong></div>
         </section>
+        <p class="allowance-print-note">Kadar harian RM {{ number_format((float) $staff->kadar_elaun, 2) }}. Jumlah elaun dikira daripada rekod kehadiran yang layak.</p>
 
         <table class="allowance-print-table">
             <thead>
@@ -189,6 +193,8 @@
         .allowance-print-report,.allowance-print-report *{visibility:visible!important}
         .allowance-print-report{display:block!important;position:fixed;inset:0;width:100%;color:#111827;background:#fff;font-family:Arial,sans-serif}
         .allowance-print-report__head{display:flex;justify-content:space-between;gap:24px;padding-bottom:12px;margin-bottom:16px;border-bottom:2px solid #111827}
+        .allowance-print-report__brand{display:flex;align-items:center;gap:14px}
+        .allowance-print-report__brand img{width:70px;height:70px;object-fit:contain}
         .allowance-print-report h1{margin:0 0 6px;font-size:20px}
         .allowance-print-report p{margin:0 0 3px;font-size:11px}
         .allowance-print-report__rate{text-align:right}
@@ -199,6 +205,7 @@
         .allowance-print-summary div:last-child{border-right:0}
         .allowance-print-summary span{display:block;font-size:9px;font-weight:700;text-transform:uppercase;color:#475569}
         .allowance-print-summary strong{display:block;margin-top:4px;font-size:13px}
+        .allowance-print-note{margin:0 0 10px;font-size:10px;color:#475569}
         .allowance-print-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:9px}
         .allowance-print-table th,.allowance-print-table td{padding:6px 5px;border:1px solid #94a3b8;vertical-align:middle;white-space:nowrap}
         .allowance-print-table th{background:#e2e8f0!important;font-size:8px;text-align:center;text-transform:uppercase;print-color-adjust:exact;-webkit-print-color-adjust:exact}

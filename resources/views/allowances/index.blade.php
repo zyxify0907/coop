@@ -173,12 +173,8 @@
 
         <footer class="allowance-print-signatures">
             <div>
-                <strong>{{ $preparedBy ?? ($monthlyAllowance ? 'Nama penyedia belum direkodkan' : 'Belum dijana') }}</strong>
                 <span>Disediakan oleh</span>
-            </div>
-            <div>
-                <strong>{{ $monthlyAllowance?->approved_at ? ($approvedBy ?? 'Nama pelulus belum direkodkan') : 'Belum disahkan' }}</strong>
-                <span>Disahkan oleh</span>
+                <strong>Pengurusan Kehadiran Koperasi</strong>
             </div>
         </footer>
     </section>
@@ -216,7 +212,7 @@
         .allowance-print-table th,.allowance-print-table td{padding:6px 5px;border:1px solid #94a3b8;vertical-align:middle;white-space:nowrap}
         .allowance-print-table th{background:#e2e8f0!important;font-size:8px;text-align:center;text-transform:uppercase;print-color-adjust:exact;-webkit-print-color-adjust:exact}
         .allowance-print-table td:nth-child(5),.allowance-print-table td:nth-child(6),.allowance-print-table td:nth-child(7),.allowance-print-table td:nth-child(8){text-align:right}
-        .allowance-print-signatures{display:grid;grid-template-columns:1fr 1fr;gap:80px;margin-top:30px}
+        .allowance-print-signatures{display:grid;grid-template-columns:1fr;width:50%;margin:30px auto 0}
         .allowance-print-signatures div{padding-top:12px;border-top:1px solid #111827;text-align:center;font-size:11px}
         .allowance-print-signatures strong,.allowance-print-signatures span{display:block}
         .allowance-print-signatures strong{margin-bottom:3px;font-size:12px}

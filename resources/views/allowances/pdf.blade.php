@@ -36,7 +36,7 @@
         th,td{border:1px solid #d1d5db;padding:7px;text-align:left;vertical-align:top}
         th{background:#f3f4f6;font-size:10px;text-transform:uppercase}tbody tr:nth-child(even){background:#f9fafb}
         .right{text-align:right}
-        .foot{margin-top:28px;display:grid;grid-template-columns:1fr 1fr;gap:80px}
+        .foot{width:50%;margin:28px auto 0;display:grid;grid-template-columns:1fr}
         .sign{padding-top:42px;border-top:1px solid #111827;text-align:center}.sign strong,.sign span{display:block}.sign strong{margin-bottom:3px}
         @page{size:A4 landscape;margin:12mm}
         @media print{.sheet{max-width:none;padding:0}.head{margin-top:0}}
@@ -104,12 +104,8 @@
 
         <section class="foot">
             <div class="sign">
-                <strong>{{ $preparedBy ?? ($monthlyAllowance ? 'Nama penyedia belum direkodkan' : 'Belum dijana') }}</strong>
                 <span>Disediakan oleh</span>
-            </div>
-            <div class="sign">
-                <strong>{{ $monthlyAllowance?->approved_at ? ($approvedBy ?? 'Nama pelulus belum direkodkan') : 'Belum disahkan' }}</strong>
-                <span>Disahkan oleh</span>
+                <strong>Pengurusan Kehadiran Koperasi</strong>
             </div>
         </section>
     </main>

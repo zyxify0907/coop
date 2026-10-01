@@ -173,22 +173,7 @@ class AllowanceController extends Controller
             'records' => $records,
             'summary' => $this->allowance->summary($records, $setting),
             'monthlyAllowance' => $monthlyAllowance,
-            'preparedBy' => $this->actorName($monthlyAllowance?->generated_by, $monthlyAllowance?->generated_by_role),
-            'approvedBy' => $this->actorName($monthlyAllowance?->approved_by, $monthlyAllowance?->approved_by_role),
         ];
-    }
-
-    private function actorName(?int $id, ?string $role): ?string
-    {
-        if (! $id) {
-            return null;
-        }
-
-        return match ($role) {
-            'admin' => AdminUser::query()->whereKey($id)->value('nama'),
-            'staff' => Pekerja::query()->whereKey($id)->value('nama'),
-            default => null,
-        };
     }
 
     private function monthYear(Request $request): array

@@ -85,6 +85,7 @@
 
 <section class="panel staff-orders-panel">
     <div class="panel-head staff-orders-head">
+        <img class="print-report__logo" src="{{ asset('images/koperasi-logo.svg') }}" alt="Logo Koperasi Politeknik Besut">
         <div>
             <h2>Senarai Tempahan</h2>
             <span>Kemaskini status tempahan baju pelajar.</span>
@@ -251,6 +252,7 @@
         white-space:nowrap;
     }
     .print-button:hover{border-color:var(--secondary);background:var(--secondary);color:#fff}
+    .print-report__logo{display:none}
     .filter-wrap{padding:0 26px 16px;border-bottom:1px solid var(--line);background:#fff}
     .filter-bar{display:flex;gap:12px;align-items:end}
     .filter-field{display:grid;gap:6px;min-width:220px}
@@ -876,7 +878,8 @@
             overflow:visible!important;
         }
         .staff-orders-panel{border:0!important;box-shadow:none!important;border-radius:0!important}
-        .staff-orders-head{padding:0 0 14px!important;border-bottom:2px solid #0f172a!important}
+        .staff-orders-head{display:block!important;padding:0 0 14px!important;border-bottom:2px solid #0f172a!important}
+        .print-report__logo{display:block!important;width:48px!important;height:48px!important;object-fit:contain!important;margin:0 auto 8px!important}
         .staff-orders-head h2{font-size:22px!important}
         .staff-orders-head span{font-size:12px!important;color:#334155!important}
         .staff-orders-panel .table-wrap,

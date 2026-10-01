@@ -646,6 +646,14 @@
             font-family: Arial, sans-serif;
         }
 
+        .print-report__logo {
+            display: block;
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 8px;
+            object-fit: contain;
+        }
+
         .print-report__title {
             margin: 0;
             padding: 0 0 6px;
@@ -1410,6 +1418,7 @@
             @endif
 
             <section class="print-report" aria-hidden="true">
+                <img class="print-report__logo" src="{{ asset('images/koperasi-logo.svg') }}" alt="Logo Koperasi Politeknik Besut">
                 <h1 class="print-report__title">SENARAI SAHAM PELAJAR</h1>
                 <p class="print-report__meta">Tarikh Cetakan: {{ now()->format('d/m/Y') }}</p>
                 <table class="print-table">
@@ -1598,6 +1607,7 @@
             @endif
 
             <section class="print-report" aria-hidden="true">
+                <img class="print-report__logo" src="{{ asset('images/koperasi-logo.svg') }}" alt="Logo Koperasi Politeknik Besut">
                 <h1 class="print-report__title">SENARAI SAHAM STAFF</h1>
                 <p class="print-report__meta">Tarikh Cetakan: {{ now()->format('d/m/Y') }}</p>
                 <table class="print-table print-table--staff">
@@ -1774,6 +1784,7 @@
                 body > *:not(#saham-print-root) { display: none !important; }
                 #saham-print-root { display: block !important; color: #111827; background: #fff; font-family: Arial, sans-serif; }
                 #saham-print-root .print-report { display: block !important; width: 100%; color: #111827; background: #fff; font-family: Arial, sans-serif; }
+                #saham-print-root .print-report__logo { display: block; width: 48px; height: 48px; margin: 0 auto 8px; object-fit: contain; }
                 #saham-print-root .print-report__title { margin: 0; padding: 0 0 6px; border-bottom: 1px solid #111827; text-align: center; font-size: 15px; font-weight: 700; letter-spacing: .04em; }
                 #saham-print-root .print-report__meta { margin: 8px 0 10px; font-size: 9px; }
                 #saham-print-root .print-table { width: 100% !important; min-width: 0 !important; border-collapse: collapse; border-spacing: 0; table-layout: fixed; font-size: 8px; line-height: 1.2; }

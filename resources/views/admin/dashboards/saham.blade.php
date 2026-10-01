@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard Saham')
-@section('page-title', 'Dashboard Saham')
+@section('title', 'Ringkasan Saham')
+@section('page-title', 'Ringkasan Saham')
 @section('page-subtitle', 'Ringkasan operasi saham koperasi.')
 
 @section('content')

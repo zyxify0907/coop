@@ -1064,26 +1064,6 @@
             background-image:none!important;
             box-shadow:0 8px 22px rgba(8,47,89,.035)!important
         }
-        .student-application-hero::before{
-            content:none!important
-        }
-        .student-application-hero > div:first-child > span{
-            position:relative;
-            display:inline-flex;
-            align-items:center;
-            color:#1D5FD1;
-            font-size:12px;
-            font-weight:900;
-            letter-spacing:.08em;
-            text-transform:uppercase
-        }
-        .student-application-hero > div:first-child > span::before{
-            content:"";
-            width:34px;
-            height:4px;
-            margin-right:12px;
-            background:#ED1C2E
-        }
         .student-application-hero h2{
             margin:8px 0 0!important;
             color:#071A34!important;

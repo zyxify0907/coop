@@ -2650,7 +2650,7 @@
             gap: 24px;
             width: 100%;
             min-height: 150px !important;
-            margin: 0 0 24px !important;
+            margin: 0 auto 24px !important;
             padding: 30px 34px 30px 26px !important;
             border: 1px solid #D6E2F0 !important;
             border-left: 8px solid #082F59 !important;

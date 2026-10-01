@@ -2651,7 +2651,7 @@
             width: 100%;
             min-height: 150px !important;
             margin: 0 0 24px !important;
-            padding: 30px 34px 30px 46px !important;
+            padding: 30px 34px 30px 36px !important;
             border: 1px solid #D6E2F0 !important;
             border-left: 8px solid #082F59 !important;
             border-radius: 14px !important;
@@ -2696,7 +2696,7 @@
             content: "";
             position: absolute;
             top: 24px;
-            left: 46px;
+            left: 36px;
             width: 52px;
             height: 4px;
             border-radius: 999px;
@@ -2825,7 +2825,7 @@
                 flex-direction: column;
                 min-height: 0 !important;
                 margin-bottom: 18px !important;
-                padding: 24px 22px 24px 32px !important;
+                padding: 24px 22px 24px 26px !important;
             }
 
             body .content :is(
@@ -2861,7 +2861,7 @@
                 .status-hero
             )::before {
                 top: 20px;
-                left: 32px;
+                left: 26px;
                 width: 44px;
                 height: 3px;
             }

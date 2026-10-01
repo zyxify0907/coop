@@ -1491,7 +1491,7 @@
             gap:10px;
             padding:12px 14px 14px;
         }
-        .student-order-page .baju-card__title{min-height:32px}
+        .student-order-page .baju-card__title{min-height:24px}
         .student-order-page .baju-card__title strong,
         .student-order-page .baju-card__body strong{
             color:var(--order-navy);
@@ -1511,6 +1511,7 @@
             align-items:center;
             justify-content:center;
             align-self:flex-start;
+            margin-top:-5px;
             min-height:34px;
             padding:0 12px;
             border:1px solid #BFD0E6;

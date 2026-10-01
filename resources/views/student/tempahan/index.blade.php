@@ -1491,18 +1491,18 @@
             gap:10px;
             padding:12px 14px 14px;
         }
-        .student-order-page .baju-card__title{min-height:38px}
+        .student-order-page .baju-card__title{min-height:32px}
         .student-order-page .baju-card__title strong,
         .student-order-page .baju-card__body strong{
             color:var(--order-navy);
-            font-size:18px;
+            font-size:15px;
             line-height:1.25;
             font-weight:900;
         }
         .student-order-page .baju-card__price{
             flex:0 0 auto;
             color:var(--order-red)!important;
-            font-size:18px!important;
+            font-size:16px!important;
             font-weight:900!important;
             white-space:nowrap;
         }

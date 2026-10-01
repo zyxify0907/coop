@@ -453,6 +453,17 @@
             border: 1px solid #BFDBFE;
         }
 
+        .sidebar-user .sidebar-avatar {
+            width: 46px;
+            height: 46px;
+            background: #EAF2FF;
+            color: #2453A6;
+            font-size: 17px;
+            font-weight: 800;
+            letter-spacing: .01em;
+            border-color: #C7DDFB;
+        }
+
         .sidebar-user strong { display: block; color: var(--text); font-size: 14px; font-weight: 700; }
         .sidebar-user span { display: block; color: var(--muted-2); font-size: 12px; font-weight: 600; }
 
@@ -2639,7 +2650,7 @@
                 </div>
 
                 <div class="sidebar-user">
-                    <span class="avatar" aria-hidden="true">{{ $initials }}</span>
+                    <span class="avatar sidebar-avatar" aria-hidden="true">{{ $initials }}</span>
                     <div>
                         <strong>{{ $displayName }}</strong>
                         <span>{{ $roleLabel }}</span>

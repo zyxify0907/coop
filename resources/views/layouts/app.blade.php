@@ -440,8 +440,8 @@
         }
 
         .avatar {
-            width: 38px;
-            height: 38px;
+            width: 36px;
+            height: 36px;
             border-radius: 999px;
             display: grid;
             place-items: center;
@@ -453,19 +453,8 @@
             border: 1px solid #BFDBFE;
         }
 
-        .sidebar-user .sidebar-avatar {
-            width: 30px !important;
-            height: 30px !important;
-            background: #EAF2FF;
-            color: #2453A6;
-            font-size: 13px;
-            font-weight: 800;
-            letter-spacing: .01em;
-            border-color: #C7DDFB;
-        }
-
         .sidebar-user strong { display: block; color: var(--text); font-size: 14px; font-weight: 700; }
-        .sidebar-user span { display: block; color: var(--muted-2); font-size: 12px; font-weight: 600; }
+        .sidebar-user > div > span { display: block; color: var(--muted-2); font-size: 12px; font-weight: 600; }
 
         /* Navigation Area */
         .nav {
@@ -1270,7 +1259,6 @@
         .icon-button:hover { border: 0; background: #EFF6FF; color: #1D4ED8; }
         .profile-chip { min-height: 40px; padding: 2px 8px 2px 2px; border: 0; border-radius: 6px; box-shadow: none; }
         .profile-chip:hover { background: var(--surface-soft); }
-        .profile-chip .avatar { width: 36px; height: 36px; }
         .topbar-logout { min-height: 38px; padding: 0 14px; border: 1px solid var(--line); border-radius: 6px; }
 
         .content { padding: 28px 32px 40px; background: var(--bg); }
@@ -2650,7 +2638,7 @@
                 </div>
 
                 <div class="sidebar-user">
-                    <span class="avatar sidebar-avatar" aria-hidden="true">{{ $initials }}</span>
+                    <x-user-avatar :initials="$initials" />
                     <div>
                         <strong>{{ $displayName }}</strong>
                         <span>{{ $roleLabel }}</span>
@@ -2846,7 +2834,7 @@
                         </details>
                         <details class="profile-menu">
                             <summary class="profile-chip" aria-label="Menu profil" title="Menu profil">
-                                <span class="avatar" aria-hidden="true">{{ $initials }}</span>
+                                <x-user-avatar :initials="$initials" />
                                 <span class="profile-chip__text"><span class="profile-chip__name">{{ $displayName }}</span><small>{{ $roleLabel }}</small></span>
                             </summary>
                             <section class="profile-dropdown" aria-label="Menu profil">

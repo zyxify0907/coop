@@ -15,7 +15,6 @@
             'absent' => 'Tidak Hadir', 'leave' => 'Cuti', 'holiday' => 'Cuti Umum', 'half_day' => 'Lain',
         ];
         $allowanceStatus = $monthlyAllowance?->status ?? 'not_generated';
-        $allowanceLabels = ['not_generated' => 'Belum Selesai', 'pending' => 'Belum Selesai', 'approved' => 'Diluluskan', 'paid' => 'Dibayar', 'completed' => 'Selesai'];
     @endphp
 
     <div class="attendance-page allowance-page">
@@ -23,10 +22,6 @@
             <div>
                 <h1>{{ $ownView ? 'Elaun Saya' : 'Elaun Bulanan' }}</h1>
                 <p>{{ $staff->nama }} - kadar harian RM {{ number_format((float) $staff->kadar_elaun, 2) }}. Jumlah jam hanya paparan; kiraan wang menggunakan jumlah minit.</p>
-            </div>
-            <div class="attendance-head__meta">
-                <span>Status</span>
-                <strong>{{ $allowanceLabels[$allowanceStatus] ?? $allowanceStatus }}</strong>
             </div>
         </header>
 

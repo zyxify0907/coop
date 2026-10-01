@@ -454,11 +454,11 @@
         }
 
         .sidebar-user .sidebar-avatar {
-            width: 46px;
-            height: 46px;
+            width: 38px;
+            height: 38px;
             background: #EAF2FF;
             color: #2453A6;
-            font-size: 17px;
+            font-size: 15px;
             font-weight: 800;
             letter-spacing: .01em;
             border-color: #C7DDFB;

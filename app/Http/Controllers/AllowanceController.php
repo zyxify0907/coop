@@ -87,7 +87,6 @@ class AllowanceController extends Controller
             'status' => MonthlyAllowance::STATUS_APPROVED,
             'approved_at' => now(),
             'approved_by' => $request->session()->get('auth_id'),
-            'approved_by_role' => $request->session()->get('auth_role'),
         ]);
 
         return back()->with('status', 'Elaun bulanan berjaya diluluskan.');
@@ -128,7 +127,6 @@ class AllowanceController extends Controller
             'status' => MonthlyAllowance::STATUS_COMPLETED,
             'approved_at' => $allowance->approved_at ?? now(),
             'approved_by' => $allowance->approved_by ?? $request->session()->get('auth_id'),
-            'approved_by_role' => $allowance->approved_by_role ?? ($allowance->approved_by ? null : $request->session()->get('auth_role')),
             'notes' => trim(($allowance->notes ? $allowance->notes.PHP_EOL : '').'Ditanda selesai pada '.now()->timezone('Asia/Kuala_Lumpur')->format('d/m/Y h:i A').'.'),
         ]);
 

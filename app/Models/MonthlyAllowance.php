@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable([
     'staff_id', 'month', 'year', 'present_days', 'full_days', 'half_days',
     'late_minutes', 'total_minutes', 'daily_rate', 'total_allowance', 'status',
-    'generated_by', 'generated_by_role', 'approved_at', 'approved_by', 'approved_by_role', 'paid_at',
+    'generated_by', 'generated_by_role', 'approved_at', 'approved_by', 'paid_at',
     'paid_by', 'notes',
 ])]
 class MonthlyAllowance extends Model

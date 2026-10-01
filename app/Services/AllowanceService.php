@@ -66,7 +66,6 @@ class AllowanceService
                 'generated_by_role' => $actorRole,
                 'approved_at' => null,
                 'approved_by' => null,
-                'approved_by_role' => null,
                 'paid_at' => null,
                 'paid_by' => null,
             ]

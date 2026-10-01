@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Edit User')
-@section('page-title', 'Edit '.($type === 'student' ? 'Student' : 'Staff'))
-@section('page-subtitle', 'Admin boleh kemaskini profil dan password.')
+@section('title', 'Kemaskini Pengguna')
+@section('page-title', 'Kemaskini '.($type === 'student' ? 'Pelajar' : 'Staf'))
+@section('page-subtitle', 'Pentadbir boleh mengemaskini profil dan kata laluan.')
 
 @php
     $isStudent = $type === 'student';
@@ -24,9 +24,9 @@
 @section('content')
     <section class="edit-user-hero">
         <div>
-            <span class="hero-kicker">{{ $isStudent ? 'STUDENT / AHLI' : 'STAFF KOPERASI' }}</span>
-            <h1>Edit <span class="brand-red">{{ $isStudent ? 'Student' : 'Staff' }}</span></h1>
-            <p>Kemaskini profil, maklumat akademik dan password pengguna tanpa ubah role login.</p>
+            <span class="hero-kicker">{{ $isStudent ? 'PELAJAR / AHLI' : 'STAF KOPERASI' }}</span>
+            <h1>Kemaskini <span class="brand-red">{{ $isStudent ? 'Pelajar' : 'Staf' }}</span></h1>
+            <p>Kemaskini profil, maklumat akademik dan kata laluan pengguna tanpa mengubah peranan log masuk.</p>
         </div>
         <a class="hero-back" href="{{ $backRoute }}">Kembali</a>
     </section>

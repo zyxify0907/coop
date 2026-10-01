@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Admin Dashboard')
-@section('page-title', 'Admin Dashboard')
-@section('page-subtitle', 'Pantau angka utama, permohonan pending, saham dan tempahan koperasi dalam satu paparan rasmi.')
+@section('title', 'Ringkasan Pentadbir')
+@section('page-title', 'Ringkasan Pentadbir')
+@section('page-subtitle', 'Pantau angka utama, permohonan yang menunggu tindakan, saham dan tempahan koperasi dalam satu paparan rasmi.')
 
 @section('content')
     @include('components.coop-page-style')
@@ -48,8 +48,8 @@
     <div class="coop-wrap admin-dashboard">
         <section class="coop-hero admin-hero">
             <div>
-                <span class="coop-kicker">PUSAT PANTAUAN ADMIN</span>
-                <h1>Dashboard Admin</h1>
+                <span class="coop-kicker">PUSAT PANTAUAN PENTADBIR</span>
+                <h1>Ringkasan Pentadbir</h1>
                 <p>Fokuskan semakan harian kepada anggota, permohonan, jumlah saham, tempahan baju dan rekod yang masih menunggu tindakan.</p>
             </div>
             <div class="admin-hero__meta">

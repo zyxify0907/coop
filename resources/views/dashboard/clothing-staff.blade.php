@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Home Pengurusan Baju')
-@section('page-title', 'Home Pengurusan Baju')
+@section('title', 'Laman Utama Pengurusan Baju')
+@section('page-title', 'Laman Utama Pengurusan Baju')
 @section('page-subtitle', 'Ringkasan pengurusan tempahan baju, notifikasi dan pengumuman.')
 
 @section('content')

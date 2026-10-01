@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Tambah User')
-@section('page-title', 'Tambah '.($type === 'student' ? 'Student' : 'Staff'))
-@section('page-subtitle', $type === 'student' ? 'Daftar akaun student untuk login menggunakan No Matrik. Bukan anggota koperasi sehingga permohonan diluluskan.' : 'Daftar staff baru untuk login menggunakan No. KP.')
+@section('title', 'Tambah Pengguna')
+@section('page-title', 'Tambah '.($type === 'student' ? 'Pelajar' : 'Staf'))
+@section('page-subtitle', $type === 'student' ? 'Daftar akaun pelajar untuk log masuk menggunakan No. Matrik. Bukan anggota koperasi sehingga permohonan diluluskan.' : 'Daftar staf baharu untuk log masuk menggunakan No. KP.')
 
 @php
     $isStudent = $type === 'student';
@@ -22,9 +22,9 @@
 @section('content')
     <section class="create-user-hero">
         <div>
-            <span class="hero-kicker">{{ $isStudent ? 'AKAUN STUDENT' : 'STAFF KOPERASI' }}</span>
-            <h1>Tambah <span class="brand-red">{{ $isStudent ? 'Student' : 'Staff' }}</span></h1>
-            <p>{{ $isStudent ? 'Daftar akaun student untuk login. Status anggota koperasi hanya aktif selepas permohonan anggota diluluskan admin.' : 'Daftar staff baru untuk login menggunakan No. KP.' }}</p>
+            <span class="hero-kicker">{{ $isStudent ? 'AKAUN PELAJAR' : 'STAF KOPERASI' }}</span>
+            <h1>Tambah <span class="brand-red">{{ $isStudent ? 'Pelajar' : 'Staf' }}</span></h1>
+            <p>{{ $isStudent ? 'Daftar akaun pelajar untuk log masuk. Status anggota koperasi hanya aktif selepas permohonan anggota diluluskan pentadbir.' : 'Daftar staf baharu untuk log masuk menggunakan No. KP.' }}</p>
         </div>
         <a class="hero-back" href="{{ $backRoute }}">Kembali</a>
     </section>

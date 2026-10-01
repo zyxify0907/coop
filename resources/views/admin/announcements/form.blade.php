@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', $announcement->exists ? 'Edit Announcement' : 'Tambah Announcement')
-@section('page-title', $announcement->exists ? 'Edit Announcement' : 'Tambah Announcement')
-@section('page-subtitle', 'Announcement diurus berasingan daripada dashboard.')
+@section('title', $announcement->exists ? 'Kemaskini Pengumuman' : 'Tambah Pengumuman')
+@section('page-title', $announcement->exists ? 'Kemaskini Pengumuman' : 'Tambah Pengumuman')
+@section('page-subtitle', 'Pengumuman diurus berasingan daripada ringkasan utama.')
 
 @section('content')
     <form class="announcement-form" method="POST" action="{{ $announcement->exists ? route('admin.announcements.update', $announcement) : route('admin.announcements.store') }}">
@@ -13,14 +13,14 @@
 
         <section class="announcement-form__head">
             <div>
-                <h1>{{ $announcement->exists ? 'Edit Announcement' : 'Tambah Announcement' }}</h1>
-                <p>Isi notis rasmi yang akan dipaparkan dalam page Announcement sahaja.</p>
+                <h1>{{ $announcement->exists ? 'Kemaskini Pengumuman' : 'Tambah Pengumuman' }}</h1>
+                <p>Isi notis rasmi yang akan dipaparkan dalam halaman pengumuman sahaja.</p>
             </div>
         </section>
 
         <section class="announcement-form__panel">
             <div class="announcement-form__section-head">
-                <h2>Maklumat Announcement</h2>
+                <h2>Maklumat Pengumuman</h2>
                 <p>Lengkapkan tajuk, kandungan, sasaran dan tempoh paparan.</p>
             </div>
             <div class="announcement-form__field">

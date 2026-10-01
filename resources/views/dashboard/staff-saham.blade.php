@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard Saham Staff')
-@section('page-title', 'Dashboard Saham')
-@section('page-subtitle', 'Ringkasan saham dan transaksi koperasi staff.')
+@section('title', 'Ringkasan Saham Staf')
+@section('page-title', 'Ringkasan Saham')
+@section('page-subtitle', 'Ringkasan saham dan transaksi koperasi staf.')
 
 @section('content')
     @php
@@ -51,8 +51,8 @@
     <div class="module-dashboard">
         <section class="module-hero">
             <div>
-                <span>DASHBOARD SAHAM</span>
-                <h1>Saham Staff</h1>
+                <span>RINGKASAN SAHAM</span>
+                <h1>Saham Staf</h1>
                 <p>Pantau nombor anggota, jumlah saham, permohonan saham dan transaksi terkini.</p>
             </div>
         </section>

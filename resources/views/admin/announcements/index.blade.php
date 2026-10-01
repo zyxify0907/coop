@@ -1,25 +1,25 @@
 @extends('layouts.app')
 
-@section('title', 'Urus Announcement')
-@section('page-title', 'Urus Announcement')
-@section('page-subtitle', 'Tambah, edit dan padam pengumuman rasmi.')
+@section('title', 'Urus Pengumuman')
+@section('page-title', 'Urus Pengumuman')
+@section('page-subtitle', 'Tambah, kemaskini dan padam pengumuman rasmi.')
 
 @section('content')
     <div class="announcement-admin">
         <section class="announcement-admin__head">
             <div>
-                <h1>Urus Announcement</h1>
-                <p>Announcement ini dipaparkan di page khas, bukan di dashboard.</p>
+                <h1>Urus Pengumuman</h1>
+                <p>Pengumuman ini dipaparkan di halaman khas, bukan di ringkasan utama.</p>
             </div>
             <div class="announcement-admin__meta">
-                <span>Total {{ $announcements->total() }} announcement</span>
+                <span>Jumlah {{ $announcements->total() }} pengumuman</span>
             </div>
         </section>
 
         <section class="announcement-table-panel">
             <div class="announcement-list-head">
                 <div>
-                    <h2>Senarai Announcement</h2>
+                    <h2>Senarai Pengumuman</h2>
                     <p>Urus pengumuman rasmi mengikut kategori, sasaran dan status aktif.</p>
                 </div>
                 <div class="announcement-list-actions">

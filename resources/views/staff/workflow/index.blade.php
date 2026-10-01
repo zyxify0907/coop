@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Workflow Staff')
-@section('page-title', 'Workflow Staff')
-@section('page-subtitle', 'Semakan harian staff koperasi.')
+@section('title', 'Aliran Kerja Staf')
+@section('page-title', 'Aliran Kerja Staf')
+@section('page-subtitle', 'Semakan harian staf koperasi.')
 
 @section('content')
     @include('components.coop-page-style')
@@ -10,9 +10,9 @@
     <div class="coop-wrap">
         <section class="coop-header">
             <div>
-                <span class="coop-kicker">STAFF KOPERASI</span>
-                <h1>Workflow Staff</h1>
-                <p>Ruang kerja staff untuk semak permohonan, dokumen, bayaran dan tempahan sebelum tindakan admin akhir.</p>
+                <span class="coop-kicker">STAF KOPERASI</span>
+                <h1>Aliran Kerja Staf</h1>
+                <p>Ruang kerja staf untuk menyemak permohonan, dokumen, bayaran dan tempahan sebelum tindakan pentadbir akhir.</p>
             </div>
         </section>
 

@@ -79,7 +79,7 @@
         ['section' => 'SAHAM', 'label' => 'Permohonan', 'route' => 'clothing-staff.permohonan.index', 'active' => 'clothing-staff.permohonan.*', 'icon' => 'clipboard'],
         ['section' => 'SAHAM', 'label' => 'Semak Permohonan', 'route' => 'student.permohonan.status', 'active' => 'student.permohonan.status', 'icon' => 'clipboard'],
         ['section' => 'SAHAM', 'label' => 'Senarai Transaksi', 'route' => 'koperasi.transactions.index', 'active' => 'koperasi.transactions.*', 'icon' => 'chart'],
-        ['section' => 'Tempahan Baju', 'label' => 'Dashboard Baju', 'route' => 'clothing-staff.dashboard.baju', 'active' => 'clothing-staff.dashboard.baju', 'icon' => 'chart'],
+        ['section' => 'Tempahan Baju', 'label' => 'Ringkasan Baju', 'route' => 'clothing-staff.dashboard.baju', 'active' => 'clothing-staff.dashboard.baju', 'icon' => 'chart'],
         ['section' => 'Tempahan Baju', 'label' => 'Stok Baju', 'route' => 'clothing-staff.baju.index', 'active' => 'clothing-staff.baju.*', 'icon' => 'box'],
         ['section' => 'Tempahan Baju', 'label' => 'Senarai Tempahan', 'route' => 'clothing-staff.orders.index', 'active' => 'clothing-staff.orders.*', 'icon' => 'clipboard'],
         ['section' => 'Pengurusan', 'label' => 'Urus Pengumuman', 'route' => 'admin.announcements.index', 'active' => 'admin.announcements.*', 'icon' => 'clipboard'],
@@ -165,7 +165,7 @@
                 'active' => ['clothing-staff.dashboard.baju', 'clothing-staff.baju.*', 'clothing-staff.orders.*'],
                 'icon' => 'box',
                 'children' => [
-                    ['label' => 'Dashboard Baju', 'route' => 'clothing-staff.dashboard.baju', 'active' => 'clothing-staff.dashboard.baju'],
+                    ['label' => 'Ringkasan Baju', 'route' => 'clothing-staff.dashboard.baju', 'active' => 'clothing-staff.dashboard.baju'],
                     ['label' => 'Stok Baju', 'route' => 'clothing-staff.baju.index', 'active' => 'clothing-staff.baju.*'],
                     ['label' => 'Senarai Tempahan', 'route' => 'clothing-staff.orders.index', 'active' => 'clothing-staff.orders.*'],
                 ],

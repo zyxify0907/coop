@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard Saham Student')
-@section('page-title', 'Dashboard Saham')
-@section('page-subtitle', 'Ringkasan saham dan transaksi koperasi student.')
+@section('title', 'Ringkasan Saham Pelajar')
+@section('page-title', 'Ringkasan Saham')
+@section('page-subtitle', 'Ringkasan saham dan transaksi koperasi pelajar.')
 
 @section('content')
     @php
@@ -69,8 +69,8 @@
     <div class="module-dashboard student-share-dashboard">
         <section class="module-hero">
             <div>
-                <span>DASHBOARD SAHAM</span>
-                <h1>Saham Student</h1>
+                <span>RINGKASAN SAHAM</span>
+                <h1>Saham Pelajar</h1>
                 <p>Pantau nombor anggota, jumlah saham, permohonan saham dan transaksi terkini.</p>
             </div>
         </section>

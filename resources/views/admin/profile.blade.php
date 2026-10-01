@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Profil Admin')
-@section('page-title', 'Profil Admin')
-@section('page-subtitle', 'Maklumat akaun admin dan tetapan kata laluan.')
+@section('title', 'Profil Pentadbir')
+@section('page-title', 'Profil Pentadbir')
+@section('page-subtitle', 'Maklumat akaun pentadbir dan tetapan kata laluan.')
 
 @section('content')
     @include('components.coop-page-style')
@@ -19,7 +19,7 @@
     @endphp
 
     <div class="admin-profile-page">
-        <section class="profile-hero-card" aria-label="Profil Admin">
+        <section class="profile-hero-card" aria-label="Profil Pentadbir">
             <div class="profile-hero-main">
                 <span class="profile-watermark">KOPERASI</span>
                 <div class="profile-identity">
@@ -30,7 +30,7 @@
                         </svg>
                     </span>
                     <div>
-                        <span class="profile-kicker">Profil Admin</span>
+                        <span class="profile-kicker">Profil Pentadbir</span>
                         <h1>{{ $user->nama }}</h1>
                         <p>{{ $user->peranan ?? 'Admin / Pengurus Sistem' }}</p>
                         <span class="profile-status profile-status--inline">{{ $user->status_aktif ? 'Aktif' : 'Tidak Aktif' }}</span>

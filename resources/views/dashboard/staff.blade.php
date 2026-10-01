@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Staff Dashboard')
-@section('page-title', 'Staff Dashboard')
+@section('title', 'Ringkasan Staf')
+@section('page-title', 'Ringkasan Staf')
 @section('page-subtitle', 'Kehadiran dan operasi harian pekerja koperasi.')
 
 @section('content')

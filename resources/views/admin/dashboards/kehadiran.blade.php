@@ -1,16 +1,16 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard Kehadiran')
-@section('page-title', 'Dashboard Kehadiran')
+@section('title', 'Ringkasan Kehadiran')
+@section('page-title', 'Ringkasan Kehadiran')
 @section('page-subtitle', 'Ringkasan kehadiran pekerja koperasi.')
 
 @section('content')
     <div class="attendance-management-dashboard">
         <section class="attendance-hero">
             <div>
-                <span>DASHBOARD KEHADIRAN</span>
-                <h1>Dashboard Kehadiran</h1>
-                <p>Pantau ringkasan kehadiran pekerja, status check-in, waktu bekerja dan elaun bulanan.</p>
+                <span>RINGKASAN KEHADIRAN</span>
+                <h1>Ringkasan Kehadiran</h1>
+                <p>Pantau ringkasan kehadiran pekerja, status daftar masuk, waktu bekerja dan elaun bulanan.</p>
             </div>
             <a href="{{ route('admin.attendance.live') }}">Buka Kehadiran Langsung</a>
         </section>

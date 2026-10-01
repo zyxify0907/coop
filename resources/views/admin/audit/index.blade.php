@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Audit Log')
-@section('page-title', 'Audit Log')
+@section('title', 'Log Audit')
+@section('page-title', 'Log Audit')
 @section('page-subtitle', 'Rekod tindakan penting dalam sistem koperasi.')
 
 @section('content')
@@ -11,8 +11,8 @@
         <section class="coop-header">
             <div>
                 <span class="coop-kicker">KAWALAN SISTEM</span>
-                <h1>Audit Log</h1>
-                <p>Jejak tindakan create, update, approval, upload, download, delete dan proses kewangan koperasi.</p>
+                <h1>Log Audit</h1>
+                <p>Jejak tindakan cipta, kemaskini, kelulusan, muat naik, muat turun, padam dan proses kewangan koperasi.</p>
             </div>
         </section>
 

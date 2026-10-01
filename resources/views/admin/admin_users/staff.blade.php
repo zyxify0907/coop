@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', $heroTitle ?? 'Manage Staff')
-@section('page-title', $heroTitle ?? 'Manage Staff')
-@section('page-subtitle', $heroSubtitle ?? 'Kemaskini maklumat staff yang sedia ada dalam sistem.')
+@section('title', $heroTitle ?? 'Urus Staf')
+@section('page-title', $heroTitle ?? 'Urus Staf')
+@section('page-subtitle', $heroSubtitle ?? 'Kemaskini maklumat staf yang sedia ada dalam sistem.')
 
 @php
     $showWorkerFields = $showWorkerFields ?? false;
@@ -12,11 +12,11 @@
 @section('content')
     <section class="staff-page-hero">
         <div>
-            <h1>{{ $heroTitle ?? 'Manage Staff' }}</h1>
-            <p>{{ $heroSubtitle ?? 'Kemaskini maklumat staff yang sedia ada dalam sistem.' }}</p>
+            <h1>{{ $heroTitle ?? 'Urus Staf' }}</h1>
+            <p>{{ $heroSubtitle ?? 'Kemaskini maklumat staf yang sedia ada dalam sistem.' }}</p>
         </div>
         <div class="staff-page-hero__meta">
-            <span>Total {{ $staff->total() }} {{ $showWorkerFields ? 'pekerja' : 'staff' }}</span>
+            <span>Jumlah {{ $staff->total() }} {{ $showWorkerFields ? 'pekerja' : 'staf' }}</span>
         </div>
     </section>
 

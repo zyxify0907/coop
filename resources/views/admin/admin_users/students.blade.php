@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
-@section('title', 'Manage Students')
-@section('page-title', 'Manage Student')
-@section('page-subtitle', 'Kemaskini profil akaun student. Password student dijana automatik.')
+@section('title', 'Urus Pelajar')
+@section('page-title', 'Urus Pelajar')
+@section('page-subtitle', 'Kemaskini profil akaun pelajar. Kata laluan pelajar dijana secara automatik.')
 
 @section('content')
     <section class="student-page-hero">
         <div>
-            <h1>Manage Student</h1>
-            <p>Kemaskini profil akaun student. Password dijana automatik daripada No Matrik.</p>
+            <h1>Urus Pelajar</h1>
+            <p>Kemaskini profil akaun pelajar. Kata laluan dijana secara automatik daripada No. Matrik.</p>
         </div>
         <div class="student-page-hero__meta">
             <span>Total {{ $students->total() }} pelajar</span>

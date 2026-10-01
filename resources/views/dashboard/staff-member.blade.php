@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Laman Utama Staff')
-@section('page-title', 'Laman Utama Staff')
-@section('page-subtitle', 'Pusat maklumat staff untuk pengumuman, notifikasi dan tindakan koperasi.')
+@section('title', 'Laman Utama Staf')
+@section('page-title', 'Laman Utama Staf')
+@section('page-subtitle', 'Pusat maklumat staf untuk pengumuman, notifikasi dan tindakan koperasi.')
 
 @section('content')
     @php
@@ -37,7 +37,7 @@
             <div class="admin-welcome__main">
                 <img class="admin-welcome__watermark" src="{{ asset('images/koperasi-logo.svg') }}" alt="" aria-hidden="true">
                 <span class="admin-home-mark"></span>
-                <span class="admin-welcome__kicker">{{ $isCoopStaff ? 'PORTAL PEKERJA KOPERASI' : 'PORTAL STAFF COOPBEST' }}</span>
+                <span class="admin-welcome__kicker">{{ $isCoopStaff ? 'PORTAL PEKERJA KOPERASI' : 'PORTAL STAF COOPBEST' }}</span>
                 <h1>{{ $user->nama }}</h1>
                 <p>Sistem Pengurusan Koperasi CoopBest</p>
             </div>
@@ -81,7 +81,7 @@
                     <div>
                         <span>PENGUMUMAN</span>
                         <h2>Pengumuman Terkini</h2>
-                        <p>Makluman rasmi terkini untuk staff.</p>
+                        <p>Makluman rasmi terkini untuk staf.</p>
                     </div>
                     @if ($canManageAnnouncements)
                         <a class="portal-home__primary" href="{{ route('admin.announcements.create') }}">Tambah</a>

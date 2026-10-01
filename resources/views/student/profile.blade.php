@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Profil Student')
-@section('page-title', 'Profil Student')
+@section('title', 'Profil Pelajar')
+@section('page-title', 'Profil Pelajar')
 @section('page-subtitle', 'Maklumat akaun, keanggotaan, saham dan aktiviti terkini.')
 
 @section('content')

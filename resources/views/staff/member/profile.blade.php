@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Profil Staff')
-@section('page-title', 'Profil Staff')
-@section('page-subtitle', 'Maklumat akaun, jenis staff, saham dan aktiviti terkini.')
+@section('title', 'Profil Staf')
+@section('page-title', 'Profil Staf')
+@section('page-subtitle', 'Maklumat akaun, jenis staf, saham dan aktiviti terkini.')
 
 @section('content')
     @include('components.coop-page-style')
@@ -12,10 +12,10 @@
         $staffTypeLabel = match($staffType) {
             'lecturer_member' => 'Pensyarah / Staf Akademik',
             'coop_staff' => 'Pekerja Koperasi',
-            'clothing_staff' => 'Staff Pengurus Baju',
-            'share_staff' => 'Staff Pengurus Saham',
-            'coop_manager' => 'Staff Pengurus Pekerja Koperasi',
-            default => 'Staff',
+            'clothing_staff' => 'Staf Pengurus Baju',
+            'share_staff' => 'Staf Pengurus Saham',
+            'coop_manager' => 'Staf Pengurus Pekerja Koperasi',
+            default => 'Staf',
         };
         $isShareholderStaff = $user->isEligibleForShares();
         $memberNumber = $staffMemberNumber ?? $user->no_anggota;
@@ -29,7 +29,7 @@
     @endphp
 
     <div class="staff-profile-page">
-        <section class="profile-hero-card" aria-label="Profil Staff">
+        <section class="profile-hero-card" aria-label="Profil Staf">
             <div class="profile-hero-main">
                 <span class="profile-watermark">KOPERASI</span>
                 <div class="profile-identity">
@@ -40,7 +40,7 @@
                         </svg>
                     </span>
                     <div>
-                        <span class="profile-kicker">Profil Staff</span>
+                        <span class="profile-kicker">Profil Staf</span>
                         <h1>{{ $user->nama }}</h1>
                         <p>{{ $isShareholderStaff ? ($memberNumber ?? 'Belum menjadi anggota') : $user->no_pekerja }} &middot; {{ $staffTypeLabel }} &middot; {{ $memberStatus }}</p>
                         <span class="profile-status profile-status--inline">{{ $user->status_aktif ? 'Aktif' : 'Tidak Aktif' }}</span>

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard Baju')
-@section('page-title', 'Dashboard Baju')
+@section('title', 'Ringkasan Baju')
+@section('page-title', 'Ringkasan Baju')
 @section('page-subtitle', 'Ringkasan tempahan dan stok baju koperasi.')
 
 @section('content')
@@ -21,8 +21,8 @@
     <div class="module-dashboard share-dashboard clothing-dashboard">
         <section class="share-dashboard-header">
             <div>
-                <span>DASHBOARD BAJU</span>
-                <h1>Clothing Order Dashboard</h1>
+                <span>RINGKASAN BAJU</span>
+                <h1>Ringkasan Tempahan Baju</h1>
                 <p>Pantau tempahan baju, stok rendah dan status pembayaran/tempahan.</p>
             </div>
             @unless ($isClothingStaff)

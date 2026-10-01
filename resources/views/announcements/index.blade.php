@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
-@section('title', 'Announcement')
-@section('page-title', 'Announcement')
+@section('title', 'Pengumuman')
+@section('page-title', 'Pengumuman')
 @section('page-subtitle', 'Semua pengumuman rasmi koperasi dipaparkan di sini sahaja.')
 
 @section('content')
     <div class="announcement-wrap">
         <section class="announcement-hero">
             <div>
-                <span class="announcement-kicker">ANNOUNCEMENT</span>
+                <span class="announcement-kicker">PENGUMUMAN</span>
                 <h1>Pengumuman Koperasi</h1>
                 <p>Rujuk notis rasmi yang aktif tanpa mengganggu paparan dashboard utama.</p>
             </div>

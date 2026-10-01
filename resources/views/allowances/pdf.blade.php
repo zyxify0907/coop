@@ -12,6 +12,7 @@
         'holiday' => 'Cuti Umum',
         'half_day' => 'Lain',
     ];
+    $absentDays = $records->where('status', 'absent')->count();
 @endphp
 <!DOCTYPE html>
 <html lang="ms">
@@ -27,7 +28,7 @@
         h1{margin:0 0 6px;font-size:22px}
         p{margin:0;color:#374151}
         .meta{text-align:right}
-        .summary{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid #d1d5db;margin-bottom:18px;background:#f8fafc}
+        .summary{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #d1d5db;margin-bottom:18px;background:#f8fafc}
         .summary div{padding:10px;border-right:1px solid #d1d5db}
         .summary div:last-child{border-right:0}
         .summary span{display:block;color:#6b7280;font-size:10px;text-transform:uppercase;font-weight:bold}
@@ -60,10 +61,9 @@
         </section>
 
         <section class="summary">
-            <div><span>Hari layak</span><strong>{{ $summary['present_days'] }} hari</strong></div>
-            <div><span>Hari penuh</span><strong>{{ $summary['full_days'] }} hari</strong></div>
-            <div><span>Jumlah masa</span><strong>{{ $duration($summary['total_minutes']) }}</strong></div>
-            <div><span>Jumlah lewat</span><strong>{{ $summary['late_minutes'] }} minit</strong></div>
+            <div><span>Jumlah Hadir</span><strong>{{ $summary['present_days'] }} hari</strong></div>
+            <div><span>Jumlah Tidak Hadir</span><strong>{{ $absentDays }} hari</strong></div>
+            <div><span>Jumlah Lewat</span><strong>{{ $duration($summary['late_minutes']) }}</strong></div>
             <div><span>Jumlah elaun</span><strong>RM {{ number_format((float) ($monthlyAllowance?->total_allowance ?? $summary['total_allowance']), 2) }}</strong></div>
         </section>
 
@@ -76,8 +76,7 @@
                 <th>Check In</th>
                 <th>Check Out</th>
                 <th>Jumlah Jam</th>
-                <th>Jumlah Minit</th>
-                <th>Minit Lewat</th>
+                <th>Lewat</th>
                 <th>Kadar Harian</th>
                 <th>Elaun</th>
                 <th>Status</th>
@@ -90,14 +89,13 @@
                     <td>{{ $record->check_in_time?->timezone('Asia/Kuala_Lumpur')->format('h:i A') ?? '-' }}</td>
                     <td>{{ $record->check_out_time?->timezone('Asia/Kuala_Lumpur')->format('h:i A') ?? '-' }}</td>
                     <td>{{ $record->check_out_time ? $duration($record->total_minutes) : '-' }}</td>
-                    <td class="right">{{ $record->check_out_time ? $record->total_minutes : '-' }}</td>
-                    <td class="right">{{ $record->late_minutes }}</td>
+                    <td class="right">{{ $record->check_in_time ? $duration($record->late_minutes) : '-' }}</td>
                     <td class="right">RM {{ number_format((float) $record->daily_rate, 2) }}</td>
                     <td class="right">RM {{ number_format((float) $record->allowance_amount, 2) }}</td>
                     <td>{{ $statusLabels[$record->status] ?? $record->status }}</td>
                 </tr>
             @empty
-                <tr><td colspan="9">Tiada rekod kehadiran untuk pilihan ini.</td></tr>
+                <tr><td colspan="8">Tiada rekod kehadiran untuk pilihan ini.</td></tr>
             @endforelse
             </tbody>
         </table>

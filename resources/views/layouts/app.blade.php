@@ -478,26 +478,6 @@
             letter-spacing: 0.08em;
         }
 
-        .nav-group { margin-top: 8px; }
-        .nav-group > .nav-group__toggle {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            min-height: 44px;
-            padding: 10px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            list-style: none;
-            user-select: none;
-        }
-        .nav-group__toggle::-webkit-details-marker { display: none; }
-        .nav-group__toggle:hover { background: #EEF2F7; color: #1D4ED8; }
-        .nav-group__toggle:focus-visible { outline: 2px solid #2453A6; outline-offset: -2px; }
-        .nav-group__chevron { width: 16px; height: 16px; flex: 0 0 auto; }
-        .nav-group[open] > .nav-group__toggle .nav-group__chevron { transform: rotate(180deg); }
-        .nav-group__links { margin-left: 10px; padding-left: 4px; border-left: 1px solid #D7E2F0; }
-
         .nav-link {
             min-height: 42px;
             display: flex;
@@ -2667,7 +2647,11 @@
 
                 <nav class="nav" aria-label="Primary">
                     @php
-                        $sidebarGroups = collect($links)->map(function ($link) {
+                        $currentSection = null;
+                    @endphp
+                    @foreach ($links as $link)
+                        @php
+                            $href = $link['route'] ? route($link['route'], $link['params'] ?? []) : '#';
                             $activePatterns = (array) ($link['active'] ?? []);
                             $active = request()->routeIs(...$activePatterns);
                             if (($link['route'] ?? null) === 'admin.permohonan.index' && isset($link['audience'])) {
@@ -2676,26 +2660,13 @@
                             $active = $active
                                 || ($link['route'] === 'admin.users.students' && request()->routeIs('admin.users.edit') && request()->route('type') === 'student')
                                 || ($link['route'] === 'admin.users.staff' && request()->routeIs('admin.users.edit') && request()->route('type') === 'staff');
-                            $link['is_active'] = $active;
-                            return $link;
-                        })->groupBy(fn ($link) => $link['section'] ?? 'Menu');
-                    @endphp
-                    @foreach ($sidebarGroups as $section => $sectionLinks)
-                        @if ($section === 'Home')
-                            <div class="nav-label">{{ $section }}</div>
-                        @else
-                            <details class="nav-group" @if($sectionLinks->contains('is_active', true)) open @endif>
-                                <summary class="nav-label nav-group__toggle">
-                                    <span>{{ $section }}</span>
-                                    <svg class="nav-group__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-                                </summary>
-                                <div class="nav-group__links">
-                        @endif
-                    @foreach ($sectionLinks as $link)
-                        @php
-                            $href = $link['route'] ? route($link['route'], $link['params'] ?? []) : '#';
-                            $active = $link['is_active'];
                         @endphp
+                        @if (($link['section'] ?? 'Menu') !== $currentSection)
+                            @php
+                                $currentSection = $link['section'] ?? 'Menu';
+                            @endphp
+                            <div class="nav-label">{{ $currentSection }}</div>
+                        @endif
                         <a class="nav-link {{ $active ? 'active' : '' }}" href="{{ $href }}" @if($active) aria-current="page" @endif>
                             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 @switch($link['icon'])
@@ -2747,11 +2718,6 @@
                             </svg>
                             <span class="nav-link__label">{{ $link['label'] }}</span>
                         </a>
-                    @endforeach
-                        @if ($section !== 'Home')
-                                </div>
-                            </details>
-                        @endif
                     @endforeach
                 </nav>
 

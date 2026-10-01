@@ -2608,6 +2608,298 @@
                 grid-template-columns: 1fr !important;
             }
         }
+
+        /* Shared page-header system: every internal header uses one size, spacing and palette. */
+        body .content :is(
+            .template-hero,
+            .student-hero,
+            .coop-hero,
+            .admin-hero,
+            .applications-hero,
+            .student-page-hero,
+            .staff-page-hero,
+            .create-user-hero,
+            .edit-user-hero,
+            .anggota-hero,
+            .baju-hero,
+            .admin-baju-hero,
+            .baju-orders-hero,
+            .baju-edit-hero,
+            .withdrawal-hero,
+            .share-add-hero,
+            .application-detail-hero,
+            .detail-hero,
+            .staff-hero,
+            .share-head,
+            .attendance-head,
+            .attendance-hero,
+            .announcement-hero,
+            .announcement-admin__head,
+            .announcement-form__head,
+            .notification-hero,
+            .coop-header,
+            .module-hero,
+            .share-dashboard-header,
+            .status-hero
+        ) {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            width: 100%;
+            min-height: 150px !important;
+            margin: 0 0 24px !important;
+            padding: 30px 34px 30px 46px !important;
+            border: 1px solid #D6E2F0 !important;
+            border-left: 8px solid #082F59 !important;
+            border-radius: 14px !important;
+            background: #fff !important;
+            box-shadow: 0 10px 28px rgba(8, 47, 89, .06) !important;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        body .content :is(
+            .template-hero,
+            .student-hero,
+            .coop-hero,
+            .admin-hero,
+            .applications-hero,
+            .student-page-hero,
+            .staff-page-hero,
+            .create-user-hero,
+            .edit-user-hero,
+            .anggota-hero,
+            .baju-hero,
+            .admin-baju-hero,
+            .baju-orders-hero,
+            .baju-edit-hero,
+            .withdrawal-hero,
+            .share-add-hero,
+            .application-detail-hero,
+            .detail-hero,
+            .staff-hero,
+            .share-head,
+            .attendance-head,
+            .attendance-hero,
+            .announcement-hero,
+            .announcement-admin__head,
+            .announcement-form__head,
+            .notification-hero,
+            .coop-header,
+            .module-hero,
+            .share-dashboard-header,
+            .status-hero
+        )::before {
+            content: "";
+            position: absolute;
+            top: 24px;
+            left: 46px;
+            width: 52px;
+            height: 4px;
+            border-radius: 999px;
+            background: #ED1C2E;
+            pointer-events: none;
+        }
+
+        body .content :is(.module-hero, .share-dashboard-header) span::before,
+        body .content :is(.status-hero) .coop-kicker::before {
+            content: none !important;
+        }
+
+        body .content :is(
+            .template-hero,
+            .student-hero,
+            .coop-hero,
+            .admin-hero,
+            .applications-hero,
+            .student-page-hero,
+            .staff-page-hero,
+            .create-user-hero,
+            .edit-user-hero,
+            .anggota-hero,
+            .baju-hero,
+            .admin-baju-hero,
+            .baju-orders-hero,
+            .baju-edit-hero,
+            .withdrawal-hero,
+            .share-add-hero,
+            .application-detail-hero,
+            .detail-hero,
+            .staff-hero,
+            .share-head,
+            .attendance-head,
+            .attendance-hero,
+            .announcement-hero,
+            .announcement-admin__head,
+            .announcement-form__head,
+            .notification-hero,
+            .coop-header,
+            .module-hero,
+            .share-dashboard-header,
+            .status-hero
+        ) :is(h1, h2) {
+            margin: 16px 0 0 !important;
+            color: #082F59 !important;
+            font-size: 32px !important;
+            line-height: 1.12 !important;
+            font-weight: 900 !important;
+            letter-spacing: 0 !important;
+        }
+
+        body .content :is(
+            .template-hero,
+            .student-hero,
+            .coop-hero,
+            .admin-hero,
+            .applications-hero,
+            .student-page-hero,
+            .staff-page-hero,
+            .create-user-hero,
+            .edit-user-hero,
+            .anggota-hero,
+            .baju-hero,
+            .admin-baju-hero,
+            .baju-orders-hero,
+            .baju-edit-hero,
+            .withdrawal-hero,
+            .share-add-hero,
+            .application-detail-hero,
+            .detail-hero,
+            .staff-hero,
+            .share-head,
+            .attendance-head,
+            .attendance-hero,
+            .announcement-hero,
+            .announcement-admin__head,
+            .announcement-form__head,
+            .notification-hero,
+            .coop-header,
+            .module-hero,
+            .share-dashboard-header,
+            .status-hero
+        ) p {
+            margin: 8px 0 0 !important;
+            color: #496487 !important;
+            font-size: 15px !important;
+            line-height: 1.45 !important;
+            font-weight: 700 !important;
+        }
+
+        @media (max-width: 760px) {
+            body .content :is(
+                .template-hero,
+                .student-hero,
+                .coop-hero,
+                .admin-hero,
+                .applications-hero,
+                .student-page-hero,
+                .staff-page-hero,
+                .create-user-hero,
+                .edit-user-hero,
+                .anggota-hero,
+                .baju-hero,
+                .admin-baju-hero,
+                .baju-orders-hero,
+                .baju-edit-hero,
+                .withdrawal-hero,
+                .share-add-hero,
+                .application-detail-hero,
+                .detail-hero,
+                .staff-hero,
+                .share-head,
+                .attendance-head,
+                .attendance-hero,
+                .announcement-hero,
+                .announcement-admin__head,
+                .announcement-form__head,
+                .notification-hero,
+                .coop-header,
+                .module-hero,
+                .share-dashboard-header,
+                .status-hero
+            ) {
+                align-items: stretch;
+                flex-direction: column;
+                min-height: 0 !important;
+                margin-bottom: 18px !important;
+                padding: 24px 22px 24px 32px !important;
+            }
+
+            body .content :is(
+                .template-hero,
+                .student-hero,
+                .coop-hero,
+                .admin-hero,
+                .applications-hero,
+                .student-page-hero,
+                .staff-page-hero,
+                .create-user-hero,
+                .edit-user-hero,
+                .anggota-hero,
+                .baju-hero,
+                .admin-baju-hero,
+                .baju-orders-hero,
+                .baju-edit-hero,
+                .withdrawal-hero,
+                .share-add-hero,
+                .application-detail-hero,
+                .detail-hero,
+                .staff-hero,
+                .share-head,
+                .attendance-head,
+                .attendance-hero,
+                .announcement-hero,
+                .announcement-admin__head,
+                .announcement-form__head,
+                .notification-hero,
+                .coop-header,
+                .module-hero,
+                .share-dashboard-header,
+                .status-hero
+            )::before {
+                top: 20px;
+                left: 32px;
+                width: 44px;
+                height: 3px;
+            }
+
+            body .content :is(
+                .template-hero,
+                .student-hero,
+                .coop-hero,
+                .admin-hero,
+                .applications-hero,
+                .student-page-hero,
+                .staff-page-hero,
+                .create-user-hero,
+                .edit-user-hero,
+                .anggota-hero,
+                .baju-hero,
+                .admin-baju-hero,
+                .baju-orders-hero,
+                .baju-edit-hero,
+                .withdrawal-hero,
+                .share-add-hero,
+                .application-detail-hero,
+                .detail-hero,
+                .staff-hero,
+                .share-head,
+                .attendance-head,
+                .attendance-hero,
+                .announcement-hero,
+                .announcement-admin__head,
+                .announcement-form__head,
+                .notification-hero,
+                .coop-header,
+                .module-hero,
+                .share-dashboard-header,
+                .status-hero
+            ) :is(h1, h2) {
+                font-size: 26px !important;
+            }
+        }
     </style>
 </head>
 <body class="{{ trim(($isDialogMode ? 'dialog-mode embedded-frame' : '').' '.($showPortalNav ? 'student-navbar-page' : '')) }}">

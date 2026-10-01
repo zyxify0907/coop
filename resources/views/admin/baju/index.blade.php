@@ -100,7 +100,10 @@
                     @endif
                 </div>
                 <div class="baju-card__body">
-                    <strong>{{ $item->nama_item }}</strong>
+                    <div class="baju-card__title">
+                        <strong>{{ $item->nama_item }}</strong>
+                        <span class="baju-card__price">{{ $money($item->harga) }}</span>
+                    </div>
                     <div class="size-pills">
                         @foreach ($item->sizes as $size)
                             <span class="size-pill">{{ $size->saiz ?? '-' }} <b>{{ $size->stok_tertinggal }}</b></span>
@@ -109,7 +112,6 @@
                     <div class="baju-meta-row">
                         <div class="baju-meta-text">
                             <span>Jumlah stok: {{ $item->total_stock }}</span>
-                            <span>Harga: {{ $money($item->harga) }}</span>
                             <span>{{ $item->is_visible ? 'Dipaparkan kepada pelajar' : 'Disorok daripada pelajar' }}</span>
                         </div>
                     </div>
@@ -360,11 +362,13 @@
         justify-content:center;
         overflow:hidden;
     }
-    .admin-order-page .baju-card__image img{display:block;width:100%;height:100%;object-fit:cover;background:#fff;flex:0 0 100%}
+    .admin-order-page .baju-card__image img{display:block;width:100%;height:100%;object-fit:contain;background:#fff;flex:0 0 100%}
     .admin-order-page .baju-card__image .is-hidden{display:none!important}
     .admin-order-page .baju-card__placeholder{width:100%;height:100%;display:grid;place-items:center;color:#7589A8;font-weight:700;font-size:13px}
-    .admin-order-page .baju-card__body{display:flex;flex-direction:column;gap:12px;padding:16px 16px 10px;flex:1}
+    .admin-order-page .baju-card__body{display:flex;flex-direction:column;gap:10px;padding:12px 14px 14px;flex:1}
+    .admin-order-page .baju-card__title{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;min-height:38px}
     .admin-order-page .baju-card__body strong{color:var(--order-navy);font-size:14px;line-height:1.35;font-weight:900}
+    .admin-order-page .baju-card__price{flex:0 0 auto;color:var(--order-red)!important;font-size:14px!important;font-weight:900!important;white-space:nowrap}
     .admin-order-page .baju-card__body span{font-size:12px;color:#3B5374}
     .admin-order-page .baju-meta-row{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:auto;padding-top:2px}
     .admin-order-page .baju-meta-text{display:grid;gap:4px;min-width:0}
@@ -431,10 +435,11 @@
     .admin-order-page .image-upload-button.is-selected{background:#E7F6EF;border-color:#9FDEC0;color:#0D8A4B}
     .admin-order-page .image-upload-button input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
     .admin-order-page .image-upload-button--form{height:40px;width:100%;font-size:11px}
-    .admin-order-page .baju-card__buttons{display:grid;grid-template-columns:auto auto;justify-content:start;gap:8px;align-items:center;padding:0 16px 16px}
+    .admin-order-page .baju-card__buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:center;padding:0 14px 14px}
     .admin-order-page .baju-card__buttons form{margin:0}
     .admin-order-page .baju-card__buttons .button,
     .admin-order-page .baju-card__buttons .link-button{
+        width:100%;
         min-height:32px!important;
         padding:0 12px!important;
         border-radius:6px!important;

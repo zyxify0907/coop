@@ -12,6 +12,7 @@
             ->map(fn ($variants) => $variants->sortBy(fn ($variant) => $sizeOrder[strtoupper((string) $variant->saiz)] ?? 99)->values());
         $cartTotalQuantity = $cartItems->sum('quantity_ordered');
         $cartTotalItems = $cartItems->count();
+        $money = fn ($value) => 'RM '.number_format((float) $value, 2);
     @endphp
 
     <div class="student-order-page">
@@ -67,6 +68,7 @@
                         <div class="baju-card__body">
                             <div class="baju-card__title">
                                 <strong>{{ $itemName }}</strong>
+                                <span class="baju-card__price">{{ $money($preview->harga) }}</span>
                             </div>
                             <div class="baju-card__sizes">
                                 @foreach ($variants as $variant)
@@ -1440,6 +1442,13 @@
             font-size:15px;
             line-height:1.25;
             font-weight:900;
+        }
+        .student-order-page .baju-card__price{
+            flex:0 0 auto;
+            color:var(--order-red)!important;
+            font-size:14px!important;
+            font-weight:900!important;
+            white-space:nowrap;
         }
         .student-order-page .baju-card__sizes{
             display:flex;

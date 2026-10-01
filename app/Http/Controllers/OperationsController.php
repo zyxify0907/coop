@@ -293,6 +293,8 @@ class OperationsController extends Controller
             return redirect()->route('login');
         }
 
+        $this->ensureBajuSizeChartColumn();
+
         return view('student.tempahan.index', [
             'role' => 'ahli',
             'user' => $user,
@@ -801,6 +803,8 @@ class OperationsController extends Controller
             return $auth;
         }
 
+        $this->ensureBajuSizeChartColumn();
+
         $itemRows = DB::table('item_baju')
             ->leftJoin('kategori_baju', 'item_baju.id_kategori', '=', 'kategori_baju.id_kategori')
             ->select([
@@ -896,6 +900,8 @@ class OperationsController extends Controller
             return $auth;
         }
 
+        $this->ensureBajuSizeChartColumn();
+
         $validated = $request->validate([
             'id_kategori' => ['nullable', 'integer'],
             'nama_item' => ['required', 'string', 'max:100'],
@@ -939,6 +945,8 @@ class OperationsController extends Controller
             return $auth;
         }
 
+        $this->ensureBajuSizeChartColumn();
+
         $item = DB::table('item_baju')->where('id_item', $id)->first();
         abort_if(! $item, 404);
 
@@ -962,6 +970,8 @@ class OperationsController extends Controller
         if ($auth instanceof RedirectResponse) {
             return $auth;
         }
+
+        $this->ensureBajuSizeChartColumn();
 
         $validated = $request->validate([
             'id_kategori' => ['nullable', 'integer'],
@@ -1031,6 +1041,8 @@ class OperationsController extends Controller
         if ($auth instanceof RedirectResponse) {
             return $auth;
         }
+
+        $this->ensureBajuSizeChartColumn();
 
         $item = DB::table('item_baju')->where('id_item', $id)->first();
         abort_if(! $item, 404);
@@ -1760,6 +1772,15 @@ class OperationsController extends Controller
     private function hasColumn(string $table, string $column): bool
     {
         return Schema::hasTable($table) && Schema::hasColumn($table, $column);
+    }
+
+    private function ensureBajuSizeChartColumn(): void
+    {
+        if (Schema::hasTable('item_baju') && ! Schema::hasColumn('item_baju', 'size_chart_path')) {
+            Schema::table('item_baju', function ($table): void {
+                $table->string('size_chart_path')->nullable()->after('image_path');
+            });
+        }
     }
 
     private function storeBajuImage(?UploadedFile $file): ?string

@@ -811,7 +811,8 @@ class OperationsController extends Controller
                 'item_baju.harga',
                 'item_baju.stok_tertinggal',
                 'item_baju.image_path',
-            'item_baju.is_visible',
+                'item_baju.size_chart_path',
+                'item_baju.is_visible',
                 'kategori_baju.nama_kategori',
             ])
             ->orderBy('item_baju.nama_item')
@@ -824,6 +825,7 @@ class OperationsController extends Controller
                 $item->id_kategori ?? 'none',
                 number_format((float) $item->harga, 2, '.', ''),
                 $item->image_path ?? 'none',
+                $item->size_chart_path ?? 'none',
                 (int) $item->is_visible,
             ]))
             ->map(function ($group) {
@@ -901,9 +903,11 @@ class OperationsController extends Controller
             'stok_saiz' => ['required', 'array'],
             'stok_saiz.*' => ['nullable', 'integer', 'min:0'],
             'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'size_chart' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ]);
 
         $imagePath = $this->storeBajuImage($request->file('image'));
+        $sizeChartPath = $this->storeBajuImage($request->file('size_chart'));
         $rows = collect($validated['stok_saiz'])
             ->filter(fn ($stock) => (int) $stock > 0)
             ->map(fn ($stock, $size) => [
@@ -913,6 +917,7 @@ class OperationsController extends Controller
                 'harga' => $validated['harga'],
                 'stok_tertinggal' => (int) $stock,
                 'image_path' => $imagePath,
+                'size_chart_path' => $sizeChartPath,
                 'is_visible' => true,
             ])
             ->values()
@@ -965,6 +970,7 @@ class OperationsController extends Controller
             'stok_saiz' => ['required', 'array'],
             'stok_saiz.*' => ['nullable', 'integer', 'min:0'],
             'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'size_chart' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'is_visible' => ['nullable', 'boolean'],
         ]);
 
@@ -973,6 +979,7 @@ class OperationsController extends Controller
 
         $groupRows = $this->bajuGroupRows($item);
         $imagePath = $item->image_path;
+        $sizeChartPath = $item->size_chart_path;
         $isVisible = array_key_exists('is_visible', $validated)
             ? (bool) $validated['is_visible']
             : (bool) $item->is_visible;
@@ -982,9 +989,14 @@ class OperationsController extends Controller
             $imagePath = $this->storeBajuImage($request->file('image'));
         }
 
+        if ($request->hasFile('size_chart')) {
+            $this->deleteBajuImage($sizeChartPath);
+            $sizeChartPath = $this->storeBajuImage($request->file('size_chart'));
+        }
+
         $categoryId = array_key_exists('id_kategori', $validated) ? $validated['id_kategori'] : $item->id_kategori;
 
-        DB::transaction(function () use ($validated, $groupRows, $imagePath, $categoryId, $isVisible): void {
+        DB::transaction(function () use ($validated, $groupRows, $imagePath, $sizeChartPath, $categoryId, $isVisible): void {
             $existingBySize = $groupRows->keyBy(fn ($row) => strtoupper((string) $row->saiz));
 
             foreach ($validated['stok_saiz'] as $size => $stock) {
@@ -998,6 +1010,7 @@ class OperationsController extends Controller
                     'harga' => $validated['harga'],
                     'stok_tertinggal' => $stock,
                     'image_path' => $imagePath,
+                    'size_chart_path' => $sizeChartPath,
                     'is_visible' => $isVisible,
                 ];
 
@@ -1035,11 +1048,17 @@ class OperationsController extends Controller
                     ? $query->whereNull('image_path')
                     : $query->where('image_path', $item->image_path);
             })
+            ->where(function ($query) use ($item): void {
+                $item->size_chart_path === null
+                    ? $query->whereNull('size_chart_path')
+                    : $query->where('size_chart_path', $item->size_chart_path);
+            })
             ->pluck('id_item');
 
         try {
             DB::table('item_baju')->whereIn('id_item', $groupIds)->delete();
             $this->deleteBajuImage($item->image_path);
+            $this->deleteBajuImage($item->size_chart_path);
         } catch (QueryException) {
             return back()->withErrors(['delete' => 'Baju tidak boleh dipadam kerana masih ada tempahan berkaitan.']);
         }
@@ -1684,6 +1703,7 @@ class OperationsController extends Controller
                 'item_baju.harga',
                 'item_baju.stok_tertinggal as quantity',
                 'item_baju.image_path',
+                'item_baju.size_chart_path',
                 'kategori_baju.nama_kategori',
             ]);
     }
@@ -1877,6 +1897,11 @@ class OperationsController extends Controller
                 $item->image_path === null
                     ? $query->whereNull('image_path')
                     : $query->where('image_path', $item->image_path);
+            })
+            ->where(function ($query) use ($item): void {
+                $item->size_chart_path === null
+                    ? $query->whereNull('size_chart_path')
+                    : $query->where('size_chart_path', $item->size_chart_path);
             })
             ->get();
     }

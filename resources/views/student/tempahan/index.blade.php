@@ -70,6 +70,17 @@
                                 <strong>{{ $itemName }}</strong>
                                 <span class="baju-card__price">{{ $money($preview->harga) }}</span>
                             </div>
+                            @if ($preview->size_chart_path)
+                                <button
+                                    class="size-chart-button"
+                                    type="button"
+                                    data-size-chart-open
+                                    data-size-chart-src="{{ asset($preview->size_chart_path) }}"
+                                    data-size-chart-title="Carta Saiz {{ $itemName }}"
+                                >
+                                    Lihat Carta Saiz
+                                </button>
+                            @endif
                             <div class="baju-card__sizes">
                                 @foreach ($variants as $variant)
                                     <button
@@ -104,6 +115,21 @@
             </div>
 
         </section>
+
+        <dialog class="size-chart-dialog" data-size-chart-dialog aria-labelledby="sizeChartTitle">
+            <section class="size-chart-panel">
+                <header class="size-chart-panel__head">
+                    <div>
+                        <h2 id="sizeChartTitle">Carta Saiz</h2>
+                        <p>Pilih size yang paling sesuai sebelum menambah baju ke troli.</p>
+                    </div>
+                    <button class="size-chart-dialog__close" type="button" data-size-chart-close aria-label="Tutup carta saiz">&times;</button>
+                </header>
+                <div class="size-chart-panel__image">
+                    <img data-size-chart-image src="" alt="Carta saiz baju">
+                </div>
+            </section>
+        </dialog>
 
             <dialog class="cart-dialog" data-cart-dialog aria-labelledby="cartDialogTitle">
         <section class="panel cart-panel">
@@ -361,6 +387,36 @@
             cartDialog?.addEventListener('click', function (event) {
                 if (event.target === cartDialog) {
                     cartDialog.close();
+                }
+            });
+
+            const sizeChartDialog = document.querySelector('[data-size-chart-dialog]');
+            const sizeChartImage = document.querySelector('[data-size-chart-image]');
+            const sizeChartTitle = document.querySelector('#sizeChartTitle');
+
+            document.querySelectorAll('[data-size-chart-open]').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    if (!sizeChartDialog || !sizeChartImage) {
+                        return;
+                    }
+
+                    const title = button.dataset.sizeChartTitle || 'Carta Saiz';
+                    sizeChartImage.src = button.dataset.sizeChartSrc || '';
+                    sizeChartImage.alt = title;
+                    if (sizeChartTitle) {
+                        sizeChartTitle.textContent = title;
+                    }
+                    sizeChartDialog.showModal();
+                });
+            });
+
+            document.querySelector('[data-size-chart-close]')?.addEventListener('click', function () {
+                sizeChartDialog?.close();
+            });
+
+            sizeChartDialog?.addEventListener('click', function (event) {
+                if (event.target === sizeChartDialog) {
+                    sizeChartDialog.close();
                 }
             });
 
@@ -1450,6 +1506,24 @@
             font-weight:900!important;
             white-space:nowrap;
         }
+        .student-order-page .size-chart-button{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            align-self:flex-start;
+            min-height:34px;
+            padding:0 12px;
+            border:1px solid #BFD0E6;
+            border-radius:6px;
+            background:#fff;
+            color:var(--order-navy);
+            font:inherit;
+            font-size:12px;
+            font-weight:900;
+            cursor:pointer;
+        }
+        .student-order-page .size-chart-button::before{content:'↗';margin-right:7px;color:var(--order-red);font-size:14px}
+        .student-order-page .size-chart-button:hover,.student-order-page .size-chart-button:focus-visible{border-color:var(--order-red);background:#FFF8F8;outline:none}
         .student-order-page .baju-card__sizes{
             display:flex;
             flex-wrap:wrap;
@@ -1653,6 +1727,26 @@
             overflow:hidden;
             box-shadow:0 18px 42px rgba(8,47,89,.16);
         }
+        .student-order-page .size-chart-dialog{
+            width:min(760px,calc(100vw - 40px));
+            max-width:760px;
+            max-height:min(88dvh,820px);
+            padding:0;
+            border:1px solid #D7E2EF;
+            border-radius:12px;
+            background:#fff;
+            overflow:hidden;
+            box-shadow:0 18px 42px rgba(8,47,89,.20);
+        }
+        .student-order-page .size-chart-dialog::backdrop{background:rgba(8,47,89,.26)}
+        .student-order-page .size-chart-panel{display:grid;grid-template-rows:auto minmax(0,1fr);max-height:min(88dvh,820px);background:#fff}
+        .student-order-page .size-chart-panel__head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px 22px;border-bottom:4px solid var(--order-red);background:var(--order-navy)}
+        .student-order-page .size-chart-panel__head h2{margin:0;color:#fff;font-size:22px;font-weight:900}
+        .student-order-page .size-chart-panel__head p{margin:5px 0 0;color:rgba(255,255,255,.8);font-size:13px;font-weight:700}
+        .student-order-page .size-chart-dialog__close{display:grid;place-items:center;width:38px;height:38px;flex:0 0 38px;padding:0;border:1px solid rgba(255,255,255,.35);border-radius:8px;background:rgba(255,255,255,.06);color:#fff;font-size:28px;line-height:1;cursor:pointer}
+        .student-order-page .size-chart-dialog__close:hover,.student-order-page .size-chart-dialog__close:focus-visible{background:#fff;color:var(--order-navy);outline:none}
+        .student-order-page .size-chart-panel__image{min-height:0;overflow:auto;padding:20px;background:#F5F8FC}
+        .student-order-page .size-chart-panel__image img{display:block;width:100%;height:auto;max-height:calc(88dvh - 144px);object-fit:contain;margin:auto;border:1px solid #D7E2EF;border-radius:8px;background:#fff}
         .student-order-page .cart-dialog::backdrop{
             background:rgba(8,47,89,.18);
         }

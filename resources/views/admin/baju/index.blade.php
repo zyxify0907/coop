@@ -63,6 +63,13 @@
                 <span data-upload-label>Pilih Gambar</span>
             </label>
         </div>
+        <div class="field">
+            <label for="size_chart">Carta Saiz</label>
+            <label class="image-upload-button image-upload-button--form">
+                <input id="size_chart" name="size_chart" type="file" accept=".jpg,.jpeg,.png,.webp">
+                <span data-upload-label>Muat Naik Carta Saiz</span>
+            </label>
+        </div>
         <div class="field field--sizes">
             <label>Stok Mengikut Size</label>
             <div class="size-stock-grid">
@@ -113,6 +120,7 @@
                         <div class="baju-meta-text">
                             <span>Jumlah stok: {{ $item->total_stock }}</span>
                             <span>{{ $item->is_visible ? 'Dipaparkan kepada pelajar' : 'Disorok daripada pelajar' }}</span>
+                            <span>{{ $item->size_chart_path ? 'Carta saiz tersedia' : 'Carta saiz belum dimuat naik' }}</span>
                         </div>
                     </div>
                 </div>
@@ -282,7 +290,7 @@
     .admin-order-page .panel-head span{margin-top:6px;display:block;color:#4D6484;font-size:12px;font-weight:800}
     .admin-order-page .form-grid--baju{
         display:grid;
-        grid-template-columns:minmax(180px,1.1fr) minmax(110px,.45fr) minmax(160px,.65fr) minmax(420px,1.6fr) 142px;
+        grid-template-columns:minmax(180px,1.1fr) minmax(110px,.45fr) minmax(160px,.65fr) minmax(160px,.8fr) minmax(420px,1.6fr) 142px;
         gap:14px;
         padding:0;
         align-items:end;

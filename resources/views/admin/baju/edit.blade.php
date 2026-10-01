@@ -63,6 +63,13 @@
                         <span data-upload-label>Pilih Gambar</span>
                     </label>
                 </div>
+                <div class="field">
+                    <label for="size_chart">Carta Saiz</label>
+                    <label class="image-upload-button image-upload-button--form">
+                        <input id="size_chart" name="size_chart" type="file" accept=".jpg,.jpeg,.png,.webp">
+                        <span data-upload-label>{{ $item->size_chart_path ? 'Tukar Carta Saiz' : 'Muat Naik Carta Saiz' }}</span>
+                    </label>
+                </div>
                 <div class="field field--visibility">
                     <label class="visibility-control" for="is_visible">
                         <input type="hidden" name="is_visible" value="0">
@@ -129,7 +136,7 @@
     .size-pill b{color:var(--text)}
     .size-pill.is-empty{opacity:.65}
     .edit-form{padding:28px}
-    .form-grid{display:grid;grid-template-columns:minmax(260px,1.2fr) minmax(160px,.7fr) minmax(220px,.9fr) minmax(360px,1.55fr);gap:16px;align-items:end}
+    .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;align-items:end}
     .field{display:grid;gap:8px}
     .field--visibility{align-self:end}
     .visibility-control{position:relative;display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:48px;padding:10px 12px 10px 14px;border:1px solid #dbe7fb;border-radius:12px;background:#fff;box-shadow:0 8px 18px rgba(15,23,42,.045);cursor:pointer;transition:border-color .2s,box-shadow .2s,background .2s}

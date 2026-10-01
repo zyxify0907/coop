@@ -21,7 +21,6 @@
     <div class="attendance-page allowance-page">
         <header class="attendance-head">
             <div>
-                <span class="attendance-kicker">ELAUN</span>
                 <h1>{{ $ownView ? 'Elaun Saya' : 'Elaun Bulanan' }}</h1>
                 <p>{{ $staff->nama }} - kadar harian RM {{ number_format((float) $staff->kadar_elaun, 2) }}. Jumlah jam hanya paparan; kiraan wang menggunakan jumlah minit.</p>
             </div>

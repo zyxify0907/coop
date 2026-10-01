@@ -8,7 +8,6 @@
     <div class="attendance-management-dashboard">
         <section class="attendance-hero">
             <div>
-                <span>RINGKASAN KEHADIRAN</span>
                 <h1>Ringkasan Kehadiran</h1>
                 <p>Pantau ringkasan kehadiran pekerja, status daftar masuk, waktu bekerja dan elaun bulanan.</p>
             </div>

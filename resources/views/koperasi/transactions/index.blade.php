@@ -35,7 +35,6 @@
     <div class="coop-wrap transaction-page">
         <section class="coop-hero transaction-hero">
             <div>
-                <span class="coop-kicker">LEJAR SAHAM</span>
                 <h1>Transaksi Saham</h1>
                 <p>{{ $showAllTransactions ? 'Cari transaksi saham semua pelajar dan staff dalam satu tempat.' : 'Setiap kali saham bertambah atau berkurang, sistem simpan rekod di sini supaya baki boleh disemak semula.' }}</p>
             </div>

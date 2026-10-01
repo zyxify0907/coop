@@ -29,7 +29,6 @@
 <div class="admin-order-page">
 <section class="admin-baju-hero">
     <div>
-        <span class="admin-baju-hero__eyebrow"><i></i>Koperasi Politeknik Besut</span>
         <h2>Tempahan Baju</h2>
         <p>Staff boleh urus senarai baju, stok, harga, gambar dan status tempahan.</p>
     </div>

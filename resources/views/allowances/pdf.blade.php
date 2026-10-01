@@ -37,7 +37,7 @@
         th{background:#f3f4f6;font-size:10px;text-transform:uppercase}tbody tr:nth-child(even){background:#f9fafb}
         .right{text-align:right}
         .foot{margin-top:28px;display:grid;grid-template-columns:1fr 1fr;gap:80px}
-        .sign{padding-top:42px;border-top:1px solid #111827;text-align:center}
+        .sign{padding-top:42px;border-top:1px solid #111827;text-align:center}.sign strong,.sign span{display:block}.sign strong{margin-bottom:3px}
         @page{size:A4 landscape;margin:12mm}
         @media print{.sheet{max-width:none;padding:0}.head{margin-top:0}}
     </style>
@@ -103,8 +103,14 @@
         </table>
 
         <section class="foot">
-            <div class="sign">Disediakan oleh</div>
-            <div class="sign">Disahkan oleh</div>
+            <div class="sign">
+                <strong>{{ $preparedBy ?? ($monthlyAllowance ? 'Nama penyedia belum direkodkan' : 'Belum dijana') }}</strong>
+                <span>Disediakan oleh</span>
+            </div>
+            <div class="sign">
+                <strong>{{ $monthlyAllowance?->approved_at ? ($approvedBy ?? 'Nama pelulus belum direkodkan') : 'Belum disahkan' }}</strong>
+                <span>Disahkan oleh</span>
+            </div>
         </section>
     </main>
     <script>

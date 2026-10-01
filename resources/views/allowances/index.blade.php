@@ -172,8 +172,14 @@
         </table>
 
         <footer class="allowance-print-signatures">
-            <div>Disediakan oleh</div>
-            <div>Disahkan oleh</div>
+            <div>
+                <strong>{{ $preparedBy ?? ($monthlyAllowance ? 'Nama penyedia belum direkodkan' : 'Belum dijana') }}</strong>
+                <span>Disediakan oleh</span>
+            </div>
+            <div>
+                <strong>{{ $monthlyAllowance?->approved_at ? ($approvedBy ?? 'Nama pelulus belum direkodkan') : 'Belum disahkan' }}</strong>
+                <span>Disahkan oleh</span>
+            </div>
         </footer>
     </section>
 @endsection
@@ -211,7 +217,9 @@
         .allowance-print-table th{background:#e2e8f0!important;font-size:8px;text-align:center;text-transform:uppercase;print-color-adjust:exact;-webkit-print-color-adjust:exact}
         .allowance-print-table td:nth-child(5),.allowance-print-table td:nth-child(6),.allowance-print-table td:nth-child(7),.allowance-print-table td:nth-child(8){text-align:right}
         .allowance-print-signatures{display:grid;grid-template-columns:1fr 1fr;gap:80px;margin-top:30px}
-        .allowance-print-signatures div{padding-top:38px;border-top:1px solid #111827;text-align:center;font-size:11px}
+        .allowance-print-signatures div{padding-top:12px;border-top:1px solid #111827;text-align:center;font-size:11px}
+        .allowance-print-signatures strong,.allowance-print-signatures span{display:block}
+        .allowance-print-signatures strong{margin-bottom:3px;font-size:12px}
     }
     @media(max-width:1100px){.allowance-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
     @media(max-width:680px){.allowance-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.allowance-actions{align-items:stretch;flex-direction:column}.allowance-actions form,.allowance-actions button{width:100%}}

@@ -87,6 +87,7 @@ class AllowanceController extends Controller
             'status' => MonthlyAllowance::STATUS_APPROVED,
             'approved_at' => now(),
             'approved_by' => $request->session()->get('auth_id'),
+            'approved_by_role' => $request->session()->get('auth_role'),
         ]);
 
         return back()->with('status', 'Elaun bulanan berjaya diluluskan.');
@@ -127,6 +128,7 @@ class AllowanceController extends Controller
             'status' => MonthlyAllowance::STATUS_COMPLETED,
             'approved_at' => $allowance->approved_at ?? now(),
             'approved_by' => $allowance->approved_by ?? $request->session()->get('auth_id'),
+            'approved_by_role' => $allowance->approved_by_role ?? ($allowance->approved_by ? null : $request->session()->get('auth_role')),
             'notes' => trim(($allowance->notes ? $allowance->notes.PHP_EOL : '').'Ditanda selesai pada '.now()->timezone('Asia/Kuala_Lumpur')->format('d/m/Y h:i A').'.'),
         ]);
 
@@ -160,16 +162,33 @@ class AllowanceController extends Controller
 
         $records->each(fn (AttendanceRecord $record) => $this->allowance->calculateRecord($record, $setting));
 
+        $monthlyAllowance = MonthlyAllowance::query()
+            ->where('staff_id', $staff->id_pekerja)
+            ->where('month', $month)
+            ->where('year', $year)
+            ->first();
+
         return [
             'staff' => $staff,
             'records' => $records,
             'summary' => $this->allowance->summary($records, $setting),
-            'monthlyAllowance' => MonthlyAllowance::query()
-                ->where('staff_id', $staff->id_pekerja)
-                ->where('month', $month)
-                ->where('year', $year)
-                ->first(),
+            'monthlyAllowance' => $monthlyAllowance,
+            'preparedBy' => $this->actorName($monthlyAllowance?->generated_by, $monthlyAllowance?->generated_by_role),
+            'approvedBy' => $this->actorName($monthlyAllowance?->approved_by, $monthlyAllowance?->approved_by_role),
         ];
+    }
+
+    private function actorName(?int $id, ?string $role): ?string
+    {
+        if (! $id) {
+            return null;
+        }
+
+        return match ($role) {
+            'admin' => AdminUser::query()->whereKey($id)->value('nama'),
+            'staff' => Pekerja::query()->whereKey($id)->value('nama'),
+            default => null,
+        };
     }
 
     private function monthYear(Request $request): array

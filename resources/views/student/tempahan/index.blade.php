@@ -88,7 +88,8 @@
                             <form method="POST" action="{{ route('student.tempahan.cart.add') }}" class="card-cart-form">
                                 @csrf
                                 <input name="item_id" type="hidden" value="{{ (int) old('item_id') && $variants->contains('item_id', (int) old('item_id')) ? old('item_id') : '' }}" required>
-                                <div class="card-cart-form__row">
+                                <div class="card-cart-form__meta">
+                                    <span>KUANTITI</span>
                                     @if ($preview->size_chart_path)
                                         <button
                                             class="size-chart-button"
@@ -100,8 +101,10 @@
                                             Lihat Carta Saiz
                                         </button>
                                     @endif
-                                    <label>
-                                        <span>KUANTITI</span>
+                                </div>
+                                <div class="card-cart-form__row">
+                                    <label class="card-cart-form__quantity">
+                                        <span class="sr-only">Kuantiti</span>
                                         <input name="quantity" type="number" inputmode="numeric" min="1" value="{{ old('quantity', 1) }}" required>
                                     </label>
                                     <button class="button card-cart-form__button" type="submit">Tambah ke Troli</button>
@@ -1572,11 +1575,14 @@
         }
         .student-order-page .card-cart-form__row{
             display:grid;
-            grid-template-columns:auto 82px minmax(0,1fr);
+            grid-template-columns:82px minmax(0,1fr);
             gap:10px;
             align-items:end;
         }
-        .student-order-page .card-cart-form__row .size-chart-button{margin:0;align-self:end;white-space:nowrap}
+        .student-order-page .card-cart-form__meta{display:flex;align-items:center;justify-content:space-between;gap:10px}
+        .student-order-page .card-cart-form__meta > span{color:#344D6D;font-size:11px;font-weight:900;letter-spacing:0;text-transform:uppercase}
+        .student-order-page .card-cart-form__meta .size-chart-button{margin:0;white-space:nowrap}
+        .student-order-page .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
         .student-order-page .card-cart-form label span{
             color:#344D6D;
             font-size:11px;
@@ -1713,7 +1719,6 @@
             .student-order-page .baju-catalog{grid-template-columns:1fr;gap:14px}
             .student-order-page .baju-card__image{aspect-ratio:4/3}
             .student-order-page .card-cart-form__row{grid-template-columns:82px minmax(0,1fr)}
-            .student-order-page .card-cart-form__row .size-chart-button{grid-column:1 / -1;justify-self:start}
             .student-order-page .order-list-panel{padding:0!important}
             .student-order-page .student-orders-table-wrap{margin:0 16px 16px}
             .student-order-page .order-list-panel .panel-pad{padding:16px!important}

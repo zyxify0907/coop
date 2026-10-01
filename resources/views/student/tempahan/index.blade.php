@@ -1581,7 +1581,8 @@
         }
         .student-order-page .card-cart-form__meta{display:flex;align-items:center;justify-content:space-between;gap:10px}
         .student-order-page .card-cart-form__meta > span{color:#344D6D;font-size:11px;font-weight:900;letter-spacing:0;text-transform:uppercase}
-        .student-order-page .card-cart-form__meta .size-chart-button{margin:0;white-space:nowrap}
+        .student-order-page .card-cart-form__meta .size-chart-button{min-height:auto;margin:0;padding:0;border:0;background:transparent;box-shadow:none;white-space:nowrap}
+        .student-order-page .card-cart-form__meta .size-chart-button:hover,.student-order-page .card-cart-form__meta .size-chart-button:focus-visible{border:0;background:transparent;text-decoration:underline}
         .student-order-page .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
         .student-order-page .card-cart-form label span{
             color:#344D6D;

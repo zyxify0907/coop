@@ -45,7 +45,7 @@
                     <div>
                         <span class="profile-kicker">Profil Pelajar</span>
                         <h1>{{ $user->nama }}</h1>
-                        <p>{{ $user->no_matrik }} &middot; {{ $user->program ?? 'Program belum ditetapkan' }} &middot; {{ $user->kelas ?? 'Kelas belum ditetapkan' }}</p>
+                        <p>{{ $user->no_matrik }} &middot; {{ $user->program ?? 'Program belum ditetapkan' }}</p>
                         <span class="profile-status profile-status--inline">
                             {{ $user->status_aktif ? 'Aktif' : 'Tidak Aktif' }}
                         </span>

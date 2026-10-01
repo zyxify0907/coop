@@ -1502,7 +1502,7 @@
         .student-order-page .baju-card__price{
             flex:0 0 auto;
             color:var(--order-red)!important;
-            font-size:14px!important;
+            font-size:16px!important;
             font-weight:900!important;
             white-space:nowrap;
         }
@@ -1510,7 +1510,7 @@
             display:inline-flex;
             align-items:center;
             justify-content:center;
-            align-self:flex-start;
+            align-self:flex-end;
             min-height:34px;
             padding:0 12px;
             border:1px solid #BFD0E6;

@@ -103,6 +103,10 @@
             <strong>{{ 'RM '.number_format((float) $memberFee, 2) }}</strong>
         </section>
         <section>
+            <span>Jumlah Tambahan</span>
+            <strong>{{ 'RM '.number_format($additionalShare, 2) }}</strong>
+        </section>
+        <section>
             <span>Jumlah Saham</span>
             <strong>{{ 'RM '.number_format($totalShare, 2) }}</strong>
         </section>

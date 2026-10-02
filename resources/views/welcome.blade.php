@@ -170,27 +170,23 @@
                 <div class="home-contact__list">
                     <article class="home-contact__card">
                         <span class="home-contact__role">Pengerusi Koperasi</span>
-                        <strong>Norulmaisura Bt Mohamad</strong>
-                        <a href="mailto:maisura.staff@example.com">maisura.staff@example.com</a>
-                        <a href="tel:+60123456789">012-3456789</a>
+                        <strong>NORULMAISURA BT MOHAMAD</strong>
+                        <a href="mailto:maisura@polibesut.edu.my">maisura@polibesut.edu.my</a>
                     </article>
                     <article class="home-contact__card">
                         <span class="home-contact__role">Staff Pengurusan Baju</span>
                         <strong>ADNAN BIN YAZID</strong>
-                        <a href="mailto:suriyani.staff@example.com">suriyani.staff@example.com</a>
-                        <a href="tel:+60124567890">012-4567890</a>
+                        <a href="mailto:adnan@polibesut.edu.my">adnan@polibesut.edu.my</a>
                     </article>
                     <article class="home-contact__card">
                         <span class="home-contact__role">Staff Pengurusan Saham</span>
                         <strong>ROSHILA BINTI ABDUL MUTALIB</strong>
-                        <a href="mailto:azlina.staff@example.com">azlina.staff@example.com</a>
-                        <a href="tel:+60122345678">012-2345678</a>
+                        <a href="mailto:roshila@polibesut.edu.my">roshila@polibesut.edu.my</a>
                     </article>
                     <article class="home-contact__card">
                         <span class="home-contact__role">Staff Pengurusan Kedai</span>
-                        <strong>Nor Azira Binti Abd Razak</strong>
-                        <a href="mailto:azira.staff@example.com">azira.staff@example.com</a>
-                        <a href="tel:+60121234567">012-1234567</a>
+                        <strong>NOR AZIRA BINTI ABD RAZAK</strong>
+                        <a href="mailto:norazira.razak@polibesut.edu.my">norazira.razak@polibesut.edu.my</a>
                     </article>
                 </div>
             </div>

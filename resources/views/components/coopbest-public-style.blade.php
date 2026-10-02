@@ -2101,7 +2101,8 @@
     }
     .home-contact__card {
         display: grid;
-        gap: 8px;
+        align-content: start;
+        gap: 12px;
         min-height: 190px;
         padding: 22px;
         border: 1px solid #D7E2EF;

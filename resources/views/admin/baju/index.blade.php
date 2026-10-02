@@ -33,7 +33,6 @@
         <p>Staff boleh urus senarai baju, stok, harga, gambar dan status tempahan.</p>
     </div>
     <div class="admin-baju-hero__meta">
-        <strong>{{ $items->count() }} rekod</strong>
         <a class="clothing-dashboard-backlink" href="{{ route($bajuDashboardRoute) }}">Dashboard Tempahan</a>
     </div>
 </section>

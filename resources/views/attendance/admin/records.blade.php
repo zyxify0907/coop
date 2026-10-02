@@ -102,9 +102,11 @@
         width: 160px;
     }
 
-    .attendance-records-table .attendance-person {
-        gap: 3px;
-        padding: 0;
+    .attendance-records-table td.attendance-person {
+        display: table-cell;
+        padding-top: 0;
+        padding-bottom: 0;
+        vertical-align: middle;
     }
 
     .attendance-records-table .attendance-person strong {

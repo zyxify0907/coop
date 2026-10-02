@@ -549,14 +549,14 @@ class AttendanceController extends Controller
 
     public function settings(Request $request): View
     {
-        $admin = $this->systemAdmin($request);
+        $admin = $this->admin($request);
 
-        return view('attendance.admin.settings', ['role' => 'admin', 'user' => $admin, 'setting' => $this->attendance->setting()]);
+        return view('attendance.admin.settings', ['role' => $request->session()->get('auth_role'), 'user' => $admin, 'setting' => $this->attendance->setting()]);
     }
 
     public function updateSettings(Request $request): RedirectResponse
     {
-        $admin = $this->systemAdmin($request);
+        $admin = $this->admin($request);
         $validated = $request->validate([
             'work_start_time' => ['required', 'date_format:H:i'],
             'work_end_time' => ['required', 'date_format:H:i', 'after:work_start_time'],

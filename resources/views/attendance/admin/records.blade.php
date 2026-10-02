@@ -48,6 +48,10 @@
         width: 118px;
     }
 
+    .attendance-records-table__date-cell {
+        vertical-align: top;
+    }
+
     .attendance-records-table__date,
     .attendance-records-table__date-cell,
     .attendance-records-table__time,

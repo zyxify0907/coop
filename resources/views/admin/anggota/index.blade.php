@@ -127,7 +127,7 @@
                             </td>
                             <td>
                                 <div class="action-group">
-                                    <a class="action-link" href="{{ route('admin.anggota.show', $member) }}" data-view-dialog-open data-dialog-title="Profil Anggota" data-dialog-url="{{ route('admin.anggota.show', ['permohonan' => $member, 'dialog' => 1]) }}">Lihat Profil</a>
+                                    <a class="action-link" href="{{ route('admin.anggota.show', $member) }}">Lihat Profil</a>
                                     <form method="POST" action="{{ route('admin.anggota.destroy', $member) }}" onsubmit="return confirm('Padam anggota ini? Rekod saham dan nombor anggota akan dibuang.');">
                                         @csrf
                                         @method('DELETE')

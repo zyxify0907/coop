@@ -175,7 +175,13 @@
 
                     <div class="field">
                         <label for="password">Password Baru</label>
-                        <input id="password" name="password" type="password" placeholder="Biarkan kosong jika tidak mahu ubah">
+                        <div class="password-input">
+                            <input id="password" name="password" type="password" placeholder="Biarkan kosong jika tidak mahu ubah" autocomplete="new-password">
+                            <button type="button" data-password-visibility-toggle aria-label="Papar kata laluan" aria-pressed="false">
+                                <svg class="eye-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                <svg class="eye-hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 2 20 20"/><path d="M6.7 6.7C3.8 8.6 2 12 2 12s3.5 7 10 7c1.8 0 3.3-.5 4.7-1.2"/><path d="M9.9 4.2C10.6 4.1 11.3 4 12 4c6.5 0 10 8 10 8s-.8 1.7-2.2 3.4"/></svg>
+                            </button>
+                        </div>
                         @error('password')<div class="field-error">{{ $message }}</div>@enderror
                     </div>
                 </div>
@@ -264,6 +270,13 @@
         font-weight:700;
     }
     .field input:focus,.field select:focus{outline:0;border-color:var(--secondary);box-shadow:0 0 0 4px rgba(30,64,175,.10)}
+    .password-input{position:relative}
+    .password-input input{padding-right:50px!important}
+    .password-input button{position:absolute;top:50%;right:8px;display:grid;place-items:center;width:32px;height:32px;padding:0;border:0;border-radius:7px;background:transparent;color:#31517D;transform:translateY(-50%);cursor:pointer}
+    .password-input button:hover,.password-input button:focus-visible{background:#E8F0FE;color:#0B5ED7;outline:0}
+    .password-input svg{width:19px;height:19px}
+    .password-input .eye-hide,.password-input button.is-visible .eye-show{display:none}
+    .password-input button.is-visible .eye-hide{display:block}
     .field-error{color:var(--danger);font-size:13px;font-weight:800}
     .field-section-heading{
         grid-column:1 / -1;
@@ -464,6 +477,20 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('[data-password-visibility-toggle]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const input = button.closest('.password-input')?.querySelector('input');
+                    if (!input) return;
+
+                    const isVisible = input.type === 'password';
+                    input.type = isVisible ? 'text' : 'password';
+                    button.classList.toggle('is-visible', isVisible);
+                    button.setAttribute('aria-pressed', String(isVisible));
+                    button.setAttribute('aria-label', isVisible ? 'Sembunyi kata laluan' : 'Papar kata laluan');
+                    input.focus();
+                });
+            });
+
             const display = document.querySelector('[data-email-display]');
             const hidden = document.querySelector('[data-email-hidden]');
             const form = display?.closest('form');

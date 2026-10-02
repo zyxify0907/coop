@@ -48,10 +48,6 @@
         width: 118px;
     }
 
-    .attendance-records-table__date-cell {
-        vertical-align: middle;
-    }
-
     .attendance-records-table__date,
     .attendance-records-table__date-cell,
     .attendance-records-table__time,
@@ -97,9 +93,8 @@
     }
 
     .attendance-records-table .attendance-person {
-        gap: 4px;
+        gap: 3px;
         padding: 0;
-        transform: translateY(8px);
     }
 
     .attendance-records-table .attendance-person strong {

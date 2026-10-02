@@ -378,13 +378,13 @@
     .admin-order-page .baju-card__body strong{color:var(--order-navy);font-size:14px;line-height:1.35;font-weight:900}
     .admin-order-page .baju-card__price{flex:0 0 auto;color:var(--order-red)!important;font-size:14px!important;font-weight:900!important;white-space:nowrap}
     .admin-order-page .baju-card__body span{font-size:12px;color:#3B5374}
-    .admin-order-page .baju-meta-row{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:auto;padding-top:2px}
+    .admin-order-page .baju-meta-row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-top:0;padding-top:0}
     .admin-order-page .baju-meta-text{display:grid;gap:4px;min-width:0}
     .admin-order-page .baju-meta-text span{color:#4D6484;font-size:12px;font-weight:800}
     .admin-order-page .size-pills{
-        display:flex;
-        gap:8px;
-        flex-wrap:wrap;
+        display:grid;
+        grid-template-columns:repeat(5,minmax(0,1fr));
+        gap:6px;
         min-width:0;
         padding-bottom:12px;
         border-bottom:1px solid var(--order-border);
@@ -394,9 +394,10 @@
         align-items:center;
         justify-content:center;
         gap:6px;
-        min-width:42px;
+        width:100%;
+        min-width:0;
         min-height:32px;
-        padding:0 10px;
+        padding:0 6px;
         border:1px solid #BFD0E6;
         border-radius:6px;
         background:#fff;
@@ -404,6 +405,7 @@
         font-size:12px;
         font-weight:900;
     }
+    .admin-order-page .baju-meta-row{transform:none}
     .admin-order-page .size-pill b{color:#4D6484;font-size:11px;font-weight:900}
     .baju-card__edit{display:grid;gap:9px;padding:10px 14px;min-width:0}
     .baju-card__edit input,.baju-card__edit select{width:100%;border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px;min-height:36px}

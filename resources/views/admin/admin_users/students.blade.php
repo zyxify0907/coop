@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Urus Pelajar')
-@section('page-title', 'Urus Pelajar')
+@section('title', 'Pengurusan Pelajar')
+@section('page-title', 'Pengurusan Pelajar')
 @section('page-subtitle', 'Kemaskini profil akaun pelajar. Kata laluan pelajar dijana secara automatik.')
 
 @section('content')
     <section class="student-page-hero">
         <div>
-            <h1>Urus Pelajar</h1>
+            <h1>Pengurusan Pelajar</h1>
             <p>Kemaskini profil akaun pelajar. Kata laluan dijana secara automatik daripada No. Matrik.</p>
         </div>
         <div class="student-page-hero__meta">

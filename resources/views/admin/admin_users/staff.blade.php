@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', $heroTitle ?? 'Urus Staf')
-@section('page-title', $heroTitle ?? 'Urus Staf')
+@section('title', $heroTitle ?? 'Pengurusan Staf')
+@section('page-title', $heroTitle ?? 'Pengurusan Staf')
 @section('page-subtitle', $heroSubtitle ?? 'Kemaskini maklumat staf yang sedia ada dalam sistem.')
 
 @php
@@ -12,7 +12,7 @@
 @section('content')
     <section class="staff-page-hero">
         <div>
-            <h1>{{ $heroTitle ?? 'Urus Staf' }}</h1>
+            <h1>{{ $heroTitle ?? 'Pengurusan Staf' }}</h1>
             <p>{{ $heroSubtitle ?? 'Kemaskini maklumat staf yang sedia ada dalam sistem.' }}</p>
         </div>
         <div class="staff-page-hero__meta">

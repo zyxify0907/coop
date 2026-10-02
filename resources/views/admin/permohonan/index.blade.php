@@ -121,7 +121,7 @@
                     <div class="date-cell">{{ optional($application->tarikh_permohonan)->format('d/m/Y') ?? '-' }}</div>
 
                     <div class="row-actions">
-                        <a class="mini-button mini-button--view" href="{{ route('admin.permohonan.show', $application) }}" data-view-dialog-open data-dialog-title="Butiran Permohonan" data-dialog-url="{{ route('admin.permohonan.show', ['permohonan' => $application, 'dialog' => 1]) }}">Lihat</a>
+                        <a class="mini-button mini-button--view" href="{{ route('admin.permohonan.show', $application) }}">Lihat</a>
                         @if ($role === 'admin' || ($role === 'staff' && ($user->staff_type ?? null) === \App\Models\Pekerja::SHARE_MANAGER_STAFF_TYPE))
                             <form method="POST" action="{{ route('admin.permohonan.destroy', $application) }}" onsubmit="return confirm('Padam permohonan ini? Tindakan ini tidak boleh dibatalkan.');">
                                 @csrf

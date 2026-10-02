@@ -39,11 +39,10 @@
 
     $adminLinks = [
         ['section' => 'Home', 'label' => 'Laman Utama Admin', 'route' => 'auth.dashboard', 'active' => 'auth.dashboard', 'icon' => 'grid'],
-        ['section' => 'Pengurusan Pekerja Koperasi', 'label' => 'Senarai Pekerja Koperasi', 'route' => 'admin.users.coop-workers', 'active' => 'admin.users.coop-workers', 'icon' => 'users'],
-        ['section' => 'Pengurusan Pekerja Koperasi', 'label' => 'Ringkasan Kehadiran', 'route' => 'admin.attendance.dashboard', 'active' => 'admin.attendance.dashboard', 'icon' => 'chart'],
-        ['section' => 'Pengurusan Pekerja Koperasi', 'label' => 'Rekod Kehadiran', 'route' => 'admin.attendance.records', 'active' => 'admin.attendance.records*', 'icon' => 'clipboard'],
-        ['section' => 'Pengurusan Pekerja Koperasi', 'label' => 'Elaun Bulanan', 'route' => 'admin.allowances.index', 'active' => 'admin.allowances.*', 'icon' => 'cash'],
-        ['section' => 'Pengurusan Pekerja Koperasi', 'label' => 'Tetapan Kehadiran', 'route' => 'admin.attendance.settings', 'active' => 'admin.attendance.settings*', 'icon' => 'book'],
+        ['section' => 'Kehadiran Pekerja', 'label' => 'Ringkasan Kehadiran', 'route' => 'admin.attendance.dashboard', 'active' => 'admin.attendance.dashboard', 'icon' => 'chart'],
+        ['section' => 'Kehadiran Pekerja', 'label' => 'Rekod Kehadiran', 'route' => 'admin.attendance.records', 'active' => 'admin.attendance.records*', 'icon' => 'clipboard'],
+        ['section' => 'Kehadiran Pekerja', 'label' => 'Elaun Bulanan', 'route' => 'admin.allowances.index', 'active' => 'admin.allowances.*', 'icon' => 'cash'],
+        ['section' => 'Kehadiran Pekerja', 'label' => 'Tetapan Kehadiran', 'route' => 'admin.attendance.settings', 'active' => 'admin.attendance.settings*', 'icon' => 'book'],
         ['section' => 'SAHAM', 'label' => 'Ringkasan Saham', 'route' => 'admin.dashboard.saham', 'active' => 'admin.dashboard.saham', 'icon' => 'chart'],
         ['section' => 'SAHAM', 'label' => 'Permohonan Student', 'route' => 'admin.permohonan.index', 'params' => ['pemohon' => 'pelajar'], 'active' => 'admin.permohonan.*', 'audience' => 'pelajar', 'icon' => 'clipboard'],
         ['section' => 'SAHAM', 'label' => 'Permohonan Staff', 'route' => 'admin.permohonan.index', 'params' => ['pemohon' => 'staff'], 'active' => 'admin.permohonan.*', 'audience' => 'staff', 'icon' => 'clipboard'],
@@ -56,6 +55,7 @@
         ['section' => 'Tempahan Baju', 'label' => 'Stok Baju', 'route' => 'admin.baju.index', 'active' => 'admin.baju.index', 'icon' => 'box'],
         ['section' => 'Pengguna', 'label' => 'Senarai Student', 'route' => 'admin.users.students', 'active' => 'admin.users.students', 'icon' => 'users'],
         ['section' => 'Pengguna', 'label' => 'Senarai Staff', 'route' => 'admin.users.staff', 'active' => 'admin.users.staff', 'icon' => 'users'],
+        ['section' => 'Pengguna', 'label' => 'Senarai Pekerja Koperasi', 'route' => 'admin.users.coop-workers', 'active' => 'admin.users.coop-workers', 'icon' => 'users'],
         ['section' => 'Pengurusan', 'label' => 'Pengumuman', 'route' => 'admin.announcements.index', 'active' => 'admin.announcements.*', 'icon' => 'clipboard'],
     ];
 
@@ -529,31 +529,6 @@
         .nav-link.active .nav-icon {
             color: #1D4ED8;
         }
-
-        .sidebar-nav-dropdown {
-            margin: 8px 0;
-        }
-
-        .sidebar-nav-dropdown > summary {
-            min-height: 42px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 0 12px;
-            border-radius: var(--radius-sm);
-            color: var(--sidebar-text);
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 700;
-            list-style: none;
-        }
-
-        .sidebar-nav-dropdown > summary::-webkit-details-marker { display: none; }
-        .sidebar-nav-dropdown > summary:hover { background: #EEF2F7; color: #1D4ED8; }
-        .sidebar-nav-dropdown > summary::after { content: '\25BE'; margin-left: auto; color: var(--sidebar-icon); font-size: 14px; transition: transform var(--transition-fast); }
-        .sidebar-nav-dropdown[open] > summary::after { transform: rotate(180deg); }
-        .sidebar-nav-dropdown__menu { display: grid; gap: 2px; margin: 4px 0 4px 20px; padding: 4px 0 4px 10px; border-left: 1px solid var(--sidebar-border); }
-        .sidebar-nav-dropdown__menu .nav-link { min-height: 38px; margin: 0; padding-left: 10px; font-size: 13px; }
 
         /* Content Area Infrastructure */
         .main-wrap {
@@ -2966,46 +2941,8 @@
                 <nav class="nav" aria-label="Primary">
                     @php
                         $currentSection = null;
-                        $workerManagementRendered = false;
                     @endphp
                     @foreach ($links as $link)
-                        @php
-                            $section = $link['section'] ?? 'Menu';
-                            $isWorkerManagement = $section === 'Pengurusan Pekerja Koperasi';
-                        @endphp
-                        @if ($isWorkerManagement)
-                            @if (! $workerManagementRendered)
-                                @php
-                                    $workerManagementLinks = collect($links)->where('section', 'Pengurusan Pekerja Koperasi')->values();
-                                    $workerManagementActive = $workerManagementLinks->contains(fn ($workerLink) => request()->routeIs(...((array) ($workerLink['active'] ?? []))));
-                                    $workerManagementRendered = true;
-                                    $currentSection = $section;
-                                @endphp
-                                <details class="sidebar-nav-dropdown" @if($workerManagementActive) open @endif>
-                                    <summary>
-                                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                            <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/>
-                                            <circle cx="9.5" cy="7" r="3.5"/>
-                                            <path d="M21 21v-2a3.5 3.5 0 0 0-3-3.46"/>
-                                            <path d="M16.5 3.4a3.5 3.5 0 0 1 0 6.8"/>
-                                        </svg>
-                                        <span>Pengurusan Pekerja Koperasi</span>
-                                    </summary>
-                                    <div class="sidebar-nav-dropdown__menu">
-                                        @foreach ($workerManagementLinks as $workerLink)
-                                            @php
-                                                $workerHref = route($workerLink['route'], $workerLink['params'] ?? []);
-                                                $workerActive = request()->routeIs(...((array) ($workerLink['active'] ?? [])));
-                                            @endphp
-                                            <a class="nav-link {{ $workerActive ? 'active' : '' }}" href="{{ $workerHref }}" @if($workerActive) aria-current="page" @endif>
-                                                <span class="nav-link__label">{{ $workerLink['label'] }}</span>
-                                            </a>
-                                        @endforeach
-                                    </div>
-                                </details>
-                            @endif
-                            @continue
-                        @endif
                         @php
                             $href = $link['route'] ? route($link['route'], $link['params'] ?? []) : '#';
                             $activePatterns = (array) ($link['active'] ?? []);
@@ -3017,9 +2954,9 @@
                                 || ($link['route'] === 'admin.users.students' && request()->routeIs('admin.users.edit') && request()->route('type') === 'student')
                                 || ($link['route'] === 'admin.users.staff' && request()->routeIs('admin.users.edit') && request()->route('type') === 'staff');
                         @endphp
-                        @if ($section !== $currentSection)
+                        @if (($link['section'] ?? 'Menu') !== $currentSection)
                             @php
-                                $currentSection = $section;
+                                $currentSection = $link['section'] ?? 'Menu';
                             @endphp
                             <div class="nav-label">{{ $currentSection }}</div>
                         @endif

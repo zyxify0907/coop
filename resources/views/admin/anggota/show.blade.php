@@ -5,7 +5,6 @@
 @section('page-subtitle', 'Maklumat penuh anggota koperasi yang telah diluluskan.')
 
 @php
-    $isDialogMode = request()->boolean('dialog');
     $application = $memberApplication;
     $data = $application->data_permohonan ?? [];
     $isStaffMember = ($data['pemohon_role'] ?? null) === 'staff';
@@ -61,17 +60,6 @@
     ])->filter(fn ($value) => filled($value) || is_numeric($value));
     $heirData = collect($data)->only($heirFields)->filter(fn ($value) => filled($value));
 @endphp
-
-@section('page-actions')
-    @unless ($isDialogMode)
-    <a class="link-button secondary" href="{{ route($isStaffMember ? 'admin.anggota.staff' : 'admin.anggota.students') }}">Kembali</a>
-    <form method="POST" action="{{ route('admin.anggota.destroy', $application) }}" onsubmit="return confirm('Padam anggota ini? Rekod saham dan nombor anggota akan dibuang.');" class="page-delete-form">
-        @csrf
-        @method('DELETE')
-        <button class="link-button danger" type="submit">Delete</button>
-    </form>
-    @endunless
-@endsection
 
 @section('content')
     <section class="detail-hero">

@@ -120,12 +120,13 @@
 
     $coopManagerManagementDropdown = [
         'label' => 'Pengurusan Koperasi',
-        'active' => ['coop-manager.dashboard.koperasi', 'admin.attendance.dashboard', 'admin.users.coop-workers', 'admin.attendance.records*', 'admin.allowances.*'],
+        'active' => ['coop-manager.dashboard.koperasi', 'admin.attendance.dashboard', 'admin.users.coop-workers', 'admin.attendance.records*', 'admin.allowances.*', 'admin.attendance.settings*'],
         'children' => [
             ['label' => 'Dashboard Pengurusan Koperasi', 'route' => 'coop-manager.dashboard.koperasi', 'active' => ['coop-manager.dashboard.koperasi', 'admin.attendance.dashboard']],
             ['label' => 'Senarai Pekerja Koperasi', 'route' => 'admin.users.coop-workers', 'active' => 'admin.users.coop-workers'],
             ['label' => 'Rekod Kehadiran', 'route' => 'admin.attendance.records', 'active' => 'admin.attendance.records*'],
             ['label' => 'Elaun Bulanan', 'route' => 'admin.allowances.index', 'active' => 'admin.allowances.*'],
+            ['label' => 'Tetapan Kehadiran', 'route' => 'admin.attendance.settings', 'active' => 'admin.attendance.settings*'],
         ],
     ];
 

@@ -49,7 +49,7 @@
     }
 
     .attendance-records-table__date-cell {
-        vertical-align: top;
+        vertical-align: middle;
     }
 
     .attendance-records-table__date,
@@ -97,8 +97,9 @@
     }
 
     .attendance-records-table .attendance-person {
-        gap: 6px;
-        padding-top: 2px;
+        gap: 4px;
+        padding: 0;
+        transform: translateY(8px);
     }
 
     .attendance-records-table .attendance-person strong {

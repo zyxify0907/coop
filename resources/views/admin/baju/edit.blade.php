@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Edit Baju')
-@section('page-title', 'Edit Baju')
+@section('title', 'Kemas Kini Maklumat Baju')
+@section('page-title', 'Kemas Kini Maklumat Baju')
 @section('page-subtitle', 'Kemaskini gambar, harga dan stok mengikut size.')
 
 @section('content')
@@ -16,9 +16,8 @@
 <div class="baju-edit-wrap">
     <section class="baju-edit-hero">
         <div>
-            <span>URUS BAJU</span>
-            <h1>Edit Baju</h1>
-            <p>Kemaskini maklumat baju dan tambah stok size baharu dalam satu tempat.</p>
+            <h1>Kemas Kini Maklumat Baju</h1>
+            <p>Semak maklumat, gambar, harga dan stok baju di satu tempat.</p>
         </div>
     </section>
 
@@ -120,8 +119,7 @@
     .alert.danger{background:var(--danger-soft);color:var(--primary-dark);border:1px solid var(--danger-soft)}
     .baju-edit-wrap{max-width:none;margin:0 auto;padding:0 0 48px}
     .baju-edit-hero{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:24px;padding:34px 36px;border:1px solid var(--line);border-left:5px solid var(--secondary);border-radius:22px;background:#fff;box-shadow:0 14px 34px rgba(15,23,42,.055);flex-wrap:wrap}
-    .baju-edit-hero span{display:inline-flex;min-height:24px;align-items:center;border-radius:4px;background:var(--secondary-soft);color:var(--secondary);padding:0 10px;font-size:11px;font-weight:900;letter-spacing:.04em}
-    .baju-edit-hero h1{margin:14px 0 0;font-size:38px;font-weight:900;color:var(--text);letter-spacing:0}
+    .baju-edit-hero h1{margin:0;font-size:38px;font-weight:900;color:var(--text);letter-spacing:0}
     .baju-edit-hero p{margin:10px 0 0;color:var(--muted-2);font-size:14px;font-weight:800}
     .hero-back{display:inline-flex;min-height:36px;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--secondary);padding:0 16px;text-decoration:none;font-size:14px;font-weight:800;white-space:nowrap}
     .hero-back:hover{background:var(--secondary);color:#fff}

@@ -98,9 +98,11 @@
 
     $shareStaffManagementDropdown = [
         'label' => 'Pengurusan Saham',
-        'active' => ['admin.dashboard.saham', 'admin.permohonan.*', 'admin.saham.*', 'koperasi.transactions.*'],
+        'active' => ['admin.dashboard.saham', 'admin.anggota.*', 'admin.permohonan.*', 'admin.saham.*', 'koperasi.transactions.*'],
         'children' => [
             ['label' => 'Dashboard Pengurusan Saham', 'route' => 'admin.dashboard.saham', 'active' => 'admin.dashboard.saham'],
+            ['label' => 'Senarai Anggota Pelajar', 'route' => 'admin.anggota.students', 'active' => 'admin.anggota.students'],
+            ['label' => 'Senarai Anggota Staff', 'route' => 'admin.anggota.staff', 'active' => 'admin.anggota.staff'],
             ['label' => 'Permohonan Anggota Pelajar', 'route' => 'admin.permohonan.index', 'params' => ['pemohon' => 'pelajar', 'jenis' => 'anggota'], 'active' => 'admin.permohonan.*'],
             ['label' => 'Permohonan Anggota Staff', 'route' => 'admin.permohonan.index', 'params' => ['pemohon' => 'staff', 'jenis' => 'anggota'], 'active' => 'admin.permohonan.*'],
             ['label' => 'Proses Tambah Saham', 'route' => 'admin.permohonan.index', 'params' => ['jenis' => 'saham'], 'active' => 'admin.permohonan.*'],

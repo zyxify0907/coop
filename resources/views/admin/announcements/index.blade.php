@@ -135,7 +135,7 @@
     .announcement-table td strong{display:block;color:#082F59;font-size:14px;font-weight:900}
     .announcement-table td span{display:block;margin-top:3px;color:#526987;font-size:12px;font-weight:700}
     .badge-code{display:inline-flex;min-height:26px;align-items:center;white-space:nowrap;border-radius:6px;background:#F1F6FC;color:#082F59;padding:0 10px;font-size:12px;font-weight:750}
-    .announcement-status{display:inline-flex;min-width:100px;min-height:26px;align-items:center;justify-content:center;border-radius:999px;padding:0 10px;font-size:12px;font-weight:900}
+    .announcement-table .announcement-status{display:inline-flex !important;min-width:100px;min-height:26px;align-items:center !important;justify-content:center !important;border-radius:999px;padding:0 10px;font-size:12px;font-weight:900;text-align:center}
     .announcement-status.active{background:var(--success-soft);color:var(--success)}
     .announcement-status.inactive{background:var(--danger-soft);color:var(--danger)}
     .announcement-actions{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:nowrap}

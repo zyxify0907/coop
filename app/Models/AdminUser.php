@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['nama', 'username', 'nric', 'password_hash', 'peranan', 'status_aktif'])]
+#[Fillable(['nama', 'username', 'nric', 'password_hash', 'peranan', 'status_aktif', 'profile_image_path'])]
 class AdminUser extends Model
 {
     protected $table = 'admin';

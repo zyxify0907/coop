@@ -9,6 +9,7 @@ use App\Models\CooperativeNotification;
 use App\Models\Pekerja;
 use App\Models\Permohonan;
 use App\Models\ShareTransaction;
+use App\Services\ProfileImageService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -302,16 +303,29 @@ class StaffPortalController extends Controller
         $validated = $request->validate([
             'no_tel' => ['nullable', 'string', 'max:20'],
             'email' => ['nullable', 'email', 'max:100', Rule::unique('pekerja', 'email')->ignore($user->id_pekerja, 'id_pekerja')],
+            'profile_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ], [
             'email.email' => 'Format email tidak sah.',
             'email.unique' => 'Email ini sudah digunakan oleh akaun lain.',
             'no_tel.max' => 'No telefon terlalu panjang.',
+            'profile_image.image' => 'Sila pilih fail gambar yang sah.',
+            'profile_image.mimes' => 'Gambar profil mesti dalam format JPG, PNG atau WebP.',
+            'profile_image.max' => 'Saiz gambar profil tidak boleh melebihi 4 MB.',
         ]);
 
-        $user->update([
+        $updates = [
             'no_tel' => $validated['no_tel'] ?? null,
             'email' => $validated['email'] ?? null,
-        ]);
+        ];
+
+        if ($request->hasFile('profile_image')) {
+            $updates['profile_image_path'] = app(ProfileImageService::class)->replace(
+                $request->file('profile_image'),
+                $user->profile_image_path,
+            );
+        }
+
+        $user->update($updates);
 
         return back()->with('success', 'Profil berjaya dikemaskini.');
     }

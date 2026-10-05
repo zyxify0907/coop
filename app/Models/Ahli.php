@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['no_anggota', 'no_matrik', 'nama', 'nric', 'password_hash', 'semester', 'program', 'kelas', 'no_tel', 'email', 'baki_ewallet', 'tarikh_daftar', 'status_aktif'])]
+#[Fillable(['no_anggota', 'no_matrik', 'nama', 'nric', 'password_hash', 'semester', 'program', 'kelas', 'no_tel', 'email', 'baki_ewallet', 'tarikh_daftar', 'status_aktif', 'profile_image_path'])]
 class Ahli extends Model
 {
     protected $table = 'ahli';

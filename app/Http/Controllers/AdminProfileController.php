@@ -11,6 +11,7 @@ use App\Models\Permohonan;
 use App\Models\Saham;
 use App\Models\SahamStaff;
 use App\Services\AhliImportService;
+use App\Services\ProfileImageService;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -64,6 +65,37 @@ class AdminProfileController extends Controller
         ]);
 
         return view('admin.profile', compact('role', 'user', 'staffProfile', 'recentActivities', 'loginEntries'));
+    }
+
+    public function updateProfile(Request $request): RedirectResponse
+    {
+        if (! $this->isAdmin($request)) {
+            return redirect()->route('login');
+        }
+
+        $user = AdminUser::query()->find($request->session()->get('auth_id'));
+
+        if (! $user) {
+            return redirect()->route('login');
+        }
+
+        $validated = $request->validate([
+            'profile_image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+        ], [
+            'profile_image.required' => 'Sila pilih gambar profil.',
+            'profile_image.image' => 'Sila pilih fail gambar yang sah.',
+            'profile_image.mimes' => 'Gambar profil mesti dalam format JPG, PNG atau WebP.',
+            'profile_image.max' => 'Saiz gambar profil tidak boleh melebihi 4 MB.',
+        ]);
+
+        $user->update([
+            'profile_image_path' => app(ProfileImageService::class)->replace(
+                $validated['profile_image'],
+                $user->profile_image_path,
+            ),
+        ]);
+
+        return back()->with('success', 'Gambar profil berjaya dikemaskini.');
     }
 
     public function updatePassword(Request $request): RedirectResponse

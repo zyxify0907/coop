@@ -136,7 +136,11 @@
                             <td>
                                 <div class="user-cell">
                                     <div class="avatar">
-                                        {{ strtoupper(substr($member->nama, 0, 2)) }}
+                                        @if ($member->profile_image_path)
+                                            <img src="{{ asset($member->profile_image_path) }}" alt="Gambar profil {{ $member->nama }}">
+                                        @else
+                                            {{ strtoupper(substr($member->nama, 0, 2)) }}
+                                        @endif
                                     </div>
                                     <div>
                                         <div class="user-name">{{ $member->nama }}</div>
@@ -530,6 +534,7 @@
         font-weight:900;
         flex:0 0 auto;
     }
+        .avatar img { width: 100%; height: 100%; display: block; border-radius: inherit; object-fit: cover; }
     .user-name{font-weight:900;color:var(--text)}
     .user-sub{margin-top:3px;font-size:12px;color:var(--muted-2);font-weight:700}
     .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace}

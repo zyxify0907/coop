@@ -28,6 +28,7 @@ Route::get('/dashboard/chart-data', [AuthController::class, 'dashboardChartData'
 Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
 Route::get('/admin/dashboard', [AuthController::class, 'adminDashboard'])->name('admin.dashboard');
 Route::get('/admin/profile', [AdminProfileController::class, 'profile'])->name('admin.profile');
+Route::patch('/admin/profile', [AdminProfileController::class, 'updateProfile'])->name('admin.profile.update');
 Route::patch('/admin/profile/password', [AdminProfileController::class, 'updatePassword'])->name('admin.profile.password');
 Route::get('/student/dashboard-saham', [AuthController::class, 'studentShareDashboard'])->name('student.dashboard.saham');
 Route::get('/student/profile', [AuthController::class, 'studentProfile'])->name('student.profile');

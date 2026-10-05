@@ -23,11 +23,15 @@
             <div class="profile-hero-main">
                 <span class="profile-watermark">KOPERASI</span>
                 <div class="profile-identity">
-                    <span class="profile-avatar" aria-label="{{ $profileInitial }}">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <circle cx="12" cy="7" r="4"/>
-                            <path d="M5 21v-2a7 7 0 0 1 14 0v2"/>
-                        </svg>
+                    <span class="profile-avatar" aria-label="Gambar profil {{ $user->nama }}">
+                        @if ($user->profile_image_path)
+                            <img src="{{ asset($user->profile_image_path) }}" alt="Gambar profil {{ $user->nama }}">
+                        @else
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="12" cy="7" r="4"/>
+                                <path d="M5 21v-2a7 7 0 0 1 14 0v2"/>
+                            </svg>
+                        @endif
                     </span>
                     <div>
                         <span class="profile-kicker">Profil Pentadbir</span>
@@ -76,7 +80,9 @@
                             <p>Maklumat asas akaun admin semasa.</p>
                         </div>
                     </div>
-                    <div class="profile-form">
+                    <form class="profile-form" method="POST" action="{{ route('admin.profile.update') }}" enctype="multipart/form-data">
+                        @csrf
+                        @method('PATCH')
                         <div class="profile-form-grid">
                             <label>
                                 <span>Nama Penuh</span>
@@ -90,8 +96,17 @@
                                 <span>Peranan</span>
                                 <input value="{{ $user->peranan ?? 'Admin' }}" disabled>
                             </label>
+                            <label class="profile-photo-upload">
+                                <span>Gambar Profil</span>
+                                <input name="profile_image" type="file" accept="image/jpeg,image/png,image/webp" required>
+                                <small>JPG, PNG atau WebP. Maksimum 4 MB.</small>
+                                @error('profile_image')<small>{{ $message }}</small>@enderror
+                            </label>
                         </div>
-                    </div>
+                        <div class="profile-actions">
+                            <button class="button primary" type="submit">Simpan Gambar Profil</button>
+                        </div>
+                    </form>
                 </section>
 
                 <section class="panel profile-panel">

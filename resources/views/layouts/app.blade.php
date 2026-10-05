@@ -456,6 +456,14 @@
             border: 1px solid #BFDBFE;
         }
 
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            border-radius: inherit;
+            object-fit: cover;
+        }
+
         .sidebar-user strong { display: block; color: var(--text); font-size: 14px; font-weight: 700; }
         .sidebar-user > div > span { display: block; color: var(--muted-2); font-size: 12px; font-weight: 600; }
 
@@ -3058,7 +3066,7 @@
                 </div>
 
                 <div class="sidebar-user">
-                    <x-user-avatar :initials="$initials" />
+                    <x-user-avatar :initials="$initials" :image-path="$user->profile_image_path ?? null" :name="$displayName" />
                     <div>
                         <strong>{{ $displayName }}</strong>
                         <span>{{ $roleLabel }}</span>
@@ -3254,7 +3262,7 @@
                         </details>
                         <details class="profile-menu">
                             <summary class="profile-chip" aria-label="Menu profil" title="Menu profil">
-                                <x-user-avatar :initials="$initials" />
+                                <x-user-avatar :initials="$initials" :image-path="$user->profile_image_path ?? null" :name="$displayName" />
                                 <span class="profile-chip__text"><span class="profile-chip__name">{{ $displayName }}</span><small>{{ $roleLabel }}</small></span>
                             </summary>
                             <section class="profile-dropdown" aria-label="Menu profil">

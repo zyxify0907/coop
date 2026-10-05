@@ -121,10 +121,14 @@
                                 <td>
                                     <div class="member-cell">
                                         <span class="member-avatar" aria-hidden="true">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                <circle cx="12" cy="8" r="4"></circle>
-                                                <path d="M4 21c0-4.42 3.58-8 8-8s8 3.58 8 8"></path>
-                                            </svg>
+                                            @if ($member?->profile_image_path)
+                                                <img src="{{ asset($member->profile_image_path) }}" alt="">
+                                            @else
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <circle cx="12" cy="8" r="4"></circle>
+                                                    <path d="M4 21c0-4.42 3.58-8 8-8s8 3.58 8 8"></path>
+                                                </svg>
+                                            @endif
                                         </span>
                                         <div>
                                             <strong>{{ $memberName }}</strong>
@@ -318,6 +322,7 @@
 
         .member-cell .member-avatar { display: grid; margin-top: 0; }
         .member-avatar svg { width: 20px; height: 20px; }
+        .member-avatar img { width: 100%; height: 100%; display: block; border-radius: inherit; object-fit: cover; }
 
         .member-cell strong,
         .member-cell span {

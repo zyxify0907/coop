@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['no_anggota', 'no_pekerja', 'nama', 'nric', 'password_hash', 'jawatan', 'staff_type', 'no_tel', 'email', 'kadar_elaun', 'tarikh_mula', 'status_aktif'])]
+#[Fillable(['no_anggota', 'no_pekerja', 'nama', 'nric', 'password_hash', 'jawatan', 'staff_type', 'no_tel', 'email', 'kadar_elaun', 'tarikh_mula', 'status_aktif', 'profile_image_path'])]
 class Pekerja extends Model
 {
     public const SHAREHOLDER_STAFF_TYPES = [

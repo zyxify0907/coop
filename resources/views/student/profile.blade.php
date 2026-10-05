@@ -388,8 +388,8 @@
     }
 
     .profile-avatar {
-        width: 78px;
-        height: 78px;
+        width: 48px;
+        height: 48px;
         flex: 0 0 auto;
         display: grid;
         place-items: center;
@@ -894,8 +894,8 @@
         }
 
         .profile-avatar {
-            width: 68px;
-            height: 68px;
+            width: 48px;
+            height: 48px;
             font-size: 24px;
         }
 
@@ -1029,8 +1029,8 @@
     }
 
     .profile-hero-main .profile-avatar {
-        width: 94px;
-        height: 94px;
+        width: 48px;
+        height: 48px;
         border: 3px solid rgba(255,255,255,.34);
         background: #DCEBFF;
         color: var(--profile-navy);

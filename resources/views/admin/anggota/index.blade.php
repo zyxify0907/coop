@@ -462,8 +462,8 @@
         min-width:0;
     }
     .member-avatar{
-        width:36px;
-        height:36px;
+        width:48px;
+        height:48px;
         border-radius:999px;
         overflow:hidden;
         display:grid;

@@ -443,8 +443,8 @@
         }
 
         .avatar {
-            width: 36px;
-            height: 36px;
+            width: 48px;
+            height: 48px;
             border-radius: 999px;
             overflow: hidden;
             display: grid;
@@ -3006,15 +3006,15 @@
             }
 
             body.student-navbar-page .profile-chip {
-                min-height: 38px;
+                min-height: 48px;
                 padding: 1px;
                 border: 0;
                 background: transparent;
             }
 
             body.student-navbar-page .profile-chip .avatar {
-                width: 36px;
-                height: 36px;
+                width: 48px;
+                height: 48px;
             }
         }
 

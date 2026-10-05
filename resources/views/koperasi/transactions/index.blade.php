@@ -308,8 +308,8 @@
         }
 
         .member-avatar {
-            width: 42px;
-            height: 42px;
+            width: 48px;
+            height: 48px;
             border-radius: 999px;
             overflow: hidden;
             display: grid;
@@ -670,8 +670,8 @@
         }
 
         .content .transaction-page .member-avatar {
-            width: 28px;
-            height: 28px;
+            width: 48px;
+            height: 48px;
             border: 1px solid #CFE0F5;
             background: #EAF3FF;
             color: #0B5ED7;

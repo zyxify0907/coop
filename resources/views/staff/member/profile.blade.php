@@ -275,8 +275,8 @@
         min-width: 0;
     }
     .profile-avatar {
-        width: 62px;
-        height: 62px;
+        width: 48px;
+        height: 48px;
         flex: 0 0 auto;
         display: grid;
         place-items: center;
@@ -544,8 +544,8 @@
     }
 
     .staff-profile-page .profile-avatar {
-        width: 94px;
-        height: 94px;
+        width: 48px;
+        height: 48px;
         flex: 0 0 auto;
         display: grid;
         place-items: center;

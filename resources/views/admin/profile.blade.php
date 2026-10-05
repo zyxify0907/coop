@@ -234,8 +234,8 @@
         min-width: 0;
     }
     .profile-avatar {
-        width: 62px;
-        height: 62px;
+        width: 48px;
+        height: 48px;
         flex: 0 0 auto;
         display: grid;
         place-items: center;
@@ -369,8 +369,8 @@
         padding-top:22px;
     }
     .content .profile-avatar{
-        width:78px;
-        height:78px;
+        width:48px;
+        height:48px;
         border:0;
         border-radius:999px;
         background:#DCEBFF;
@@ -585,8 +585,8 @@
     }
 
     .admin-profile-page .profile-avatar {
-        width: 82px;
-        height: 82px;
+        width: 48px;
+        height: 48px;
         flex: 0 0 auto;
         display: grid;
         place-items: center;

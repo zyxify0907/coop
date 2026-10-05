@@ -521,8 +521,8 @@
     .staff-table tbody tr:hover{background:#f8fafc}
     .user-cell{display:flex;align-items:center;gap:12px;min-width:220px}
     .avatar{
-        width:42px;
-        height:42px;
+        width:48px;
+        height:48px;
         border-radius:999px;
         display:flex;
         align-items:center;
@@ -725,8 +725,8 @@
         min-width:190px;
     }
     .content .avatar{
-        width:36px;
-        height:36px;
+        width:48px;
+        height:48px;
         background:#EAF3FF;
         color:#0B5ED7;
         border-color:#CFE0F5;

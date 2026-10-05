@@ -123,8 +123,8 @@
     .attendance-records-table .attendance-person__avatar {
         display: grid;
         place-items: center;
-        width: 36px;
-        height: 36px;
+        width: 48px;
+        height: 48px;
         flex: 0 0 auto;
         overflow: hidden;
         border: 1px solid #CFE0F5;

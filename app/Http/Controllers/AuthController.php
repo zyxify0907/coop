@@ -79,7 +79,28 @@ class AuthController extends Controller
             'nric' => ['required', 'string', 'max:20'],
             'email' => ['required', 'email', 'max:100'],
             'no_tel' => ['required', 'string', 'max:20'],
-            'password' => ['required', 'string', 'min:6', 'confirmed'],
+            'password' => [
+                'bail',
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $password = (string) $value;
+                    $requirements = [
+                        '/[A-Z]/' => 'huruf besar (A-Z)',
+                        '/[a-z]/' => 'huruf kecil (a-z)',
+                        '/[0-9]/' => 'nombor (0-9)',
+                        '/[@$!%*?&]/' => 'simbol khas (@$!%*?&)',
+                    ];
+
+                    foreach ($requirements as $pattern => $label) {
+                        if (! preg_match($pattern, $password)) {
+                            $fail('Kata laluan mesti mengandungi '.$label.'.');
+                        }
+                    }
+                },
+            ],
             'agreement' => ['accepted'],
         ];
 
@@ -98,6 +119,8 @@ class AuthController extends Controller
             'email.email' => 'Format emel tidak sah.',
             'no_tel.required' => 'Sila masukkan no. telefon.',
             'password.required' => 'Sila masukkan kata laluan.',
+            'password.min' => 'Kata laluan mesti sekurang-kurangnya 8 aksara.',
+            'password.regex' => 'Kata laluan mesti sekurang-kurangnya 8 aksara dan mengandungi huruf besar, huruf kecil, nombor serta simbol @$!%*?&.',
             'password.confirmed' => 'Sahkan kata laluan mesti sepadan.',
             'agreement.accepted' => 'Sila sahkan maklumat yang diberikan adalah benar.',
         ]);

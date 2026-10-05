@@ -119,7 +119,19 @@
                         <div class="baju-meta-text">
                             <span>Jumlah stok: {{ $item->total_stock }}</span>
                             <span>{{ $item->is_visible ? 'Dipaparkan kepada pelajar' : 'Disorok daripada pelajar' }}</span>
-                            <span>{{ $item->size_chart_path ? 'Carta saiz tersedia' : 'Carta saiz belum dimuat naik' }}</span>
+                            @if ($item->size_chart_path)
+                                <button
+                                    class="size-chart-view"
+                                    type="button"
+                                    data-size-chart-open
+                                    data-size-chart-src="{{ asset($item->size_chart_path) }}"
+                                    data-size-chart-title="Carta Saiz {{ $item->nama_item }}"
+                                >
+                                    Lihat gambar carta saiz
+                                </button>
+                            @else
+                                <span>Carta saiz belum dimuat naik</span>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -138,6 +150,21 @@
     </div>
 
 </section>
+
+<dialog class="size-chart-dialog" data-size-chart-dialog aria-labelledby="sizeChartTitle">
+    <section class="size-chart-panel">
+        <header class="size-chart-panel__head">
+            <div>
+                <h2 id="sizeChartTitle">Carta Saiz</h2>
+                <p>Semak gambar carta saiz baju.</p>
+            </div>
+            <button class="size-chart-dialog__close" type="button" data-size-chart-close aria-label="Tutup carta saiz">&times;</button>
+        </header>
+        <div class="size-chart-panel__image">
+            <img data-size-chart-image src="" alt="Carta saiz baju">
+        </div>
+    </section>
+</dialog>
 </div>
 
 @endsection
@@ -380,6 +407,9 @@
     .admin-order-page .baju-meta-row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-top:0;padding-top:0}
     .admin-order-page .baju-meta-text{display:grid;gap:4px;min-width:0}
     .admin-order-page .baju-meta-text span{color:#4D6484;font-size:12px;font-weight:800}
+    .admin-order-page .size-chart-view{justify-self:start;padding:0;border:0;background:transparent;color:#0B5ED7;font:inherit;font-size:12px;font-weight:900;line-height:1.35;text-align:left;cursor:pointer}
+    .admin-order-page .size-chart-view::before{content:'↗';margin-right:6px;color:var(--order-red);font-size:14px}
+    .admin-order-page .size-chart-view:hover,.admin-order-page .size-chart-view:focus-visible{color:var(--order-red);text-decoration:underline;outline:0}
     .admin-order-page .size-pills{
         display:grid;
         grid-template-columns:repeat(5,minmax(0,1fr));
@@ -471,6 +501,16 @@
     .order-actions select,.order-actions input{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
     .pagination-wrap{padding:0 18px 18px}
     .admin-order-page .empty-state{grid-column:1 / -1;padding:28px;text-align:center;color:#64748b;font-weight:700;border:1px dashed var(--order-border);border-radius:8px;background:#F8FBFF}
+    .size-chart-dialog{width:min(900px,calc(100vw - 32px));max-width:900px;max-height:88dvh;padding:0;border:0;border-radius:12px;background:transparent;overflow:hidden;box-shadow:0 28px 80px rgba(15,23,42,.28)}
+    .size-chart-dialog::backdrop{background:rgba(8,47,89,.30)}
+    .size-chart-panel{display:grid;grid-template-rows:auto minmax(0,1fr);max-height:88dvh;background:#fff}
+    .size-chart-panel__head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px 22px;border-bottom:4px solid var(--order-red);background:var(--order-navy)}
+    .size-chart-panel__head h2{margin:0;color:#fff;font-size:22px;font-weight:900}
+    .size-chart-panel__head p{margin:5px 0 0;color:rgba(255,255,255,.8);font-size:13px;font-weight:700}
+    .size-chart-dialog__close{display:grid;place-items:center;width:38px;height:38px;flex:0 0 38px;padding:0;border:1px solid rgba(255,255,255,.35);border-radius:8px;background:rgba(255,255,255,.06);color:#fff;font-size:28px;line-height:1;cursor:pointer}
+    .size-chart-dialog__close:hover,.size-chart-dialog__close:focus-visible{background:#fff;color:var(--order-navy);outline:none}
+    .size-chart-panel__image{min-height:0;overflow:auto;padding:20px;background:#F5F8FC}
+    .size-chart-panel__image img{display:block;width:100%;height:auto;max-height:calc(88dvh - 144px);object-fit:contain;margin:auto;border:1px solid #D7E2EF;border-radius:8px;background:#fff}
     @media (max-width: 1120px){
         .admin-order-page .form-grid--baju{grid-template-columns:repeat(2,minmax(0,1fr))}
         .admin-order-page .field--sizes{grid-column:1 / -1}
@@ -529,6 +569,36 @@
             button.classList.remove('is-selected');
             button.removeAttribute('title');
             label.textContent = defaultText;
+        }
+    });
+
+    const sizeChartDialog = document.querySelector('[data-size-chart-dialog]');
+    const sizeChartImage = document.querySelector('[data-size-chart-image]');
+    const sizeChartTitle = document.querySelector('#sizeChartTitle');
+
+    document.querySelectorAll('[data-size-chart-open]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            if (! sizeChartDialog || ! sizeChartImage) {
+                return;
+            }
+
+            const title = button.dataset.sizeChartTitle || 'Carta Saiz';
+            sizeChartImage.src = button.dataset.sizeChartSrc || '';
+            sizeChartImage.alt = title;
+            if (sizeChartTitle) {
+                sizeChartTitle.textContent = title;
+            }
+            sizeChartDialog.showModal();
+        });
+    });
+
+    document.querySelector('[data-size-chart-close]')?.addEventListener('click', function () {
+        sizeChartDialog?.close();
+    });
+
+    sizeChartDialog?.addEventListener('click', function (event) {
+        if (event.target === sizeChartDialog) {
+            sizeChartDialog.close();
         }
     });
 </script>

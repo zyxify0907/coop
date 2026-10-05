@@ -107,42 +107,6 @@
             font-size: 18px;
         }
 
-        body.login-page.register-page .password-requirements {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 5px 14px;
-            margin: -4px 0 0;
-            padding: 0;
-            color: var(--cb-muted);
-            font-size: 12px;
-            list-style: none;
-        }
-
-        body.login-page.register-page .password-requirements li::before {
-            content: '○';
-            display: inline-block;
-            width: 18px;
-            color: #7A8798;
-        }
-
-        body.login-page.register-page .password-requirements li[data-valid="true"] {
-            color: #16794B;
-        }
-
-        body.login-page.register-page .password-requirements li[data-valid="true"]::before {
-            content: '✓';
-            color: #16794B;
-        }
-
-        body.login-page.register-page .password-requirements[data-has-input="true"] li[data-valid="false"] {
-            color: #B42318;
-        }
-
-        body.login-page.register-page .password-requirements[data-has-input="true"] li[data-valid="false"]::before {
-            content: '×';
-            color: #B42318;
-        }
-
         body.login-page.register-page .register-row {
             margin-top: 12px;
             font-size: 14px;
@@ -312,22 +276,14 @@
 
                         <div class="login-field">
                             <label for="password">Kata Laluan</label>
-                            <p class="login-field__hint" id="password-hint">Kata laluan perlu memenuhi semua syarat berikut:</p>
                             <div class="login-input-wrap">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                                <input id="password" type="password" name="password" required minlength="8" autocomplete="new-password" aria-describedby="password-hint password-requirements" placeholder="Masukkan kata laluan">
+                                <input id="password" type="password" name="password" required minlength="8" autocomplete="new-password" placeholder="Masukkan kata laluan">
                                 <button class="password-toggle" type="button" aria-label="Papar kata laluan" aria-pressed="false" data-password-toggle>
                                     <svg class="eye-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
                                     <svg class="eye-hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 2 20 20"/><path d="M6.7 6.7C3.8 8.6 2 12 2 12s3.5 7 10 7c1.8 0 3.3-.5 4.7-1.2"/><path d="M9.9 4.2C10.6 4.1 11.3 4 12 4c6.5 0 10 8 10 8s-.8 1.7-2.2 3.4"/></svg>
                                 </button>
                             </div>
-                            <ul class="password-requirements" id="password-requirements" aria-live="polite">
-                                <li data-password-rule="length">Sekurang-kurangnya 8 aksara</li>
-                                <li data-password-rule="uppercase">Huruf besar (A-Z)</li>
-                                <li data-password-rule="lowercase">Huruf kecil (a-z)</li>
-                                <li data-password-rule="number">Nombor (0-9)</li>
-                                <li data-password-rule="symbol">Simbol khas (@$!%*?&amp;)</li>
-                            </ul>
                         </div>
 
                         <div class="login-field">
@@ -376,7 +332,7 @@
         const registerForm = document.getElementById('register-form');
         const passwordInput = document.getElementById('password');
         const passwordConfirmationInput = document.getElementById('password_confirmation');
-        const passwordRequirements = document.getElementById('password-requirements');
+        const passwordRequirementMessage = 'Kata laluan mesti sekurang-kurangnya 8 aksara dan mengandungi huruf besar, huruf kecil, nombor serta simbol khas (@$!%*?&).';
         const passwordRules = {
             length: (value) => value.length >= 8,
             uppercase: (value) => /[A-Z]/.test(value),
@@ -389,17 +345,12 @@
             const value = passwordInput.value;
             let isValid = true;
 
-            passwordRequirements?.setAttribute('data-has-input', String(value.length > 0));
-
-            Object.entries(passwordRules).forEach(([rule, check]) => {
-                const passed = check(value);
-                const item = document.querySelector(`[data-password-rule="${rule}"]`);
-                item?.setAttribute('data-valid', String(passed));
-                isValid = isValid && passed;
+            Object.values(passwordRules).forEach((check) => {
+                isValid = isValid && check(value);
             });
 
             passwordInput.setCustomValidity(value && !isValid
-                ? 'Sila lengkapkan semua syarat kata laluan yang dipaparkan.'
+                ? passwordRequirementMessage
                 : '');
 
             return isValid;
@@ -423,8 +374,20 @@
         passwordConfirmationInput.addEventListener('input', updatePasswordConfirmation);
         updatePasswordRequirements();
         registerForm.addEventListener('submit', (event) => {
-            updatePasswordRequirements();
+            const passwordIsValid = updatePasswordRequirements();
             updatePasswordConfirmation();
+
+            if (passwordInput.value && !passwordIsValid) {
+                event.preventDefault();
+                window.showSystemNotice?.({
+                    type: 'error',
+                    title: 'Kata laluan tidak memenuhi syarat',
+                    message: passwordRequirementMessage,
+                });
+                passwordInput.focus();
+                return;
+            }
+
             if (!registerForm.checkValidity()) {
                 event.preventDefault();
                 registerForm.reportValidity();

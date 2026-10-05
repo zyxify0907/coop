@@ -13,25 +13,28 @@
     @include('components.coopbest-public-style')
     <style>
         body.login-page.register-page .login-form-wrap {
-            max-width: 610px;
+            max-width: 680px;
         }
 
         body.login-page.register-page .login-form-head h2 {
-            font-size: clamp(32px, 2.8vw, 44px);
+            font-size: clamp(30px, 2.6vw, 38px);
+            letter-spacing: -.03em;
         }
 
         body.login-page.register-page .login-form-head p {
-            margin-bottom: 14px;
+            margin-bottom: 18px;
+            color: #526A88;
+            font-size: 16px;
         }
 
         body.login-page.register-page .login-form {
-            gap: 12px;
+            gap: 18px;
         }
 
         body.login-page.register-page .register-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 10px 16px;
+            gap: 15px 20px;
         }
 
         body.login-page.register-page .login-field label {
@@ -109,19 +112,33 @@
 
         body.login-page.register-page .password-requirements {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 5px 14px;
-            margin: -4px 0 0;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+            margin: 14px 0 0;
             padding: 0;
             color: var(--cb-muted);
             font-size: 12px;
+            font-weight: 700;
             list-style: none;
+        }
+
+        body.login-page.register-page .password-requirements li {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 34px;
+            padding: 7px 9px;
+            border: 1px solid #D8E2EF;
+            border-radius: 7px;
+            background: #FFF;
         }
 
         body.login-page.register-page .password-requirements li::before {
             content: '○';
-            display: inline-block;
-            width: 18px;
+            display: inline-grid;
+            width: 14px;
+            flex: 0 0 14px;
+            place-items: center;
             color: #7A8798;
         }
 
@@ -141,6 +158,47 @@
         body.login-page.register-page .password-requirements[data-has-input="true"] li[data-valid="false"]::before {
             content: '×';
             color: #B42318;
+        }
+
+        body.login-page.register-page .register-password-section {
+            padding: 18px;
+            border: 1px solid #D7E2F0;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #F6F9FD 0%, #FDFEFF 100%);
+        }
+
+        body.login-page.register-page .register-password-section__head {
+            margin-bottom: 14px;
+        }
+
+        body.login-page.register-page .register-password-section__eyebrow {
+            display: block;
+            margin-bottom: 3px;
+            color: #1A63B8;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        body.login-page.register-page .register-password-section h3 {
+            margin: 0;
+            color: var(--cb-navy);
+            font-size: 17px;
+            line-height: 1.3;
+        }
+
+        body.login-page.register-page .register-password-section__head p {
+            margin: 3px 0 0;
+            color: var(--cb-muted);
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        body.login-page.register-page .register-password-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
         }
 
         body.login-page.register-page .register-row {
@@ -168,6 +226,11 @@
 
         @media (max-width: 640px) {
             body.login-page.register-page .register-grid {
+                grid-template-columns: 1fr;
+            }
+
+            body.login-page.register-page .register-password-grid,
+            body.login-page.register-page .password-requirements {
                 grid-template-columns: 1fr;
             }
         }
@@ -309,39 +372,49 @@
                                 <input id="no_tel" name="no_tel" value="{{ old('no_tel') }}" required placeholder="Masukkan no. telefon">
                             </div>
                         </div>
-
-                        <div class="login-field">
-                            <label for="password">Kata Laluan</label>
-                            <p class="login-field__hint" id="password-hint">Kata laluan perlu memenuhi semua syarat berikut:</p>
-                            <div class="login-input-wrap">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                                <input id="password" type="password" name="password" required minlength="8" autocomplete="new-password" aria-describedby="password-hint password-requirements" placeholder="Masukkan kata laluan">
-                                <button class="password-toggle" type="button" aria-label="Papar kata laluan" aria-pressed="false" data-password-toggle>
-                                    <svg class="eye-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
-                                    <svg class="eye-hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 2 20 20"/><path d="M6.7 6.7C3.8 8.6 2 12 2 12s3.5 7 10 7c1.8 0 3.3-.5 4.7-1.2"/><path d="M9.9 4.2C10.6 4.1 11.3 4 12 4c6.5 0 10 8 10 8s-.8 1.7-2.2 3.4"/></svg>
-                                </button>
-                            </div>
-                            <ul class="password-requirements" id="password-requirements" aria-live="polite">
-                                <li data-password-rule="length">Sekurang-kurangnya 8 aksara</li>
-                                <li data-password-rule="uppercase">Huruf besar (A-Z)</li>
-                                <li data-password-rule="lowercase">Huruf kecil (a-z)</li>
-                                <li data-password-rule="number">Nombor (0-9)</li>
-                                <li data-password-rule="symbol">Simbol khas (@$!%*?&amp;)</li>
-                            </ul>
-                        </div>
-
-                        <div class="login-field">
-                            <label for="password_confirmation">Sahkan Kata Laluan</label>
-                            <div class="login-input-wrap">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                                <input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password" placeholder="Sahkan kata laluan">
-                                <button class="password-toggle" type="button" aria-label="Papar kata laluan" aria-pressed="false" data-password-toggle>
-                                    <svg class="eye-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
-                                    <svg class="eye-hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 2 20 20"/><path d="M6.7 6.7C3.8 8.6 2 12 2 12s3.5 7 10 7c1.8 0 3.3-.5 4.7-1.2"/><path d="M9.9 4.2C10.6 4.1 11.3 4 12 4c6.5 0 10 8 10 8s-.8 1.7-2.2 3.4"/></svg>
-                                </button>
-                            </div>
-                        </div>
                     </div>
+
+                    <section class="register-password-section" aria-labelledby="password-section-title">
+                        <div class="register-password-section__head">
+                            <span class="register-password-section__eyebrow">Keselamatan Akaun</span>
+                            <h3 id="password-section-title">Tetapkan Kata Laluan</h3>
+                            <p>Gunakan kata laluan yang kuat untuk melindungi akaun anda.</p>
+                        </div>
+
+                        <div class="register-password-grid">
+                            <div class="login-field">
+                                <label for="password">Kata Laluan</label>
+                                <div class="login-input-wrap">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                    <input id="password" type="password" name="password" required minlength="8" autocomplete="new-password" aria-describedby="password-requirements" placeholder="Masukkan kata laluan">
+                                    <button class="password-toggle" type="button" aria-label="Papar kata laluan" aria-pressed="false" data-password-toggle>
+                                        <svg class="eye-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        <svg class="eye-hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 2 20 20"/><path d="M6.7 6.7C3.8 8.6 2 12 2 12s3.5 7 10 7c1.8 0 3.3-.5 4.7-1.2"/><path d="M9.9 4.2C10.6 4.1 11.3 4 12 4c6.5 0 10 8 10 8s-.8 1.7-2.2 3.4"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="login-field">
+                                <label for="password_confirmation">Sahkan Kata Laluan</label>
+                                <div class="login-input-wrap">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                    <input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password" placeholder="Sahkan kata laluan">
+                                    <button class="password-toggle" type="button" aria-label="Papar kata laluan" aria-pressed="false" data-password-toggle>
+                                        <svg class="eye-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        <svg class="eye-hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 2 20 20"/><path d="M6.7 6.7C3.8 8.6 2 12 2 12s3.5 7 10 7c1.8 0 3.3-.5 4.7-1.2"/><path d="M9.9 4.2C10.6 4.1 11.3 4 12 4c6.5 0 10 8 10 8s-.8 1.7-2.2 3.4"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <ul class="password-requirements" id="password-requirements" aria-live="polite">
+                            <li data-password-rule="length">8 aksara minimum</li>
+                            <li data-password-rule="uppercase">Huruf besar A-Z</li>
+                            <li data-password-rule="lowercase">Huruf kecil a-z</li>
+                            <li data-password-rule="number">Nombor 0-9</li>
+                            <li data-password-rule="symbol">Simbol @$!%*?&amp;</li>
+                        </ul>
+                    </section>
 
                     <label class="register-agreement">
                         <input type="checkbox" name="agreement" value="1" required>

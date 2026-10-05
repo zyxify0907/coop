@@ -394,6 +394,7 @@
         display: grid;
         place-items: center;
         border-radius: 999px;
+        overflow: hidden;
         background: #DCEBFF;
         color: var(--profile-navy);
         font-size: 28px;

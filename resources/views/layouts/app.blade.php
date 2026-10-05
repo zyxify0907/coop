@@ -446,6 +446,7 @@
             width: 36px;
             height: 36px;
             border-radius: 999px;
+            overflow: hidden;
             display: grid;
             place-items: center;
             background: #DBEAFE;

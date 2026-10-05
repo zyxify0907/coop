@@ -280,7 +280,8 @@
         flex: 0 0 auto;
         display: grid;
         place-items: center;
-        border-radius: 8px;
+        border-radius: 999px;
+        overflow: hidden;
         background: rgba(255, 255, 255, .14);
         color: #fff;
         font-size: 24px;

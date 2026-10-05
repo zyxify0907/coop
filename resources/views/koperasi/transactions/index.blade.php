@@ -311,6 +311,7 @@
             width: 42px;
             height: 42px;
             border-radius: 999px;
+            overflow: hidden;
             display: grid;
             place-items: center;
             flex: 0 0 auto;

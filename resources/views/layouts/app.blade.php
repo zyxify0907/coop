@@ -2904,6 +2904,130 @@
                 font-size: 26px !important;
             }
         }
+
+        /* Phone navigation keeps the account tools beside the logo and gives
+           the main links their own full-width row. This prevents the bell and
+           profile button from dropping below, or extending beyond the screen. */
+        @media (max-width: 760px) {
+            body.student-navbar-page {
+                overflow-x: hidden;
+            }
+
+            body.student-navbar-page .topbar {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto;
+                grid-template-rows: auto auto;
+                align-items: center;
+                gap: 8px;
+                min-height: 0;
+                padding: 10px 14px 8px;
+            }
+
+            body.student-navbar-page .topbar-left,
+            body.student-navbar-page .student-topnav {
+                display: contents;
+            }
+
+            .student-topnav__brand {
+                grid-column: 1;
+                grid-row: 1;
+                min-width: 0;
+                overflow: hidden;
+            }
+
+            .student-topnav__brand img {
+                width: 38px;
+                height: 38px;
+            }
+
+            .student-topnav__brand > span {
+                min-width: 0;
+            }
+
+            .student-topnav__brand strong {
+                font-size: 18px;
+            }
+
+            .student-topnav__brand small {
+                font-size: 10px;
+                letter-spacing: .07em;
+                white-space: nowrap;
+            }
+
+            .student-topnav__links {
+                grid-column: 1 / -1;
+                grid-row: 2;
+                width: 100%;
+                margin: 0;
+                gap: 0 4px;
+                flex-wrap: wrap;
+                overflow: visible;
+            }
+
+            .student-topnav__links a,
+            .student-topnav__dropdown > summary {
+                min-height: 36px;
+                padding-inline: 10px;
+                font-size: 13px;
+            }
+
+            body.student-navbar-page .topbar-actions {
+                grid-column: 2;
+                grid-row: 1;
+                align-self: center;
+                min-height: 38px;
+                margin: 0;
+                padding: 0;
+                gap: 2px;
+                border: 0;
+                border-radius: 0;
+                background: transparent;
+                box-shadow: none;
+            }
+
+            body.student-navbar-page .topbar-actions::before {
+                display: none;
+            }
+
+            body.student-navbar-page .icon-button {
+                width: 38px;
+                height: 38px;
+                border: 0;
+                background: transparent;
+            }
+
+            body.student-navbar-page .profile-chip {
+                min-height: 38px;
+                padding: 1px;
+                border: 0;
+                background: transparent;
+            }
+
+            body.student-navbar-page .profile-chip .avatar {
+                width: 36px;
+                height: 36px;
+            }
+        }
+
+        @media (max-width: 380px) {
+            body.student-navbar-page .topbar {
+                padding-inline: 10px;
+            }
+
+            .student-topnav__brand img {
+                width: 34px;
+                height: 34px;
+            }
+
+            .student-topnav__brand strong {
+                font-size: 17px;
+            }
+
+            .student-topnav__links a,
+            .student-topnav__dropdown > summary {
+                padding-inline: 8px;
+            }
+        }
     </style>
 </head>
 <body class="{{ trim(($isDialogMode ? 'dialog-mode embedded-frame' : '').' '.($showPortalNav ? 'student-navbar-page' : '')) }}">

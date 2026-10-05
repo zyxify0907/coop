@@ -22,6 +22,7 @@ Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.submit');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::post('/session/activity', [AuthController::class, 'recordActivity'])->name('session.activity');
 Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('auth.dashboard');
 Route::get('/dashboard/chart-data', [AuthController::class, 'dashboardChartData'])->name('auth.dashboard.chart-data');
 Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements.index');

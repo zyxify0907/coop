@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
             \App\Http\Middleware\RestoreRememberedSession::class,
+            \App\Http\Middleware\EnsureSingleActiveSession::class,
         ]);
 
         $middleware->alias([

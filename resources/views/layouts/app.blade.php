@@ -3290,7 +3290,84 @@
     </div>
     @stack('scripts')
     @if ($showAccountTools)
+        <form id="idle-logout-form" method="POST" action="{{ route('logout') }}" hidden>
+            @csrf
+            <input type="hidden" name="idle_timeout" value="1">
+        </form>
         <script>
+            (function () {
+                const idleLimit = 15 * 60 * 1000;
+                const activityKey = @json('coopbest:activity:'.session()->getId());
+                const activityUrl = @json(route('session.activity'));
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                let lastActivity = Date.now();
+                let timer;
+                let lastWrite = 0;
+                let lastServerUpdate = 0;
+
+                try {
+                    lastActivity = Number(localStorage.getItem(activityKey)) || lastActivity;
+                    localStorage.setItem(activityKey, String(lastActivity));
+                } catch (error) {
+                    // Keep the idle timeout active when browser storage is unavailable.
+                }
+
+                function shareActivity(timestamp) {
+                    try {
+                        localStorage.setItem(activityKey, String(timestamp));
+                    } catch (error) {
+                        // The current tab still tracks activity without cross-tab storage.
+                    }
+                }
+
+                function scheduleLogout() {
+                    window.clearTimeout(timer);
+                    const remaining = idleLimit - (Date.now() - lastActivity);
+                    if (remaining <= 0) {
+                        document.getElementById('idle-logout-form').requestSubmit();
+                        return;
+                    }
+                    timer = window.setTimeout(scheduleLogout, remaining);
+                }
+
+                function recordMouseActivity() {
+                    const now = Date.now();
+                    if (now - lastWrite < 1000) {
+                        return;
+                    }
+                    lastWrite = now;
+                    lastActivity = now;
+                    shareActivity(now);
+
+                    if (now - lastServerUpdate >= 30000) {
+                        lastServerUpdate = now;
+                        fetch(activityUrl, {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken || '',
+                            },
+                            keepalive: true,
+                        }).catch(function () {
+                            // The local timer still ends the session if the connection is unavailable.
+                        });
+                    }
+
+                    scheduleLogout();
+                }
+
+                window.addEventListener('storage', function (event) {
+                    if (event.key === activityKey && event.newValue) {
+                        lastActivity = Number(event.newValue) || Date.now();
+                        scheduleLogout();
+                    }
+                });
+                document.addEventListener('mousemove', recordMouseActivity, { passive: true });
+                document.addEventListener('click', recordMouseActivity, { passive: true });
+                scheduleLogout();
+            })();
+
             document.querySelectorAll('.notification-menu, .profile-menu, .student-topnav__dropdown').forEach(function (menu) {
                 menu.addEventListener('toggle', function () {
                     if (!menu.open) {

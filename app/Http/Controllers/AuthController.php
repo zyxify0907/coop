@@ -11,6 +11,7 @@ use App\Models\DocumentUpload;
 use App\Models\Pekerja;
 use App\Models\Permohonan;
 use App\Models\ShareTransaction;
+use App\Services\ActiveUserSessionService;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -59,9 +60,10 @@ class AuthController extends Controller
         $request->session()->put('auth_id', $user->getKey());
         $request->session()->put('staff_type', $role === 'staff' ? $user->staff_type : null);
         $request->session()->put('last_login_at', now()->timezone('Asia/Kuala_Lumpur')->toDateTimeString());
+        $this->activeSessions()->activate($role, (int) $user->getKey(), $request->session()->getId());
 
         if ($request->boolean('remember')) {
-            Cookie::queue($this->rememberMeCookie($role, $user));
+            Cookie::queue($this->rememberMeCookie($role, $user, $request->session()->getId()));
         } else {
             Cookie::queue(Cookie::forget($this->rememberMeCookieName()));
         }
@@ -377,12 +379,24 @@ class AuthController extends Controller
 
     public function logout(Request $request): RedirectResponse
     {
+        $timedOut = $request->boolean('idle_timeout');
+        $role = $request->session()->get('auth_role');
+        $userId = (int) $request->session()->get('auth_id');
+
+        if (in_array($role, ['ahli', 'staff', 'admin'], true) && $userId) {
+            $this->activeSessions()->forget($role, $userId, $request->session()->getId());
+        }
+
         $request->session()->flush();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         Cookie::queue(Cookie::forget($this->rememberMeCookieName()));
 
-        return redirect()->route('login');
+        $redirect = redirect()->route('login');
+
+        return $timedOut
+            ? $redirect->with('status', 'Sesi anda telah tamat, sila log masuk semula.')
+            : $redirect;
     }
 
     private function adminHomeData(Request $request): array
@@ -749,6 +763,7 @@ class AuthController extends Controller
         $request->session()->put('auth_id', $user->getKey());
         $request->session()->put('staff_type', $role === 'staff' ? $user->staff_type : null);
         $request->session()->put('last_login_at', now()->timezone('Asia/Kuala_Lumpur')->toDateTimeString());
+        $this->activeSessions()->activate($role, (int) $user->getKey(), $request->session()->getId());
 
         return redirect()
             ->route('auth.dashboard')
@@ -865,8 +880,13 @@ class AuthController extends Controller
         $role = $payload['role'] ?? null;
         $id = isset($payload['id']) ? (int) $payload['id'] : null;
         $staffType = $payload['staff_type'] ?? null;
+        $sessionId = $payload['session_id'] ?? null;
 
-        if (! in_array($role, ['ahli', 'staff', 'admin'], true) || ! $id) {
+        if (! in_array($role, ['ahli', 'staff', 'admin'], true) || ! $id || ! is_string($sessionId) || $sessionId === '') {
+            return null;
+        }
+
+        if (! app(ActiveUserSessionService::class)->isCurrent($role, $id, $sessionId)) {
             return null;
         }
 
@@ -903,12 +923,13 @@ class AuthController extends Controller
         ];
     }
 
-    private function rememberMeCookie(string $role, Model $user)
+    private function rememberMeCookie(string $role, Model $user, string $sessionId)
     {
         $payload = json_encode([
             'role' => $role,
             'id' => $user->getKey(),
             'staff_type' => $role === 'staff' ? $user->staff_type : null,
+            'session_id' => $sessionId,
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         return cookie(
@@ -932,5 +953,24 @@ class AuthController extends Controller
     private static function rememberMeCookieNameStatic(): string
     {
         return 'coopbest_remember';
+    }
+
+    public function recordActivity(Request $request): JsonResponse
+    {
+        $role = $request->session()->get('auth_role');
+        $userId = (int) $request->session()->get('auth_id');
+
+        if (! in_array($role, ['ahli', 'staff', 'admin'], true) || ! $userId) {
+            return response()->json(['message' => 'Sesi tidak sah.'], 401);
+        }
+
+        return $this->activeSessions()->touch($role, $userId, $request->session()->getId())
+            ? response()->json(['ok' => true])
+            : response()->json(['message' => 'Sesi tidak sah.'], 401);
+    }
+
+    private function activeSessions(): ActiveUserSessionService
+    {
+        return app(ActiveUserSessionService::class);
     }
 }

@@ -48,7 +48,12 @@
                             <tr>
                                 <td>
                                     <div class="announcement-title-cell">
-                                        <div class="announcement-icon">{{ strtoupper(substr($announcement->title, 0, 2)) }}</div>
+                                        <div class="announcement-icon" aria-hidden="true">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="12" cy="8" r="4"></circle>
+                                                <path d="M4 21c0-4.42 3.58-8 8-8s8 3.58 8 8"></path>
+                                            </svg>
+                                        </div>
                                         <div>
                                             <strong>{{ $announcement->title }}</strong>
                                             <span>{{ \Illuminate\Support\Str::limit($announcement->body, 90) }}</span>
@@ -131,7 +136,8 @@
     .announcement-table td{padding:14px 16px;border-bottom:1px solid #DCE5F0;color:#082F59;font-size:13px;vertical-align:middle}
     .announcement-table tbody tr:hover{background:#F8FBFF}
     .announcement-title-cell{display:flex;align-items:center;gap:12px;min-width:260px}
-    .announcement-icon{display:flex;width:36px;height:36px;flex:0 0 auto;align-items:center;justify-content:center;border:1px solid #CFE0F5;border-radius:999px;background:#EAF3FF;color:#0B5ED7;font-size:12px;font-weight:900}
+    .announcement-icon{display:flex;width:36px;height:36px;flex:0 0 auto;align-items:center;justify-content:center;border:1px solid #CFE0F5;border-radius:999px;background:#EAF3FF;color:#0B5ED7}
+    .announcement-icon svg{width:18px;height:18px}
     .announcement-table td strong{display:block;color:#082F59;font-size:14px;font-weight:900}
     .announcement-table td span{display:block;margin-top:3px;color:#526987;font-size:12px;font-weight:700}
     .badge-code{display:inline-flex;min-height:26px;align-items:center;white-space:nowrap;border-radius:6px;background:#F1F6FC;color:#082F59;padding:0 10px;font-size:12px;font-weight:750}

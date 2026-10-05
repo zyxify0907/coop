@@ -475,6 +475,43 @@
             object-position: center;
         }
 
+        /* Profile heroes use a larger frame than navigation and table avatars. */
+        .content .profile-hero-main .profile-avatar {
+            --profile-hero-avatar-size: 96px;
+            position: relative;
+            width: var(--profile-hero-avatar-size);
+            height: var(--profile-hero-avatar-size);
+            min-width: var(--profile-hero-avatar-size);
+            min-height: var(--profile-hero-avatar-size);
+            max-width: var(--profile-hero-avatar-size);
+            max-height: var(--profile-hero-avatar-size);
+            flex: 0 0 var(--profile-hero-avatar-size);
+            border-radius: 50%;
+            overflow: hidden;
+        }
+
+        .content .profile-hero-main .profile-avatar img {
+            position: absolute;
+            inset: 0;
+            display: block;
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+            object-fit: cover;
+            object-position: center;
+        }
+
+        .content .profile-hero-main .profile-avatar svg {
+            width: 50%;
+            height: 50%;
+        }
+
+        @media (max-width: 720px) {
+            .content .profile-hero-main .profile-avatar {
+                --profile-hero-avatar-size: 80px;
+            }
+        }
+
         .sidebar-user strong { display: block; color: var(--text); font-size: 14px; font-weight: 700; }
         .sidebar-user > div > span { display: block; color: var(--muted-2); font-size: 12px; font-weight: 600; }
 

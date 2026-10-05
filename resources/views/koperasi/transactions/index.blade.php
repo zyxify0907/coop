@@ -120,7 +120,12 @@
                                 <td>{{ optional($transaction->transacted_at)->format('d/m/Y') ?? '-' }}</td>
                                 <td>
                                     <div class="member-cell">
-                                        <span class="member-avatar">{{ strtoupper(substr($memberName, 0, 1)) }}</span>
+                                        <span class="member-avatar" aria-hidden="true">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="12" cy="8" r="4"></circle>
+                                                <path d="M4 21c0-4.42 3.58-8 8-8s8 3.58 8 8"></path>
+                                            </svg>
+                                        </span>
                                         <div>
                                             <strong>{{ $memberName }}</strong>
                                             <span>{{ $memberNumber }} &middot; {{ $memberMeta }}</span>
@@ -310,6 +315,9 @@
             color: var(--secondary);
             font-weight: 900;
         }
+
+        .member-cell .member-avatar { display: grid; margin-top: 0; }
+        .member-avatar svg { width: 20px; height: 20px; }
 
         .member-cell strong,
         .member-cell span {

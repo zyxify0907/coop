@@ -90,7 +90,6 @@
                         @php
                             $data = $member->data_permohonan ?? [];
                             $memberName = $member->nama_pemohon ?: 'Tanpa Nama';
-                            $initials = collect(explode(' ', $memberName))->filter()->take(2)->map(fn ($part) => strtoupper(substr($part, 0, 1)))->implode('') ?: ($isStaffList ? 'AS' : 'AG');
                             $profile = $isStaffList ? $staffMembers->get($member->no_matrik) : $member->ahli;
                             $memberSaham = $isStaffList ? optional($profile)->sahamStaff : optional($profile)->saham;
                             $memberNumber = $isStaffList ? ($profile->no_anggota ?? $data['no_anggota'] ?? '-') : ($profile->no_anggota ?? '-');
@@ -105,7 +104,12 @@
                         <tr>
                             <td>
                                 <div class="member-cell">
-                                    <span class="member-avatar">{{ $initials }}</span>
+                                    <span class="member-avatar" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="8" r="4"></circle>
+                                            <path d="M4 21c0-4.42 3.58-8 8-8s8 3.58 8 8"></path>
+                                        </svg>
+                                    </span>
                                     <div>
                                         <strong>{{ $memberName }}</strong>
                                     </div>
@@ -466,6 +470,8 @@
         font-size:12px;
         flex:0 0 auto;
     }
+    .member-cell .member-avatar{display:grid;margin-top:0}
+    .member-avatar svg{width:18px;height:18px}
     .member-cell strong{
         display:block;
         font-size:14px;

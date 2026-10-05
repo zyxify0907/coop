@@ -279,6 +279,7 @@
     .profile-status {
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         min-height: 34px;
         padding: 0 14px;
         border-radius: 999px;

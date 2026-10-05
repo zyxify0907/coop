@@ -443,8 +443,13 @@
         }
 
         .avatar {
+            position: relative;
             width: 48px;
             height: 48px;
+            min-width: 48px;
+            min-height: 48px;
+            max-width: 48px;
+            max-height: 48px;
             border-radius: 999px;
             overflow: hidden;
             display: grid;
@@ -457,12 +462,17 @@
             border: 1px solid #BFDBFE;
         }
 
+        /* Keep the photo out of intrinsic grid/flex sizing so its crop stays
+           identical in the account menu, sidebar and user tables. */
         .avatar img {
+            position: absolute;
+            inset: 0;
             width: 100%;
             height: 100%;
             display: block;
             border-radius: inherit;
             object-fit: cover;
+            object-position: center;
         }
 
         .sidebar-user strong { display: block; color: var(--text); font-size: 14px; font-weight: 700; }

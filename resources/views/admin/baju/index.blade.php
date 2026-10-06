@@ -321,6 +321,7 @@
         padding:0;
         align-items:end;
     }
+    .admin-order-page .form-grid--baju > *{min-width:0}
     .admin-order-page .field{display:grid;gap:7px}
     .admin-order-page .field label{min-height:16px;color:var(--order-navy);font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.02em}
     .admin-order-page .field input,
@@ -511,6 +512,11 @@
     .size-chart-dialog__close:hover,.size-chart-dialog__close:focus-visible{background:#fff;color:var(--order-navy);outline:none}
     .size-chart-panel__image{min-height:0;overflow:auto;padding:20px;background:#F5F8FC}
     .size-chart-panel__image img{display:block;width:100%;height:auto;max-height:calc(88dvh - 144px);object-fit:contain;margin:auto;border:1px solid #D7E2EF;border-radius:8px;background:#fff}
+    @media (max-width: 1580px){
+        .admin-order-page .form-grid--baju{grid-template-columns:minmax(160px,1.3fr) minmax(100px,.55fr) minmax(150px,1fr) minmax(150px,1fr)}
+        .admin-order-page .field--sizes{grid-column:1 / span 3}
+        .admin-order-page .field-actions{grid-column:4}
+    }
     @media (max-width: 1120px){
         .admin-order-page .form-grid--baju{grid-template-columns:repeat(2,minmax(0,1fr))}
         .admin-order-page .field--sizes{grid-column:1 / -1}

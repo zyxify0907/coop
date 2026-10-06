@@ -53,27 +53,6 @@
             </label>
             <button class="student-import-button" type="submit">Upload Excel</button>
         </form>
-        @if (! empty($latestImport))
-            <div class="student-import-result">
-                <span>Import terkini</span>
-                <strong>{{ $latestImport->imported_count }} berjaya</strong>
-                <strong class="{{ $latestImport->failed_count > 0 ? 'is-danger' : '' }}">{{ $latestImport->failed_count }} gagal</strong>
-            </div>
-            @if (! empty($latestImport->errors))
-                <div class="student-import-errors" data-import-id="{{ $latestImport->id }}">
-                    <div class="student-import-errors__head">
-                        <strong>Ralat Import</strong>
-                        <button class="student-import-errors__close" type="button" aria-label="Tutup ralat import">&times;</button>
-                    </div>
-                    @foreach ($latestImport->errors as $importError)
-                        <div class="student-import-errors__item">
-                            <strong>{{ isset($importError['row']) ? 'Baris '.$importError['row'] : 'Fail Excel' }}</strong>
-                            <span>{{ $importError['message'] ?? 'Import gagal.' }}</span>
-                        </div>
-                    @endforeach
-                </div>
-            @endif
-        @endif
     </section>
 
     <section class="panel student-list-panel">

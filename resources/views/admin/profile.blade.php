@@ -80,7 +80,7 @@
                             <p>Maklumat asas akaun admin semasa.</p>
                         </div>
                     </div>
-                    <form class="profile-form" method="POST" action="{{ route('admin.profile.update') }}" enctype="multipart/form-data">
+                    <form id="admin-profile-form" class="profile-form" method="POST" action="{{ route('admin.profile.update') }}" enctype="multipart/form-data">
                         @csrf
                         @method('PATCH')
                         <div class="profile-form-grid">
@@ -103,11 +103,11 @@
                                 @error('profile_image')<small>{{ $message }}</small>@enderror
                             </label>
                         </div>
-                        <div class="profile-actions">
-                            <button class="button primary" type="submit">Simpan Gambar Profil</button>
-                        </div>
                     </form>
-                    <x-remove-profile-image :image-path="$user->profile_image_path" :name="$user->nama" :profile="true" />
+                    <div class="profile-image-actions">
+                        <button class="button primary" type="submit" form="admin-profile-form">Simpan Gambar Profil</button>
+                        <x-remove-profile-image :image-path="$user->profile_image_path" :name="$user->nama" :profile="true" />
+                    </div>
                 </section>
 
                 <section class="panel profile-panel">

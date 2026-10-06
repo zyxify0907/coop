@@ -515,10 +515,16 @@
         .sidebar-user strong { display: block; color: var(--text); font-size: 14px; font-weight: 700; }
 
         .profile-image-remove-form { margin: 0; }
-        .profile-image-remove-form--profile {
+        .profile-image-actions {
             display: flex;
+            align-items: center;
             justify-content: flex-end;
+            gap: 12px;
             padding: 0 24px 24px;
+        }
+        .profile-image-actions .profile-image-remove-form--profile {
+            display: block;
+            padding: 0;
         }
         .profile-image-remove-button {
             display: inline-flex;
@@ -542,6 +548,44 @@
         .content :is(.student-table, .staff-table) .profile-image-remove-button {
             min-height: 34px;
             border-radius: 6px;
+        }
+        .content .profile-photo-upload input[type="file"] {
+            min-height: 44px;
+            padding: 4px 8px;
+            border: 1px solid #C8D6E7;
+            border-radius: 8px;
+            background: #FFFFFF;
+            color: #46617F;
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 1.2;
+            cursor: pointer;
+        }
+        .content .profile-photo-upload input[type="file"]::file-selector-button,
+        .content .profile-photo-upload input[type="file"]::-webkit-file-upload-button {
+            height: 32px;
+            margin-right: 10px;
+            padding: 0 12px;
+            border: 0;
+            border-radius: 5px;
+            background: #E8F0FE;
+            color: #1A5FBD;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+        @media (max-width: 640px) {
+            .profile-image-actions {
+                align-items: stretch;
+                flex-direction: column;
+            }
+            .profile-image-actions > :is(.profile-button, .button, .profile-image-remove-form) {
+                width: 100%;
+            }
+            .profile-image-actions :is(.profile-button, .button, .profile-image-remove-button) {
+                width: 100%;
+            }
         }
         .sidebar-user > div > span { display: block; color: var(--muted-2); font-size: 12px; font-weight: 600; }
 

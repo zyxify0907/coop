@@ -104,7 +104,7 @@
                             <p>Kemaskini maklumat hubungan yang digunakan untuk urusan koperasi.</p>
                         </div>
                     </div>
-                    <form class="profile-form" method="POST" action="{{ route('student.profile.update') }}" enctype="multipart/form-data">
+                    <form id="student-profile-form" class="profile-form" method="POST" action="{{ route('student.profile.update') }}" enctype="multipart/form-data">
                         @csrf
                         @method('PATCH')
 
@@ -143,14 +143,14 @@
                             </label>
                         </div>
 
-                        <div class="profile-actions">
-                            <button class="profile-button" type="submit">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>
-                                Simpan Profil
-                            </button>
-                        </div>
                     </form>
-                    <x-remove-profile-image :image-path="$user->profile_image_path" :name="$user->nama" :profile="true" />
+                    <div class="profile-image-actions">
+                        <button class="profile-button" type="submit" form="student-profile-form">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>
+                            Simpan Profil
+                        </button>
+                        <x-remove-profile-image :image-path="$user->profile_image_path" :name="$user->nama" :profile="true" />
+                    </div>
                 </section>
 
                 <section class="profile-panel">

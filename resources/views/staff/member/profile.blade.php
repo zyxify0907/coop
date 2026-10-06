@@ -108,7 +108,7 @@
                             <p>Kemaskini maklumat hubungan yang digunakan untuk urusan koperasi.</p>
                         </div>
                     </div>
-                    <form class="profile-form" method="POST" action="{{ route($portalPrefix.'.profile.update') }}" enctype="multipart/form-data">
+                    <form id="staff-profile-form" class="profile-form" method="POST" action="{{ route($portalPrefix.'.profile.update') }}" enctype="multipart/form-data">
                         @csrf
                         @method('PATCH')
 
@@ -149,11 +149,11 @@
                             </label>
                         </div>
 
-                        <div class="profile-actions">
-                            <button class="button primary" type="submit">Simpan Profil</button>
-                        </div>
                     </form>
-                    <x-remove-profile-image :image-path="$user->profile_image_path" :name="$user->nama" :profile="true" />
+                    <div class="profile-image-actions">
+                        <button class="button primary" type="submit" form="staff-profile-form">Simpan Profil</button>
+                        <x-remove-profile-image :image-path="$user->profile_image_path" :name="$user->nama" :profile="true" />
+                    </div>
                 </section>
 
                 @if ($isShareholderStaff)

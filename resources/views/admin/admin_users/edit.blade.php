@@ -45,7 +45,7 @@
                 <span class="form-badge">{{ $isStudent ? 'Student' : 'Staff' }}</span>
             </div>
 
-            <form method="POST" action="{{ route('admin.users.update', ['type' => $type, 'id' => $profile->getKey()]) }}">
+            <form id="user-update-form" method="POST" action="{{ route('admin.users.update', ['type' => $type, 'id' => $profile->getKey()]) }}">
                 @csrf
                 @method('PUT')
 
@@ -186,11 +186,18 @@
                     </div>
                 </div>
 
-                <div class="edit-actions">
-                    <button class="save-button" type="submit">Simpan Perubahan</button>
-                    <a class="cancel-button" href="{{ $backRoute }}">Batal</a>
-                </div>
             </form>
+
+            <div class="edit-actions">
+                <button class="save-button" type="submit" form="user-update-form">Simpan Perubahan</button>
+                <a class="cancel-button" href="{{ $backRoute }}">Batal</a>
+                @if ($role === 'admin')
+                    <x-remove-profile-image
+                        :image-path="$profile->profile_image_path"
+                        :name="$profile->nama"
+                        :action="route('admin.users.profile-image.destroy', ['type' => $type, 'id' => $profile->getKey()])" />
+                @endif
+            </div>
         </section>
     </div>
 @endsection
@@ -297,7 +304,8 @@
         font-size:13px;
         font-weight:700;
     }
-    .edit-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px;padding-top:22px;border-top:1px solid var(--line)}
+    .edit-actions{display:flex;gap:10px;flex-wrap:wrap;margin:24px 28px 28px;padding-top:22px;border-top:1px solid var(--line)}
+    .edit-actions .profile-image-remove-form{margin:0;padding:0}
     .save-button,.cancel-button{
         display:inline-flex;
         min-height:44px;
@@ -416,7 +424,7 @@
         padding:0 14px;
         font-size:13px;
     }
-    .content .edit-form-panel form{
+    .content .edit-form-panel > form{
         padding:28px;
     }
     .content .field label{

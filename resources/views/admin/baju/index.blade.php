@@ -112,7 +112,10 @@
                     </div>
                     <div class="size-pills">
                         @foreach ($item->sizes as $size)
-                            <span class="size-pill">{{ $size->saiz ?? '-' }} <b>{{ $size->stok_tertinggal }}</b></span>
+                            <span class="size-pill">
+                                <span class="size-pill__label">{{ $size->saiz ?? '-' }}</span>
+                                <b aria-label="Stok {{ $size->saiz ?? '-' }}: {{ $size->stok_tertinggal }}">{{ $size->stok_tertinggal }}</b>
+                            </span>
                         @endforeach
                     </div>
                     <div class="baju-meta-row">
@@ -420,14 +423,14 @@
         border-bottom:1px solid var(--order-border);
     }
     .admin-order-page .size-pill{
-        display:inline-flex;
+        display:grid;
+        grid-template-columns:minmax(0,1fr) auto;
         align-items:center;
-        justify-content:center;
-        gap:6px;
+        gap:4px;
         width:100%;
         min-width:0;
         min-height:32px;
-        padding:0 6px;
+        padding:0 5px;
         border:1px solid #BFD0E6;
         border-radius:6px;
         background:#fff;
@@ -435,8 +438,9 @@
         font-size:12px;
         font-weight:900;
     }
+    .admin-order-page .size-pill__label{overflow:hidden;text-align:center;text-overflow:ellipsis;white-space:nowrap}
     .admin-order-page .baju-meta-row{transform:none}
-    .admin-order-page .size-pill b{color:#4D6484;font-size:11px;font-weight:900}
+    .admin-order-page .size-pill b{display:inline-grid;place-items:center;min-width:18px;height:20px;padding:0 3px;border-radius:4px;background:#EAF2FF;color:#0B4DA2;font-size:11px;font-weight:900;line-height:1;white-space:nowrap}
     .baju-card__edit{display:grid;gap:9px;padding:10px 14px;min-width:0}
     .baju-card__edit input,.baju-card__edit select{width:100%;border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px;min-height:36px}
     .edit-size-grid{display:flex;gap:8px;flex-wrap:wrap}

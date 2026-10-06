@@ -12,7 +12,7 @@
     $isStaffRequest = ($data['pemohon_role'] ?? 'ahli') === 'staff';
     $amountFields = ['amaun_tambahan', 'amaun_dipohon', 'syer_semasa', 'yuran_anggota', 'modal_saham', 'saham_dipohon', 'jumlah_dipohon'];
     $initials = collect(explode(' ', $application->nama_pemohon))->filter()->take(2)->map(fn ($part) => strtoupper(substr($part, 0, 1)))->implode('') ?: 'ST';
-    $heirFields = ['nama_waris', 'telefon_waris', 'hubungan_waris', 'penama_nama', 'penama_nric', 'penama_hubungan', 'penama_no_tel', 'penama_alamat', 'penama_poskod', 'penama_peratus', 'penama2_nama', 'penama2_nric', 'penama2_hubungan', 'penama2_no_tel', 'penama2_alamat', 'penama2_poskod', 'penama2_peratus'];
+    $heirFields = ['nama_waris', 'telefon_waris', 'hubungan_waris', 'penama_nama', 'penama_nric', 'penama_hubungan', 'penama_no_tel', 'penama_alamat', 'penama_poskod', 'penama2_nama', 'penama2_nric', 'penama2_hubungan', 'penama2_no_tel', 'penama2_alamat', 'penama2_poskod'];
     $witnessFields = ['saksi_nama', 'saksi_nric', 'saksi_tarikh'];
     $hiddenStaffFields = $isStaffRequest ? ['no_pekerja', 'dokumen_sokongan', 'jawatan'] : [];
     $memberData = collect($data)->reject(fn ($value, $key) => in_array($key, array_merge($heirFields, $witnessFields, $hiddenStaffFields), true));

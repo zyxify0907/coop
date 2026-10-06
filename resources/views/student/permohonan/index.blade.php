@@ -441,11 +441,6 @@
                                 <input id="penama_poskod" name="penama_poskod" type="text" value="{{ old('penama_poskod') }}" required>
                             </div>
 
-                            <div class="field-block">
-                                <label for="penama_peratus">Peratus Pembahagian</label>
-                                <input id="penama_peratus" name="penama_peratus" type="number" min="0" max="100" step="0.01" value="{{ old('penama_peratus') }}" placeholder="Untuk bukan Islam sahaja">
-                            </div>
-
                             <div class="field-block field-block--full">
                                 <h4 class="subsection-title">Penama 2</h4>
                             </div>
@@ -478,11 +473,6 @@
                             <div class="field-block">
                                 <label for="penama2_poskod">Poskod Penama 2</label>
                                 <input id="penama2_poskod" name="penama2_poskod" type="text" value="{{ old('penama2_poskod') }}">
-                            </div>
-
-                            <div class="field-block">
-                                <label for="penama2_peratus">Peratus Pembahagian Penama 2</label>
-                                <input id="penama2_peratus" name="penama2_peratus" type="number" min="0" max="100" step="0.01" value="{{ old('penama2_peratus') }}" placeholder="Untuk bukan Islam sahaja">
                             </div>
 
                             <div class="field-block field-block--full">

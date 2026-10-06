@@ -513,6 +513,36 @@
         }
 
         .sidebar-user strong { display: block; color: var(--text); font-size: 14px; font-weight: 700; }
+
+        .profile-image-remove-form { margin: 0; }
+        .profile-image-remove-form--profile {
+            display: flex;
+            justify-content: flex-end;
+            padding: 0 24px 24px;
+        }
+        .profile-image-remove-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 38px;
+            padding: 8px 12px;
+            border: 1px solid #FECACA;
+            border-radius: 8px;
+            background: #FFF1F2;
+            color: #B91C1C;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1.3;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .profile-image-remove-button:hover { background: #FFE4E6; }
+        .profile-image-remove-button:focus-visible { outline: 2px solid #B91C1C; outline-offset: 2px; }
+        .content :is(.student-table, .staff-table) .profile-image-remove-button {
+            min-height: 34px;
+            border-radius: 6px;
+        }
         .sidebar-user > div > span { display: block; color: var(--muted-2); font-size: 12px; font-weight: 600; }
 
         /* Navigation Area */

@@ -107,6 +107,7 @@
                             <button class="button primary" type="submit">Simpan Gambar Profil</button>
                         </div>
                     </form>
+                    <x-remove-profile-image :image-path="$user->profile_image_path" :name="$user->nama" :profile="true" />
                 </section>
 
                 <section class="panel profile-panel">

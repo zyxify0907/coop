@@ -150,6 +150,7 @@
                             </button>
                         </div>
                     </form>
+                    <x-remove-profile-image :image-path="$user->profile_image_path" :name="$user->nama" :profile="true" />
                 </section>
 
                 <section class="profile-panel">

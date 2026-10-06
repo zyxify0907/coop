@@ -153,6 +153,7 @@
                             <button class="button primary" type="submit">Simpan Profil</button>
                         </div>
                     </form>
+                    <x-remove-profile-image :image-path="$user->profile_image_path" :name="$user->nama" :profile="true" />
                 </section>
 
                 @if ($isShareholderStaff)

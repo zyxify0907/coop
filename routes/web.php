@@ -10,6 +10,7 @@ use App\Http\Controllers\CooperativeController;
 use App\Http\Controllers\CooperativeEventController;
 use App\Http\Controllers\OperationsController;
 use App\Http\Controllers\PermohonanController;
+use App\Http\Controllers\ProfileImageController;
 use App\Http\Controllers\StaffPortalController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,6 +24,7 @@ Route::get('/register', [AuthController::class, 'showRegister'])->name('register
 Route::post('/register', [AuthController::class, 'register'])->name('register.submit');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::post('/session/activity', [AuthController::class, 'recordActivity'])->name('session.activity');
+Route::delete('/profile/image', [ProfileImageController::class, 'destroy'])->name('profile.image.destroy');
 Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('auth.dashboard');
 Route::get('/dashboard/chart-data', [AuthController::class, 'dashboardChartData'])->name('auth.dashboard.chart-data');
 Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
@@ -142,6 +144,10 @@ Route::get('/admin/users/{type}/{id}/edit', [AdminProfileController::class, 'edi
 Route::put('/admin/users/{type}/{id}', [AdminProfileController::class, 'update'])->name('admin.users.update');
 Route::post('/admin/users/staff/{id}/promote-admin', [AdminProfileController::class, 'promoteStaffToAdmin'])->name('admin.users.staff.promote-admin');
 Route::delete('/admin/users/{type}/{id}', [AdminProfileController::class, 'destroy'])->name('admin.users.destroy');
+Route::delete('/admin/users/{type}/{id}/profile-image', [ProfileImageController::class, 'destroyUser'])
+    ->whereIn('type', ['student', 'staff'])
+    ->whereNumber('id')
+    ->name('admin.users.profile-image.destroy');
 
 Route::get('/admin/ahli', [AhliController::class, 'index'])->name('admin.ahli.index');
 Route::post('/admin/ahli/import', [AhliController::class, 'import'])->name('admin.ahli.import');

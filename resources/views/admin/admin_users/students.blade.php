@@ -198,6 +198,8 @@
                                     <a class="student-edit-button" href="{{ route('admin.users.edit', ['type' => 'student', 'id' => $student->id_ahli]) }}">
                                         Kemaskini
                                     </a>
+                                    <x-remove-profile-image :image-path="$student->profile_image_path" :name="$student->nama"
+                                        :action="route('admin.users.profile-image.destroy', ['type' => 'student', 'id' => $student->id_ahli])" />
                                     <form class="student-delete-form" method="POST" action="{{ route('admin.users.destroy', ['type' => 'student', 'id' => $student->id_ahli]) }}" data-student-name="{{ $student->nama }}">
                                         @csrf
                                         @method('DELETE')
@@ -856,7 +858,7 @@
         .badge-code{display:inline-flex;white-space:nowrap;background:#f1f5f9;padding:5px 10px;border-radius:8px;color:#334155;font-weight:900}
         .status-badge{display:inline-flex;min-height:28px;align-items:center;border-radius:999px;padding:0 11px;font-size:12px;font-weight:900;white-space:nowrap}
         .status-badge.is-info{background:var(--secondary-soft);color:var(--secondary)}
-        .student-action-buttons{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:nowrap}
+        .student-action-buttons{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
         .student-action-buttons form{margin:0}
         .student-edit-button,.student-delete-button{
             display:inline-flex;

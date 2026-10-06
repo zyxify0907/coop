@@ -166,6 +166,10 @@
                             <td>
                                 <div class="action-buttons">
                                     <a class="edit-button" href="{{ route('admin.users.edit', ['type' => 'staff', 'id' => $member->id_pekerja]) }}">Kemaskini</a>
+                                    @if ($role === 'admin')
+                                        <x-remove-profile-image :image-path="$member->profile_image_path" :name="$member->nama"
+                                            :action="route('admin.users.profile-image.destroy', ['type' => 'staff', 'id' => $member->id_pekerja])" />
+                                    @endif
                                     <form method="POST" action="{{ route('admin.users.destroy', ['type' => 'staff', 'id' => $member->id_pekerja]) }}" onsubmit="return confirm('Padam staff ini? Tindakan ini tidak boleh dibatalkan.');">
                                         @csrf
                                         @method('DELETE')
@@ -546,7 +550,7 @@
     .status-badge{display:inline-flex;min-height:28px;align-items:center;border-radius:999px;padding:0 11px;font-size:12px;font-weight:900}
     .status-badge.is-active{background:var(--success-soft);color:var(--success)}
     .status-badge.is-inactive{background:var(--danger-soft);color:var(--danger)}
-    .action-buttons{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:nowrap}
+    .action-buttons{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
     .action-buttons form{margin:0}
     .edit-button,.delete-button{
         display:inline-flex;

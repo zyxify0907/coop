@@ -561,6 +561,9 @@
             line-height: 1.2;
             cursor: pointer;
         }
+        .content .profile-form-grid > .profile-photo-upload {
+            grid-column: 1 / -1;
+        }
         .content .profile-photo-upload input[type="file"]::file-selector-button,
         .content .profile-photo-upload input[type="file"]::-webkit-file-upload-button {
             height: 32px;

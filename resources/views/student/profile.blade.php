@@ -117,12 +117,6 @@
                                 <span>No. KP</span>
                                 <input value="{{ $user->nric ?? '-' }}" disabled aria-readonly="true">
                             </label>
-                            <label class="profile-photo-upload">
-                                <span>Gambar Profil</span>
-                                <input name="profile_image" type="file" accept="image/jpeg,image/png,image/webp">
-                                <small>JPG, PNG atau WebP. Maksimum 4 MB.</small>
-                                @error('profile_image')<small>{{ $message }}</small>@enderror
-                            </label>
                             <label>
                                 <span>No Telefon</span>
                                 <input name="no_tel" value="{{ old('no_tel', $user->no_tel) }}" placeholder="Contoh: 0123456789">
@@ -140,6 +134,12 @@
                             <label>
                                 <span>Kelas</span>
                                 <input value="{{ $user->kelas ?? '-' }}" disabled aria-readonly="true">
+                            </label>
+                            <label class="profile-photo-upload">
+                                <span>Gambar Profil</span>
+                                <input name="profile_image" type="file" accept="image/jpeg,image/png,image/webp">
+                                <small>JPG, PNG atau WebP. Maksimum 4 MB.</small>
+                                @error('profile_image')<small>{{ $message }}</small>@enderror
                             </label>
                         </div>
 

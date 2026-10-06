@@ -3375,6 +3375,7 @@
         </div>
     </div>
     @stack('scripts')
+    @include('components.profile-image-viewer')
     @if ($showAccountTools)
         <form id="idle-logout-form" method="POST" action="{{ route('logout') }}" hidden>
             @csrf
